@@ -1,7 +1,15 @@
 // API client — all backend endpoints
 // Types that mirror backend response schemas
 
-import type { UUID, ISODate, Decimal, BrandingConfig } from "@/types/index";
+import type {
+  UUID,
+  ISODate,
+  Decimal,
+  BrandingConfig,
+  GiftCardRead,
+  ReturnRead,
+} from "@/types/index";
+export type { GiftCardRead, ReturnRead };
 
 // ── Response types ────────────────────────────────────────────────────────
 
@@ -177,34 +185,7 @@ export interface SupplierRead {
   created_at: ISODate;
 }
 
-export interface GiftCardRead {
-  id: UUID;
-  code: string;
-  initial_balance: Decimal;
-  current_balance: Decimal;
-  currency: string;
-  is_active: boolean;
-  expires_at?: ISODate;
-  created_at: ISODate;
-}
-
-export interface ReturnRead {
-  id: UUID;
-  original_sale_id: UUID;
-  original_folio: string;
-  cashier_id: UUID;
-  items: Array<{
-    product_id: UUID;
-    product_name: string;
-    quantity: number;
-    unit_price: Decimal;
-    subtotal: Decimal;
-  }>;
-  total_mxn: Decimal;
-  refund_method: string;
-  notes?: string;
-  created_at: ISODate;
-}
+// GiftCardRead and ReturnRead are imported from @/types/index and re-exported above
 
 export interface PurchaseRead {
   id: UUID;
@@ -547,6 +528,25 @@ export const purchasesApi = {
       token,
       body: JSON.stringify(data),
     }),
+
+  consignmentIn: (token: string, data: object) =>
+    apiFetch<PurchaseRead>("/v1/purchases/consignments/in", {
+      method: "POST",
+      token,
+      body: JSON.stringify(data),
+    }),
+
+  settle: (token: string, data: object) =>
+    apiFetch<object>("/v1/purchases/consignments/settle", {
+      method: "POST",
+      token,
+      body: JSON.stringify(data),
+    }),
+
+  listConsignments: (token: string, params?: object) =>
+    apiFetch<PurchaseRead[]>(`/v1/purchases/consignments${toQuery(params)}`, {
+      token,
+    }),
 };
 
 // ── Reports ───────────────────────────────────────────────────────────────
@@ -576,6 +576,48 @@ export const settingsApi = {
       token,
       body: JSON.stringify(data),
     }),
+};
+
+// ── Users ─────────────────────────────────────────────────────────────────
+
+export interface UserCreate {
+  username: string;
+  full_name: string;
+  email: string;
+  role: "admin" | "supervisor" | "cashier";
+  password: string;
+}
+
+export interface UserUpdate {
+  full_name?: string;
+  email?: string;
+  role?: "admin" | "supervisor" | "cashier";
+  is_active?: boolean;
+  password?: string;
+}
+
+export const usersApi = {
+  list: (token: string) => apiFetch<UserRead[]>("/v1/users", { token }),
+
+  get: (token: string, id: string) =>
+    apiFetch<UserRead>(`/v1/users/${id}`, { token }),
+
+  create: (token: string, data: UserCreate) =>
+    apiFetch<UserRead>("/v1/users", {
+      method: "POST",
+      token,
+      body: JSON.stringify(data),
+    }),
+
+  update: (token: string, id: string, data: UserUpdate) =>
+    apiFetch<UserRead>(`/v1/users/${id}`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify(data),
+    }),
+
+  delete: (token: string, id: string) =>
+    apiFetch<void>(`/v1/users/${id}`, { method: "DELETE", token }),
 };
 
 // ── Branding (unauthenticated) ────────────────────────────────────────────

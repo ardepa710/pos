@@ -178,6 +178,14 @@ export interface SupplierRead {
   is_active: boolean;
 }
 
+export interface PurchaseItemRead {
+  product_id: UUID;
+  product_name: string;
+  quantity: number;
+  unit_cost: Decimal;
+  subtotal: Decimal;
+}
+
 export interface PurchaseRead {
   id: UUID;
   folio: string;
@@ -186,6 +194,8 @@ export interface PurchaseRead {
   status: string;
   total_cost_mxn: Decimal;
   reference_number?: string;
+  notes?: string;
+  items?: PurchaseItemRead[];
   created_at: ISODate;
 }
 
