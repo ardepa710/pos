@@ -1,0 +1,32 @@
+:80 {
+    # API — proxy to FastAPI backend
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Health check passthrough
+    handle /health {
+        reverse_proxy backend:8000
+    }
+
+    # Frontend — all other routes
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    # Security headers
+    header {
+        X-Frame-Options DENY
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-XSS-Protection "1; mode=block"
+        -Server
+    }
+
+    encode gzip
+    log {
+        output stdout
+        format json
+        level INFO
+    }
+}

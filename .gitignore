@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.env
+.env.local
+.env.*.local
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+.npm
+.eslintcache
+.vercel
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+*.log
+
+# Secrets
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# Backups
+backups/
+*.bak
+
+# Print Bridge build
+print-bridge/dist/
+print-bridge/build/
+*.spec
+
+# Docs generados
+docs/security/*.pdf
+docs/user-guide/*.pdf
+scripts/audit-data/
