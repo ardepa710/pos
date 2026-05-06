@@ -1,0 +1,21 @@
+# Normalize line endings to LF in the repository
+* text=auto eol=lf
+
+# Explicitly binary files — no line ending conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.gz binary
+
+# Shell scripts must always be LF (executed in Linux containers)
+*.sh text eol=lf
+entrypoint.sh text eol=lf

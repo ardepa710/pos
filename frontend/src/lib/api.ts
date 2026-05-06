@@ -232,6 +232,9 @@ export interface BusinessSettings {
   tax_rate: Decimal;
   currency: string;
   accept_usd: boolean;
+  support_whatsapp?: string;
+  theme?: "light" | "dark" | "system";
+  wizard_completed: boolean;
 }
 
 // ── Core ──────────────────────────────────────────────────────────────────
@@ -575,6 +578,12 @@ export const settingsApi = {
       method: "PUT",
       token,
       body: JSON.stringify(data),
+    }),
+
+  completeWizard: (token: string) =>
+    apiFetch<BusinessSettings>("/v1/settings/wizard/complete", {
+      method: "POST",
+      token,
     }),
 };
 

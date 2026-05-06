@@ -1,13 +1,18 @@
 ## Stack
 
 - Runtime backend: Python 3.12 + FastAPI (async)
-- ORM: SQLAlchemy 2.0 async + Alembic
-- DB: PostgreSQL 16
+- ORM: SQLAlchemy 2.0 async + Alembic (5 migrations: 001001–001005)
+- DB: PostgreSQL 16 (NUMERIC(14,4) for money, UUID PKs, pg_trgm)
 - Runtime frontend: Node 20 / Next.js 15 App Router (TypeScript strict)
-- UI: shadcn/ui + HeroUI + Tailwind v4
-- Reverse proxy: Caddy (local Docker)
-- Print Bridge: Python FastAPI daemon (puerto 9100, PyInstaller)
-- Licensing: Ed25519 offline / online_activation opcional
+- UI: HeroUI + shadcn/ui + Tailwind v4 + Lucide icons
+- State: Zustand (auth + cart), @tanstack/react-query (server state)
+- Forms: react-hook-form + zod
+- Money precision: decimal.js on frontend
+- Jobs: APScheduler (Banxico FX daily at 09:00 MX City)
+- Auth: passlib[bcrypt] + python-jose (JWT)
+- Reports: reportlab (PDF) + openpyxl (Excel)
+- Reverse proxy: Caddy (local Docker, pos-internal network)
+- Print Bridge: Python FastAPI daemon (port 9100, PyInstaller — optional)
 
 ## Stack Type
 
@@ -15,18 +20,29 @@
 
 ## Environment Variables (names only — values in .env)
 
+- DB_PASSWORD
+- JWT_SECRET
 - DATABASE_URL
+- DATABASE_SYNC_URL
 - SECRET_KEY
 - ALGORITHM
 - ACCESS_TOKEN_EXPIRE_MINUTES
 - BANXICO_API_KEY
 - LICENSE_MODE
 - LICENSE_PUBLIC_KEY
+- LICENSE_ACTIVATION_SERVER
 - DEMO_MODE
 - BUSINESS_NAME
+- BUSINESS_TYPE
 - CORS_ORIGINS
 - BACKUP_PATH
-- DRIVE_BACKUP_ENABLED
+- PRINT_BRIDGE_URL
+- PRINT_BRIDGE_ENABLED
+- TELEMETRY_ENABLED
+- TELEMETRY_ENDPOINT
+- SUPPORT_WHATSAPP
+- ENV
+- LOG_LEVEL
 
 ## GitLab Repo
 
@@ -36,10 +52,10 @@
 
 ## Current Focus
 
-- Sprint goal: Ola 0 — fundaciones
+- Sprint goal: Ola 5 complete — sistema operacional listo
 - Blockers: ninguno
-- Recently done: PLAN.md v1.2 congelado, mockups creados
-- Next up: Ola 1 — modelos y migraciones
+- Recently done: Olas 1–5: modelos, migraciones, routers, UI completa, wizard, setup
+- Next up: QA, install script verificación, primer docker compose up
 
 ## Version
 
