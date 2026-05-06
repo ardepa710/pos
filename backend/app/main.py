@@ -6,6 +6,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.jobs.banxico_job import start_scheduler, stop_scheduler
+from app.routers import catalog, reports, settings as settings_router
+from app.routers.auth import router as auth_router
+from app.routers.users import router as users_router
+from app.routers.sales import router as sales_router
+from app.routers.purchases import router as purchases_router
+from app.routers.extras import router as extras_router
 
 log = structlog.get_logger()
 
@@ -13,7 +20,9 @@ log = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("pos.backend.startup", env=settings.env, demo_mode=settings.demo_mode)
+    start_scheduler()
     yield
+    stop_scheduler()
     log.info("pos.backend.shutdown")
 
 
@@ -32,6 +41,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(catalog.router)
+app.include_router(sales_router)
+app.include_router(purchases_router)
+app.include_router(extras_router)
+app.include_router(reports.router)
+app.include_router(settings_router.router)
 
 
 @app.get("/health", tags=["system"])

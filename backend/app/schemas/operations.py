@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime, date
 from typing import Optional
@@ -118,3 +120,43 @@ class SaleRead(BaseModel):
     items: list[SaleItemRead] = []
     payments: list[PaymentRead] = []
     created_at: datetime
+
+
+class SaleVoidRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
+# ── CashierSession schemas ────────────────────────────────────────
+
+class CashierSessionOpen(BaseModel):
+    starting_cash_mxn: Decimal = Field(ge=Decimal("0"))
+
+
+class CashierSessionClose(BaseModel):
+    physical_cash_mxn: Decimal = Field(ge=Decimal("0"))
+
+
+class CashierSessionRead(BaseModel):
+    model_config = {"from_attributes": True}
+    id: uuid.UUID
+    cashier_id: uuid.UUID
+    status: str
+    starting_cash_mxn: Decimal
+    expected_cash_mxn: Optional[Decimal]
+    physical_cash_mxn: Optional[Decimal]
+    difference_mxn: Optional[Decimal]
+    total_sales_mxn: Optional[Decimal]
+    total_cash_payments: Optional[Decimal]
+    total_card_payments: Optional[Decimal]
+    total_gift_card_payments: Optional[Decimal]
+    opened_at: datetime
+    closed_at: Optional[datetime]
+    created_at: datetime
+
+
+# ── FX rate schema ────────────────────────────────────────────────
+
+class FxRateRead(BaseModel):
+    rate: Decimal
+    pair: str
+    date: str
