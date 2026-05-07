@@ -23,20 +23,23 @@ async function downloadFile(url: string, filename: string, token: string) {
 }
 
 interface InventoryRow {
+  id: string;
   sku: string;
   name: string;
-  category_name?: string;
-  stock: number;
-  min_stock: number;
+  stock_quantity: string;
+  reorder_point: string | null;
+  unit_of_measure: string;
   track_inventory: boolean;
+  is_low_stock: boolean;
 }
 
 type StockStatus = "ok" | "low" | "out";
 
 function getStockStatus(row: InventoryRow): StockStatus {
   if (!row.track_inventory) return "ok";
-  if (row.stock <= 0) return "out";
-  if (row.stock <= row.min_stock) return "low";
+  const qty = parseFloat(String(row.stock_quantity));
+  if (qty <= 0) return "out";
+  if (row.is_low_stock) return "low";
   return "ok";
 }
 
@@ -115,28 +118,24 @@ export function InventoryReport() {
       sortable: true,
     },
     {
-      key: "category_name",
-      header: t.products.category,
-      accessor: (row) => row.category_name ?? "—",
-      sortable: true,
-    },
-    {
-      key: "stock",
+      key: "stock_quantity",
       header: t.products.stock,
       accessor: (row) => (
         <span className="tabular-nums">
-          {row.stock.toLocaleString("es-MX")}
+          {parseFloat(String(row.stock_quantity)).toLocaleString("es-MX")}
         </span>
       ),
       className: "text-right",
       sortable: true,
     },
     {
-      key: "min_stock",
+      key: "reorder_point",
       header: t.products.min_stock,
       accessor: (row) => (
         <span className="tabular-nums">
-          {row.min_stock.toLocaleString("es-MX")}
+          {row.reorder_point != null
+            ? parseFloat(String(row.reorder_point)).toLocaleString("es-MX")
+            : "—"}
         </span>
       ),
       className: "text-right",
@@ -193,7 +192,7 @@ export function InventoryReport() {
             type="button"
             onClick={handleDownloadPdf}
             disabled={!filtered.length || downloadingPdf}
-            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--bg-card-elevated)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-card-elevated)] active:scale-[0.96] disabled:active:scale-100 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <FileDown size={15} />
             PDF
@@ -202,7 +201,7 @@ export function InventoryReport() {
             type="button"
             onClick={handleDownloadExcel}
             disabled={!filtered.length || downloadingXls}
-            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--bg-card-elevated)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium transition hover:bg-[var(--bg-card-elevated)] active:scale-[0.96] disabled:active:scale-100 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <FileDown size={15} />
             Excel
@@ -226,7 +225,7 @@ export function InventoryReport() {
         <DataTable
           columns={columns}
           data={filtered}
-          keyExtractor={(row) => row.sku}
+          keyExtractor={(row) => row.id}
           emptyMessage="Sin productos en inventario."
           pageSize={25}
         />

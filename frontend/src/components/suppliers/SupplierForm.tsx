@@ -22,7 +22,8 @@ import type { SupplierRead } from "@/types/index";
 // ── Validation schema ──────────────────────────────────────────────────────
 
 const SupplierSchema = z.object({
-  name: z.string().min(1, t.error.required),
+  code: z.string().min(1, t.error.required).max(20),
+  legal_name: z.string().min(2, t.error.required),
   contact_name: z.string().optional().or(z.literal("")),
   email: z
     .string()
@@ -36,7 +37,6 @@ const SupplierSchema = z.object({
     .max(13, "El RFC no puede tener más de 13 caracteres")
     .optional()
     .or(z.literal("")),
-  payment_terms: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
   is_active: z.boolean(),
 });
@@ -85,17 +85,16 @@ export function SupplierForm({
         const s = supplier as SupplierRead & {
           address?: string;
           rfc?: string;
-          payment_terms?: string;
           notes?: string;
         };
         reset({
-          name: s.name,
+          code: s.code,
+          legal_name: s.legal_name,
           contact_name: s.contact_name ?? "",
           email: s.email ?? "",
           phone: s.phone ?? "",
           address: s.address ?? "",
           rfc: s.rfc ?? "",
-          payment_terms: s.payment_terms ?? "",
           notes: s.notes ?? "",
           is_active: s.is_active,
         });
@@ -107,21 +106,22 @@ export function SupplierForm({
 
   const mutation = useMutation({
     mutationFn: (values: SupplierFormValues) => {
-      // Strip empty strings → undefined
-      const payload = {
-        ...values,
+      const clean = {
+        code: values.code,
+        legal_name: values.legal_name,
         contact_name: values.contact_name || undefined,
         email: values.email || undefined,
         phone: values.phone || undefined,
         address: values.address || undefined,
         rfc: values.rfc || undefined,
-        payment_terms: values.payment_terms || undefined,
         notes: values.notes || undefined,
+        is_active: values.is_active,
       };
       if (isEdit) {
-        return suppliersApi.update(token, supplier.id, payload);
+        const { code: _code, ...updatePayload } = clean;
+        return suppliersApi.update(token, supplier.id, updatePayload);
       }
-      return suppliersApi.create(token, payload);
+      return suppliersApi.create(token, clean);
     },
     onSuccess,
   });
@@ -159,19 +159,30 @@ export function SupplierForm({
               </div>
             )}
 
-            {/* Name (required) */}
-            <FormField
-              label={t.suppliers.name}
-              required
-              error={errors.name?.message}
-            >
-              <input
-                {...register("name")}
-                className={INPUT_CLS}
-                placeholder="Nombre del proveedor"
-                autoComplete="organization"
-              />
-            </FormField>
+            {/* Code + Name row */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Código" required error={errors.code?.message}>
+                <input
+                  {...register("code")}
+                  className={INPUT_CLS}
+                  placeholder="Ej. PROV-001"
+                  style={{ textTransform: "uppercase" }}
+                />
+              </FormField>
+
+              <FormField
+                label={t.suppliers.name}
+                required
+                error={errors.legal_name?.message}
+              >
+                <input
+                  {...register("legal_name")}
+                  className={INPUT_CLS}
+                  placeholder="Nombre del proveedor"
+                  autoComplete="organization"
+                />
+              </FormField>
+            </div>
 
             {/* Contact + email row */}
             <div className="grid grid-cols-2 gap-4">
@@ -237,19 +248,6 @@ export function SupplierForm({
               />
             </FormField>
 
-            {/* Payment terms */}
-            <FormField
-              label="Condiciones de pago"
-              error={errors.payment_terms?.message}
-            >
-              <textarea
-                {...register("payment_terms")}
-                rows={2}
-                className={TEXTAREA_CLS}
-                placeholder="Ej: 30 días neto, contado, crédito…"
-              />
-            </FormField>
-
             {/* Notes */}
             <FormField label="Notas" error={errors.notes?.message}>
               <textarea
@@ -287,7 +285,7 @@ export function SupplierForm({
               type="submit"
               isLoading={mutation.isPending}
               isDisabled={mutation.isPending}
-              className="bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] border-0 font-medium"
+              className="bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:scale-[0.96] border-0 font-medium transition"
             >
               {t.action.save}
             </Button>

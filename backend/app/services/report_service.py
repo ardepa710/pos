@@ -220,7 +220,7 @@ async def get_sales_by_period(
     return [
         {
             "period": row.period.date().isoformat() if row.period else None,
-            "count": row.count,
+            "sale_count": row.count,
             "total_mxn": row.total_mxn,
         }
         for row in rows.all()

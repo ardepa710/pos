@@ -50,7 +50,7 @@ def upgrade() -> None:
         sa.Column("deleted_at", sa.DateTime(timezone=True)),
         sa.UniqueConstraint("tenant_id", "folio", name="uq_purchases_tenant_folio"),
         sa.CheckConstraint("purchase_type IN ('normal','consignment')", name="chk_purchases_type"),
-        sa.CheckConstraint("status IN ('draft','pending','approved','cancelled')", name="chk_purchases_status"),
+        sa.CheckConstraint("status IN ('draft','pending','approved','cancelled','received')", name="chk_purchases_status"),
     )
     op.create_index("idx_purchases_supplier", "purchases", ["supplier_id", "created_at"])
     op.create_index("idx_purchases_status", "purchases", ["status"], postgresql_where=sa.text("deleted_at IS NULL"))

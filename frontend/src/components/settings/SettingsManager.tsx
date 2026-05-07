@@ -7,8 +7,9 @@ import { PageHeader } from "@/components/ui";
 import { BusinessSettingsForm } from "./BusinessSettingsForm";
 import { UsersManager } from "./UsersManager";
 import { AppearanceSettings } from "./AppearanceSettings";
+import { TicketSettings } from "./TicketSettings";
 
-type TabKey = "business" | "users" | "appearance";
+type TabKey = "business" | "users" | "appearance" | "ticket";
 
 interface Tab {
   key: TabKey;
@@ -23,6 +24,7 @@ const TABS: Tab[] = [
   },
   { key: "users", label: t.nav.users },
   { key: "appearance", label: "Apariencia" },
+  { key: "ticket" as const, label: "Ticket" },
 ];
 
 export function SettingsManager() {
@@ -40,7 +42,7 @@ export function SettingsManager() {
             type="button"
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              "flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "flex-1 rounded-lg px-3 py-2 text-sm font-medium transition active:scale-[0.96]",
               activeTab === tab.key
                 ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-elevated)]",
@@ -56,6 +58,7 @@ export function SettingsManager() {
         {activeTab === "business" && <BusinessSettingsForm />}
         {activeTab === "users" && <UsersManager />}
         {activeTab === "appearance" && <AppearanceSettings />}
+        {activeTab === "ticket" && <TicketSettings />}
       </div>
     </div>
   );

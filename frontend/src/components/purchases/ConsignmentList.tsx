@@ -72,7 +72,7 @@ export function ConsignmentList() {
         const supplier = suppliers.find((s) => s.id === row.supplier_id);
         return (
           <span className="text-[var(--text-primary)]">
-            {supplier?.name ?? row.supplier_id}
+            {supplier?.legal_name ?? row.supplier_id}
           </span>
         );
       },
@@ -88,13 +88,11 @@ export function ConsignmentList() {
       ),
     },
     {
-      key: "total_cost_mxn",
+      key: "total",
       header: "Valor consignado",
       sortable: true,
       className: "text-right",
-      accessor: (row) => (
-        <CurrencyDisplay amount={row.total_cost_mxn} size="sm" />
-      ),
+      accessor: (row) => <CurrencyDisplay amount={row.total} size="sm" />,
     },
     {
       key: "status",

@@ -6,9 +6,11 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 interface AppShellProps {
   children: React.ReactNode;
+  businessName?: string;
+  logoUrl?: string;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, businessName, logoUrl }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -29,7 +31,7 @@ export function AppShell({ children }: AppShellProps) {
         }}
         className="sidebar-desktop"
       >
-        <Sidebar />
+        <Sidebar businessName={businessName} logoUrl={logoUrl} />
       </div>
 
       {/* Mobile overlay */}
@@ -104,16 +106,30 @@ export function AppShell({ children }: AppShellProps) {
               gap: "0.5rem",
             }}
           >
-            <Store size={18} color="var(--accent)" />
-            <span
-              style={{
-                fontWeight: 700,
-                fontSize: "0.9375rem",
-                color: "var(--text-on-dark)",
-              }}
-            >
-              POS
-            </span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={businessName ?? "POS"}
+                style={{
+                  height: "1.75rem",
+                  objectFit: "contain",
+                  maxWidth: "120px",
+                }}
+              />
+            ) : (
+              <>
+                <Store size={18} color="var(--accent)" />
+                <span
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "0.9375rem",
+                    color: "var(--text-on-dark)",
+                  }}
+                >
+                  {businessName ?? "POS"}
+                </span>
+              </>
+            )}
           </div>
         </header>
 
@@ -121,7 +137,10 @@ export function AppShell({ children }: AppShellProps) {
         <main
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {children}

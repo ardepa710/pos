@@ -24,7 +24,7 @@ async def get_business_settings(session: AsyncSession) -> BusinessSettings:
             wizard_completed=False,
         )
         session.add(settings)
-        await session.commit()
+        await session.flush()
         await session.refresh(settings)
 
     return settings
@@ -48,7 +48,7 @@ async def update_business_settings(
         setattr(settings, field, value)
 
     session.add(settings)
-    await session.commit()
+    await session.flush()
     await session.refresh(settings)
 
     log.info("settings.updated", fields=list(update_dict.keys()))
@@ -60,7 +60,7 @@ async def mark_wizard_completed(session: AsyncSession) -> BusinessSettings:
     settings = await get_business_settings(session)
     settings.wizard_completed = True
     session.add(settings)
-    await session.commit()
+    await session.flush()
     await session.refresh(settings)
     log.info("settings.wizard_completed")
     return settings

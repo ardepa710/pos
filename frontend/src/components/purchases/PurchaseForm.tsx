@@ -121,7 +121,7 @@ export function PurchaseForm({
         items: data.items.map((item) => ({
           product_id: item.product_id,
           quantity: item.quantity,
-          unit_cost_mxn: item.unit_cost_mxn,
+          unit_cost: item.unit_cost_mxn,
         })),
       });
       onSuccess();
@@ -218,7 +218,7 @@ export function PurchaseForm({
                     <option value="">Seleccionar proveedor…</option>
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.name}
+                        {s.legal_name}
                       </option>
                     ))}
                   </select>
@@ -282,7 +282,7 @@ export function PurchaseForm({
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs text-[var(--text-secondary)]">
-                              Stock: {p.stock}
+                              Stock: {parseFloat(String(p.stock_quantity))}
                             </span>
                             <Plus size={14} className="text-[var(--accent)]" />
                           </div>
@@ -413,7 +413,7 @@ export function PurchaseForm({
                       {t.purchases.supplier}
                     </span>
                     <span className="text-[var(--text-primary)] font-medium">
-                      {selectedSupplier?.name ?? "—"}
+                      {selectedSupplier?.legal_name ?? "—"}
                     </span>
                   </div>
                   {watch("reference_number") && (
@@ -538,7 +538,7 @@ export function PurchaseForm({
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
                 disabled={!canAdvance()}
-                className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition active:scale-[0.96] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 {t.action.next}
                 <ChevronRight size={15} />
@@ -547,7 +547,7 @@ export function PurchaseForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition active:scale-[0.96] disabled:opacity-50 disabled:active:scale-100"
               >
                 {isSubmitting ? t.action.loading : t.action.confirm}
               </button>

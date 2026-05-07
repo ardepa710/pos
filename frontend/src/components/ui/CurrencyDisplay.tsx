@@ -49,7 +49,12 @@ export function CurrencyDisplay({
 
   return (
     <span
-      className={cn("tabular-nums", SIZE_CLASSES[size], signClass, className)}
+      className={cn(
+        "tabular-nums text-[var(--text-primary)]",
+        SIZE_CLASSES[size],
+        signClass,
+        className,
+      )}
     >
       {prefix}
       {formatted}

@@ -1,21 +1,27 @@
 "use client";
 
-import { Printer, ShoppingCart } from "lucide-react";
+import { useState } from "react";
+import { Printer, ShoppingCart, CheckCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { formatMXN, formatUSD } from "@/lib/currency";
 import { formatDate } from "@/lib/utils";
+import { salesApi } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import type { SaleRead } from "@/types/index";
 
-const METHOD_LABELS: Record<string, string> = {
-  cash_mxn: t.payment.cash_mxn,
-  cash_usd: t.payment.cash_usd,
-  credit_card: t.payment.credit_card,
-  debit_card: t.payment.debit_card,
-  gift_card: t.payment.gift_card,
-  loyalty_points: t.payment.loyalty_points,
-  transfer: t.payment.transfer,
-};
+function methodLabel(method: string, currency: string): string {
+  if (method === "cash")
+    return currency === "USD" ? t.payment.cash_usd : t.payment.cash_mxn;
+  const labels: Record<string, string> = {
+    credit_card: t.payment.credit_card,
+    debit_card: t.payment.debit_card,
+    gift_card: t.payment.gift_card,
+    loyalty_points: t.payment.loyalty_points,
+    transfer: t.payment.transfer,
+  };
+  return labels[method] ?? method;
+}
 
 interface ReceiptModalProps {
   sale: SaleRead;
@@ -23,16 +29,46 @@ interface ReceiptModalProps {
 }
 
 export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
-  function handlePrint() {
-    window.print();
+  const { token } = useAuth();
+  const [printState, setPrintState] = useState<
+    "idle" | "printing" | "ok" | "error"
+  >("idle");
+  const [printError, setPrintError] = useState<string | null>(null);
+
+  async function handlePrint() {
+    setPrintState("printing");
+    setPrintError(null);
+    try {
+      await salesApi.printReceipt(token, sale.id);
+      setPrintState("ok");
+      // Auto-reset after 3 s so the button is usable again
+      setTimeout(() => setPrintState("idle"), 3000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error de impresión";
+      // If Print Bridge is not configured/available, fall back to browser print
+      if (
+        msg.includes("no habilitado") ||
+        msg.includes("No hay impresora") ||
+        msg.includes("502") ||
+        msg.includes("503") ||
+        msg.includes("504")
+      ) {
+        setPrintState("idle");
+        window.print();
+      } else {
+        setPrintState("error");
+        setPrintError(msg);
+        setTimeout(() => setPrintState("idle"), 4000);
+      }
+    }
   }
 
   const hasChange =
     parseFloat(sale.total_mxn) <
-    sale.payments.reduce((s, p) => s + parseFloat(p.amount_mxn), 0);
+    sale.payments.reduce((s, p) => s + parseFloat(p.amount_in_mxn), 0);
 
   const totalPaid = sale.payments.reduce(
-    (s, p) => s + parseFloat(p.amount_mxn),
+    (s, p) => s + parseFloat(p.amount_in_mxn),
     0,
   );
   const change = Math.max(0, totalPaid - parseFloat(sale.total_mxn));
@@ -113,20 +149,18 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
                 {formatMXN(sale.subtotal_mxn)}
               </span>
             </div>
-            {parseFloat(sale.discount_total_mxn) > 0 && (
+            {parseFloat(sale.discount_mxn) > 0 && (
               <div className="flex justify-between text-sm text-[var(--warning)]">
                 <span>{t.sales.discount}</span>
                 <span className="tabular-nums">
-                  -{formatMXN(sale.discount_total_mxn)}
+                  -{formatMXN(sale.discount_mxn)}
                 </span>
               </div>
             )}
-            {parseFloat(sale.tax_total_mxn) > 0 && (
+            {parseFloat(sale.tax_mxn) > 0 && (
               <div className="flex justify-between text-sm text-[var(--text-secondary)]">
                 <span>{t.sales.tax}</span>
-                <span className="tabular-nums">
-                  {formatMXN(sale.tax_total_mxn)}
-                </span>
+                <span className="tabular-nums">{formatMXN(sale.tax_mxn)}</span>
               </div>
             )}
             <div className="flex justify-between border-t border-[var(--border)] pt-2 text-base font-bold text-[var(--text-primary)]">
@@ -154,7 +188,7 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
                   className="flex justify-between text-sm text-[var(--text-secondary)]"
                 >
                   <span>
-                    {METHOD_LABELS[p.method] ?? p.method}
+                    {methodLabel(p.method, p.currency)}
                     {p.terminal_reference && (
                       <span className="ml-1 text-xs text-[var(--text-muted)]">
                         #{p.terminal_reference}
@@ -162,9 +196,9 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
                     )}
                   </span>
                   <span className="tabular-nums">
-                    {p.method === "cash_usd" && p.amount_usd
-                      ? `${formatUSD(p.amount_usd)} = ${formatMXN(p.amount_mxn)}`
-                      : formatMXN(p.amount_mxn)}
+                    {p.currency === "USD"
+                      ? `${formatUSD(p.amount)} = ${formatMXN(p.amount_in_mxn)}`
+                      : formatMXN(p.amount_in_mxn)}
                   </span>
                 </div>
               ))}
@@ -182,19 +216,38 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
           )}
         </div>
 
+        {/* Print error banner */}
+        {printState === "error" && printError && (
+          <div className="mx-4 mb-0 flex items-center gap-2 rounded-lg border border-[var(--error)] bg-[var(--error-subtle)] px-3 py-2 text-xs text-[var(--error)]">
+            <AlertCircle size={13} className="shrink-0" />
+            {printError}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex gap-2 border-t border-[var(--border)] p-4 print:hidden">
           <button
             type="button"
             onClick={handlePrint}
+            disabled={printState === "printing"}
             className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg border",
-              "border-[var(--border)] bg-[var(--bg-card-elevated)] py-2.5 text-sm font-medium",
-              "text-[var(--text-secondary)] transition-colors hover:bg-[var(--border)]",
+              "flex flex-1 items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium",
+              "transition active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+              printState === "ok"
+                ? "border-[var(--success)] bg-[var(--success-subtle)] text-[var(--success)]"
+                : "border-[var(--border)] bg-[var(--bg-card-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)]",
             )}
           >
-            <Printer size={16} />
-            {t.action.print}
+            {printState === "ok" ? (
+              <CheckCircle size={16} />
+            ) : (
+              <Printer size={16} />
+            )}
+            {printState === "printing"
+              ? "Imprimiendo…"
+              : printState === "ok"
+                ? "Impreso"
+                : t.action.print}
           </button>
           <button
             type="button"
@@ -202,7 +255,7 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
             className={cn(
               "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5",
               "bg-[var(--accent)] text-sm font-semibold text-white",
-              "transition-colors hover:bg-[var(--accent-hover)]",
+              "transition hover:bg-[var(--accent-hover)] active:scale-[0.96]",
             )}
           >
             <ShoppingCart size={16} />

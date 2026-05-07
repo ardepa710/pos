@@ -96,7 +96,7 @@ export default function LoginPage() {
             <img
               src={branding.logo_url}
               alt={businessName}
-              className="h-14 w-auto object-contain"
+              className="h-14 w-auto object-contain ring-1 ring-black/10"
             />
           ) : (
             <div
@@ -210,7 +210,7 @@ export default function LoginPage() {
                   showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                 }
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10"
                 style={{ color: "var(--text-muted)" }}
                 tabIndex={-1}
               >
@@ -243,7 +243,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+            className="w-full rounded-lg py-2.5 text-sm font-semibold transition active:scale-[0.96] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 mt-1"
             style={{
               backgroundColor: "var(--accent)",
               color: "var(--accent-foreground)",

@@ -52,6 +52,8 @@ export function BusinessSettingsForm() {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -84,6 +86,16 @@ export function BusinessSettingsForm() {
       settingsApi.updateBusiness(token, values),
     onSuccess: (updated) => {
       queryClient.setQueryData(["settings", "business"], updated);
+      // Keep layout query in sync so theme/color effects in AppLayout re-fire
+      queryClient.setQueryData(["business-settings"], updated);
+      // Apply primary color immediately without waiting for layout re-render
+      if (updated.primary_color) {
+        const root = document.documentElement;
+        root.style.setProperty("--accent", updated.primary_color);
+        root.style.setProperty("--border-focus", updated.primary_color);
+        root.style.setProperty("--info", updated.primary_color);
+        root.style.setProperty("--accent-subtle", updated.primary_color + "1a");
+      }
       reset({
         business_name: updated.business_name ?? "",
         business_type: updated.business_type ?? "general",
@@ -167,8 +179,11 @@ export function BusinessSettingsForm() {
         <FormField label={t.settings.primary_color}>
           <div className="flex items-center gap-3">
             <input
-              {...register("primary_color")}
               type="color"
+              value={watch("primary_color") ?? "#3b82f6"}
+              onChange={(e) =>
+                setValue("primary_color", e.target.value, { shouldDirty: true })
+              }
               className="h-10 w-14 cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--bg-input)] p-1"
             />
             <input
@@ -242,9 +257,9 @@ export function BusinessSettingsForm() {
           type="submit"
           disabled={!isDirty || mutation.isPending}
           className={cn(
-            "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors",
-            "bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)]",
-            "disabled:opacity-40 disabled:cursor-not-allowed",
+            "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition",
+            "bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent-hover)] active:scale-[0.96]",
+            "disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100",
           )}
         >
           <Save size={16} />

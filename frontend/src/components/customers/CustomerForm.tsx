@@ -19,36 +19,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
 import type { CustomerRead } from "@/types/index";
 
-// ── Validation schema ──────────────────────────────────────────────────────
-
 const CustomerSchema = z.object({
-  first_name: z.string().min(1, t.error.required),
-  last_name: z.string().min(1, t.error.required),
+  code: z.string().min(1, t.error.required).max(20),
+  full_name: z.string().min(2, t.error.required).max(150),
   email: z
     .string()
     .email("Correo electrónico inválido")
     .or(z.literal(""))
     .optional(),
   phone: z.string().max(20).optional().or(z.literal("")),
-  rfc: z
-    .string()
-    .max(13, "El RFC no puede tener más de 13 caracteres")
-    .optional()
-    .or(z.literal("")),
+  rfc: z.string().max(13).optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
-  is_active: z.boolean(),
+  price_tier: z.enum(["general", "a", "b", "c"]).default("general"),
+  notes: z.string().optional().or(z.literal("")),
 });
 
 type CustomerFormValues = z.infer<typeof CustomerSchema>;
 
-// ── Input / textarea styling helpers ──────────────────────────────────────
-
 const INPUT_CLS =
   "w-full rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] transition-colors focus:border-[var(--border-focus)]";
-
-const TEXTAREA_CLS = `${INPUT_CLS} resize-none`;
-
-// ── Component ──────────────────────────────────────────────────────────────
 
 interface CustomerFormProps {
   isOpen: boolean;
@@ -73,52 +62,44 @@ export function CustomerForm({
     formState: { errors },
   } = useForm<CustomerFormValues>({
     resolver: zodResolver(CustomerSchema),
-    defaultValues: { is_active: true },
+    defaultValues: { price_tier: "general" },
   });
 
-  // Populate form when editing
   useEffect(() => {
     if (isOpen) {
       if (customer) {
         reset({
-          first_name: customer.first_name,
-          last_name: customer.last_name,
+          code: customer.code,
+          full_name: customer.full_name,
           email: customer.email ?? "",
           phone: customer.phone ?? "",
           rfc: customer.rfc ?? "",
-          address:
-            (customer as CustomerRead & { address?: string }).address ?? "",
-          is_active: customer.is_active,
+          address: customer.address ?? "",
+          price_tier:
+            (customer.price_tier as "general" | "a" | "b" | "c") ?? "general",
+          notes: customer.notes ?? "",
         });
       } else {
-        reset({ is_active: true });
+        reset({ price_tier: "general" });
       }
     }
   }, [isOpen, customer, reset]);
 
   const mutation = useMutation({
     mutationFn: (values: CustomerFormValues) => {
-      // Strip empty strings → undefined so backend doesn't receive empty ""
       const payload = {
         ...values,
         email: values.email || undefined,
         phone: values.phone || undefined,
         rfc: values.rfc || undefined,
         address: values.address || undefined,
+        notes: values.notes || undefined,
       };
-      if (isEdit) {
-        return customersApi.update(token, customer.id, payload);
-      }
+      if (isEdit) return customersApi.update(token, customer.id, payload);
       return customersApi.create(token, payload);
     },
     onSuccess,
   });
-
-  function onSubmit(values: CustomerFormValues) {
-    mutation.mutate(values);
-  }
-
-  const title = isEdit ? "Editar cliente" : "Agregar cliente";
 
   return (
     <Modal
@@ -135,8 +116,10 @@ export function CustomerForm({
       }}
     >
       <ModalContent>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <ModalHeader>{title}</ModalHeader>
+        <form onSubmit={handleSubmit((v) => mutation.mutate(v))} noValidate>
+          <ModalHeader>
+            {isEdit ? "Editar cliente" : "Agregar cliente"}
+          </ModalHeader>
 
           <ModalBody className="gap-4">
             {mutation.isError && (
@@ -147,48 +130,52 @@ export function CustomerForm({
               </div>
             )}
 
-            {/* Name row */}
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                label="Nombre"
-                required
-                error={errors.first_name?.message}
-              >
+              <FormField label="Código" required error={errors.code?.message}>
                 <input
-                  {...register("first_name")}
+                  {...register("code")}
                   className={INPUT_CLS}
-                  placeholder="Nombre(s)"
-                  autoComplete="given-name"
+                  placeholder="Ej. CLI-001"
                 />
               </FormField>
-
               <FormField
-                label="Apellido"
-                required
-                error={errors.last_name?.message}
+                label="Nivel de precio"
+                error={errors.price_tier?.message}
               >
-                <input
-                  {...register("last_name")}
-                  className={INPUT_CLS}
-                  placeholder="Apellido(s)"
-                  autoComplete="family-name"
-                />
+                <select {...register("price_tier")} className={INPUT_CLS}>
+                  <option value="general">General</option>
+                  <option value="a">Precio A</option>
+                  <option value="b">Precio B</option>
+                  <option value="c">Precio C</option>
+                </select>
               </FormField>
             </div>
 
-            {/* Email */}
-            <FormField label={t.customers.email} error={errors.email?.message}>
+            <FormField
+              label="Nombre completo"
+              required
+              error={errors.full_name?.message}
+            >
               <input
-                {...register("email")}
-                type="email"
+                {...register("full_name")}
                 className={INPUT_CLS}
-                placeholder="correo@ejemplo.com"
-                autoComplete="email"
+                placeholder="Nombre completo del cliente"
+                autoComplete="name"
               />
             </FormField>
 
-            {/* Phone + RFC row */}
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                label={t.customers.email}
+                error={errors.email?.message}
+              >
+                <input
+                  {...register("email")}
+                  type="email"
+                  className={INPUT_CLS}
+                  placeholder="correo@ejemplo.com"
+                />
+              </FormField>
               <FormField
                 label={t.customers.phone}
                 error={errors.phone?.message}
@@ -198,45 +185,31 @@ export function CustomerForm({
                   type="tel"
                   className={INPUT_CLS}
                   placeholder="10 dígitos"
-                  autoComplete="tel"
-                />
-              </FormField>
-
-              <FormField label={t.customers.rfc} error={errors.rfc?.message}>
-                <input
-                  {...register("rfc")}
-                  className={INPUT_CLS}
-                  placeholder="RFC del cliente"
-                  maxLength={13}
-                  style={{ textTransform: "uppercase" }}
                 />
               </FormField>
             </div>
 
-            {/* Address */}
-            <FormField
-              label={t.customers.address}
-              error={errors.address?.message}
-            >
-              <textarea
-                {...register("address")}
-                rows={2}
-                className={TEXTAREA_CLS}
-                placeholder="Calle, número, colonia, ciudad…"
-              />
-            </FormField>
-
-            {/* Active toggle */}
-            <label className="flex cursor-pointer items-center gap-3">
-              <input
-                {...register("is_active")}
-                type="checkbox"
-                className="h-4 w-4 rounded border-[var(--border)] accent-[var(--accent)]"
-              />
-              <span className="text-sm text-[var(--text-primary)]">
-                Cliente activo
-              </span>
-            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label={t.customers.rfc} error={errors.rfc?.message}>
+                <input
+                  {...register("rfc")}
+                  className={INPUT_CLS}
+                  placeholder="RFC"
+                  maxLength={13}
+                  style={{ textTransform: "uppercase" }}
+                />
+              </FormField>
+              <FormField
+                label={t.customers.address}
+                error={errors.address?.message}
+              >
+                <input
+                  {...register("address")}
+                  className={INPUT_CLS}
+                  placeholder="Dirección"
+                />
+              </FormField>
+            </div>
           </ModalBody>
 
           <ModalFooter>
@@ -245,15 +218,14 @@ export function CustomerForm({
               variant="bordered"
               onPress={onClose}
               isDisabled={mutation.isPending}
-              className="border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-elevated)]"
+              className="border-[var(--border)] text-[var(--text-secondary)]"
             >
               {t.action.cancel}
             </Button>
             <Button
               type="submit"
               isLoading={mutation.isPending}
-              isDisabled={mutation.isPending}
-              className="bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] border-0 font-medium"
+              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96] text-white border-0 transition"
             >
               {t.action.save}
             </Button>

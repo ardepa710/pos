@@ -49,6 +49,7 @@ async def open_session(
     )
     session.add(cashier_session)
     await session.flush()
+    await session.refresh(cashier_session)
 
     log.info(
         "cashier_session.opened",
@@ -88,6 +89,7 @@ async def close_session(
     cashier_session.closed_at = datetime.now(tz=timezone.utc)  # type: ignore[assignment]
 
     await session.flush()
+    await session.refresh(cashier_session)
 
     log.info(
         "cashier_session.closed",

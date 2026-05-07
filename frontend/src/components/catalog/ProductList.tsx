@@ -121,7 +121,7 @@ export function ProductList() {
       header: t.products.category,
       accessor: (row) => (
         <span className="text-[var(--text-secondary)]">
-          {row.category_name ?? "—"}
+          {row.category?.name ?? "—"}
         </span>
       ),
     },
@@ -145,13 +145,11 @@ export function ProductList() {
             </span>
           );
         }
+        const stockNum = parseFloat(String(row.stock_quantity));
         const isLow =
-          row.stock !== undefined &&
-          (row as ProductRead & { min_stock_alert?: number })
-            .min_stock_alert !== undefined &&
-          row.stock <
-            ((row as ProductRead & { min_stock_alert?: number })
-              .min_stock_alert ?? 0);
+          row.reorder_point !== undefined &&
+          row.reorder_point !== null &&
+          stockNum < parseFloat(String(row.reorder_point));
         return (
           <span
             className={cn(
@@ -159,7 +157,7 @@ export function ProductList() {
               isLow ? "text-[var(--warning)]" : "text-[var(--text-primary)]",
             )}
           >
-            {row.stock}
+            {stockNum}
             {isLow && <span className="ml-1 text-xs">⚠</span>}
           </span>
         );
@@ -268,7 +266,7 @@ export function ProductList() {
             onClick={openCreate}
             className={cn(
               "ml-auto inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium",
-              "bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)]",
+              "bg-[var(--accent)] text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.96]",
             )}
           >
             <Plus size={15} aria-hidden />

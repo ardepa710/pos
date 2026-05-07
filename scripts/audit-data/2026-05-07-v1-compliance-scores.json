@@ -1,0 +1,450 @@
+{
+  "project": "POS — Punto de Venta",
+  "date": "2026-05-07",
+  "version": "v1",
+  "frameworks": {
+    "soc2": {
+      "total_controls": 28,
+      "scored_controls": [
+        {
+          "id": "CC6.1",
+          "description": "Logical access controls",
+          "score": 0.5,
+          "notes": "Role-based auth present; rate limiting absent; CORS wildcards"
+        },
+        {
+          "id": "CC6.2",
+          "description": "Authentication mechanisms",
+          "score": 0.5,
+          "notes": "bcrypt used; no MFA; default password weakness; .env.test committed"
+        },
+        {
+          "id": "CC6.3",
+          "description": "Role-based access",
+          "score": 1.0,
+          "notes": "3-tier role system (admin/supervisor/cashier) enforced on all routes"
+        },
+        {
+          "id": "CC6.4",
+          "description": "Auth activity logging",
+          "score": 0.5,
+          "notes": "Sales/purchases audited; user mutations and settings NOT audited"
+        },
+        {
+          "id": "CC6.5",
+          "description": "Account termination / session expiry",
+          "score": 0.5,
+          "notes": "JWT expiry implemented but 8hr duration; no server-side revocation"
+        },
+        {
+          "id": "CC6.6",
+          "description": "Network protection",
+          "score": 0.5,
+          "notes": "Caddy proxy present; missing CSP, HSTS"
+        },
+        {
+          "id": "CC6.7",
+          "description": "Encryption in transit",
+          "score": 0.5,
+          "notes": "HTTP only (port 80); HTTPS not configured for production"
+        },
+        {
+          "id": "CC6.8",
+          "description": "Input validation",
+          "score": 1.0,
+          "notes": "Pydantic models on all routes; SQLAlchemy parameterized queries"
+        },
+        {
+          "id": "CC7.1",
+          "description": "Threat / anomaly detection",
+          "score": 0.0,
+          "notes": "No monitoring, alerting, or anomaly detection"
+        },
+        {
+          "id": "CC7.2",
+          "description": "System monitoring",
+          "score": 0.5,
+          "notes": "structlog structured logging present; incomplete audit trail"
+        },
+        {
+          "id": "CC7.3",
+          "description": "Security evaluation",
+          "score": 0.0,
+          "notes": "No automated security scanning in CI pipeline"
+        },
+        {
+          "id": "CC7.4",
+          "description": "Incident response",
+          "score": 0.0,
+          "notes": "No formal incident response procedures documented"
+        },
+        {
+          "id": "CC7.5",
+          "description": "Recovery",
+          "score": 0.0,
+          "notes": "No disaster recovery or backup restoration testing"
+        },
+        {
+          "id": "CC8.1",
+          "description": "Change management",
+          "score": 0.5,
+          "notes": "Git-based version control; no formal change approval process"
+        },
+        {
+          "id": "CC8.2",
+          "description": "SDLC security gates",
+          "score": 0.0,
+          "notes": "No CI/CD pipeline; no automated security gates"
+        },
+        {
+          "id": "CC9.1",
+          "description": "Risk assessment",
+          "score": 0.0,
+          "notes": "No formal risk assessment documented"
+        },
+        {
+          "id": "CC9.2",
+          "description": "Vendor / third-party risk",
+          "score": 0.5,
+          "notes": "Docker images use pinned versions (not :latest)"
+        },
+        {
+          "id": "A1.1",
+          "description": "Availability monitoring",
+          "score": 0.5,
+          "notes": "Docker health checks configured on backend and DB"
+        },
+        {
+          "id": "A1.2",
+          "description": "Environmental protection",
+          "score": 0.0,
+          "notes": "No UPS, geo-redundancy, or failover documented"
+        },
+        {
+          "id": "A1.3",
+          "description": "Recovery testing",
+          "score": 0.0,
+          "notes": "No backup restoration testing procedures"
+        }
+      ],
+      "raw_score": 7.5,
+      "percentage": 26.8
+    },
+    "hipaa": {
+      "total_controls": 18,
+      "note": "Not directly in scope (personal project, no PHI). Scored for reference.",
+      "scored_controls": [
+        {
+          "id": "164.308(a)(1)(i)",
+          "description": "Security management — risk analysis",
+          "score": 0.0
+        },
+        {
+          "id": "164.308(a)(1)(ii)(D)",
+          "description": "Information system activity review",
+          "score": 0.5
+        },
+        {
+          "id": "164.308(a)(3)(ii)(A)",
+          "description": "Authorization / supervision",
+          "score": 1.0
+        },
+        {
+          "id": "164.308(a)(4)(ii)(B)",
+          "description": "Access authorization",
+          "score": 1.0
+        },
+        {
+          "id": "164.308(a)(5)(ii)(C)",
+          "description": "Log-in monitoring / MFA",
+          "score": 0.0
+        },
+        {
+          "id": "164.308(a)(5)(ii)(D)",
+          "description": "Password management",
+          "score": 0.5
+        },
+        {
+          "id": "164.310(a)(2)(ii)",
+          "description": "Workstation use policy",
+          "score": 0.0
+        },
+        {
+          "id": "164.310(d)(1)",
+          "description": "Device and media controls",
+          "score": 0.0
+        },
+        {
+          "id": "164.312(a)(1)",
+          "description": "Unique user identification",
+          "score": 1.0
+        },
+        {
+          "id": "164.312(a)(2)(i)",
+          "description": "Emergency access procedure",
+          "score": 0.0
+        },
+        {
+          "id": "164.312(a)(2)(iii)",
+          "description": "Automatic logoff",
+          "score": 0.5
+        },
+        { "id": "164.312(b)", "description": "Audit controls", "score": 0.5 },
+        {
+          "id": "164.312(c)(1)",
+          "description": "Integrity — authentication",
+          "score": 0.5
+        },
+        {
+          "id": "164.312(d)",
+          "description": "Person / entity authentication",
+          "score": 0.5
+        },
+        {
+          "id": "164.312(e)(1)",
+          "description": "Transmission security",
+          "score": 0.5
+        },
+        {
+          "id": "164.314(a)(2)(i)",
+          "description": "Business associate contracts",
+          "score": 0.0
+        },
+        {
+          "id": "164.314(b)(2)(i)",
+          "description": "Group health plan separation",
+          "score": 0.0
+        },
+        {
+          "id": "164.316(b)(1)",
+          "description": "Documentation policies",
+          "score": 0.0
+        }
+      ],
+      "raw_score": 6.5,
+      "percentage": 36.1
+    },
+    "cmmc": {
+      "total_controls": 22,
+      "note": "Not in scope (personal project, no CUI). Scored for reference.",
+      "scored_controls": [
+        {
+          "id": "AC.1.001",
+          "description": "Limit system access to authorized users",
+          "score": 1.0
+        },
+        {
+          "id": "AC.1.002",
+          "description": "Limit system access to authorized functions",
+          "score": 0.5
+        },
+        {
+          "id": "AC.2.006",
+          "description": "Control access to CUI in non-federal systems",
+          "score": 0.5
+        },
+        {
+          "id": "AC.2.007",
+          "description": "Employ principle of least privilege",
+          "score": 0.5
+        },
+        {
+          "id": "AC.2.147",
+          "description": "Authorize remote execution",
+          "score": 0.5
+        },
+        {
+          "id": "AU.2.041",
+          "description": "Ensure individual actions are traceable",
+          "score": 0.5
+        },
+        {
+          "id": "AU.2.042",
+          "description": "Create and retain system audit logs",
+          "score": 0.5
+        },
+        {
+          "id": "CM.3.165",
+          "description": "Configure systems to detect/prevent malicious activity",
+          "score": 0.0
+        },
+        {
+          "id": "IA.1.077",
+          "description": "Authenticate users before allowing system access",
+          "score": 0.5
+        },
+        {
+          "id": "IA.3.083",
+          "description": "Use multifactor authentication",
+          "score": 0.0
+        },
+        {
+          "id": "IR.2.092",
+          "description": "Establish incident-handling capability",
+          "score": 0.0
+        },
+        {
+          "id": "RA.3.137",
+          "description": "Periodically assess risk",
+          "score": 0.0
+        },
+        {
+          "id": "SC.1.175",
+          "description": "Monitor communications at boundaries",
+          "score": 0.5
+        },
+        {
+          "id": "SC.3.177",
+          "description": "Employ FIPS-validated cryptography",
+          "score": 0.0
+        },
+        {
+          "id": "SC.3.178",
+          "description": "Control connections to external systems",
+          "score": 0.5
+        },
+        {
+          "id": "SC.3.181",
+          "description": "Protect communications of CUI",
+          "score": 0.5
+        },
+        {
+          "id": "SC.3.187",
+          "description": "Establish and manage cryptographic keys",
+          "score": 0.5
+        },
+        {
+          "id": "SI.1.210",
+          "description": "Identify, report, and correct system flaws",
+          "score": 0.5
+        },
+        {
+          "id": "SI.3.171",
+          "description": "Implement spam and malicious code protection",
+          "score": 0.0
+        },
+        {
+          "id": "SI.4.173",
+          "description": "Real-time alert on attack indicators",
+          "score": 0.0
+        },
+        {
+          "id": "SI.4.177",
+          "description": "Identify unauthorized use of systems",
+          "score": 0.5
+        },
+        {
+          "id": "SI.4.178",
+          "description": "Analyze system behavior to detect attacks",
+          "score": 0.0
+        }
+      ],
+      "raw_score": 7.5,
+      "percentage": 34.1
+    },
+    "iso27001": {
+      "total_controls": 24,
+      "scored_controls": [
+        {
+          "id": "A.5.15",
+          "description": "Access control policy",
+          "score": 0.5
+        },
+        { "id": "A.5.16", "description": "Identity management", "score": 1.0 },
+        {
+          "id": "A.5.17",
+          "description": "Authentication information",
+          "score": 0.5
+        },
+        { "id": "A.5.18", "description": "Access rights", "score": 1.0 },
+        {
+          "id": "A.5.19",
+          "description": "Information security in supplier relationships",
+          "score": 0.0
+        },
+        {
+          "id": "A.5.31",
+          "description": "Legal, statutory, regulatory requirements",
+          "score": 0.0
+        },
+        {
+          "id": "A.8.2",
+          "description": "Privileged access rights",
+          "score": 0.5
+        },
+        {
+          "id": "A.8.3",
+          "description": "Information access restriction",
+          "score": 0.5
+        },
+        { "id": "A.8.4", "description": "Access to source code", "score": 0.5 },
+        { "id": "A.8.5", "description": "Secure authentication", "score": 0.5 },
+        {
+          "id": "A.8.7",
+          "description": "Protection against malware",
+          "score": 0.0
+        },
+        {
+          "id": "A.8.9",
+          "description": "Configuration management",
+          "score": 0.5
+        },
+        {
+          "id": "A.8.12",
+          "description": "Data leakage prevention",
+          "score": 0.5
+        },
+        { "id": "A.8.15", "description": "Logging", "score": 0.5 },
+        {
+          "id": "A.8.16",
+          "description": "Monitoring activities",
+          "score": 0.0
+        },
+        { "id": "A.8.20", "description": "Network security", "score": 0.5 },
+        {
+          "id": "A.8.21",
+          "description": "Security of network services",
+          "score": 0.5
+        },
+        {
+          "id": "A.8.22",
+          "description": "Segregation of networks",
+          "score": 0.5
+        },
+        { "id": "A.8.24", "description": "Use of cryptography", "score": 0.5 },
+        {
+          "id": "A.8.25",
+          "description": "Secure development lifecycle",
+          "score": 0.0
+        },
+        {
+          "id": "A.8.26",
+          "description": "Application security requirements",
+          "score": 0.5
+        },
+        {
+          "id": "A.8.27",
+          "description": "Secure system architecture",
+          "score": 0.5
+        },
+        { "id": "A.8.28", "description": "Secure coding", "score": 1.0 },
+        {
+          "id": "A.8.29",
+          "description": "Security testing in development",
+          "score": 0.0
+        }
+      ],
+      "raw_score": 10.5,
+      "percentage": 43.8
+    }
+  },
+  "overall_risk_score": 42,
+  "risk_band": "red",
+  "summary": {
+    "critical": 0,
+    "high": 2,
+    "medium": 5,
+    "low": 3,
+    "info": 2
+  }
+}

@@ -75,7 +75,7 @@ async def create_user(session: AsyncSession, data: UserCreate) -> User:
         must_change_password=(total == 0),
     )
     session.add(user)
-    await session.commit()
+    await session.flush()
     await session.refresh(user)
 
     log.info("user.created", user_id=str(user.id), role=user.role)
@@ -89,7 +89,7 @@ async def update_user(session: AsyncSession, user: User, data: UserUpdate) -> Us
         setattr(user, field, value)
 
     session.add(user)
-    await session.commit()
+    await session.flush()
     await session.refresh(user)
 
     log.info("user.updated", user_id=str(user.id))
@@ -102,7 +102,7 @@ async def soft_delete_user(session: AsyncSession, user: User) -> None:
     user.is_active = False
 
     session.add(user)
-    await session.commit()
+    await session.flush()
 
     log.info("user.soft_deleted", user_id=str(user.id))
 
@@ -135,7 +135,7 @@ async def authenticate_user(
     # Update last login timestamp
     user.last_login_at = datetime.now(timezone.utc)
     session.add(user)
-    await session.commit()
+    await session.flush()
     await session.refresh(user)
 
     log.info("auth.login_success", user_id=str(user.id), role=user.role)
@@ -174,7 +174,7 @@ async def get_or_create_admin(session: AsyncSession, initial_password: str) -> U
         must_change_password=True,
     )
     session.add(admin)
-    await session.commit()
+    await session.flush()
     await session.refresh(admin)
 
     log.info("user.admin_bootstrapped", user_id=str(admin.id))

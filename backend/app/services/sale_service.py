@@ -116,224 +116,223 @@ async def create_sale(
     8. Write AuditLog entry.
     9. Return Sale with items + payments eagerly loaded.
     """
-    async with session.begin():
-        folio = await _generate_folio(session)
-        today: date = datetime.now(tz=timezone.utc).date()
+    folio = await _generate_folio(session)
+    today: date = datetime.now(tz=timezone.utc).date()
 
-        # ── 1 & 2: validate and build SaleItem rows ──────────────────────────
-        sale_items: list[SaleItem] = []
-        subtotal_mxn = Decimal("0")
-        discount_total_mxn = Decimal("0")
+    # ── 1 & 2: validate and build SaleItem rows ──────────────────────────
+    sale_items: list[SaleItem] = []
+    subtotal_mxn = Decimal("0")
+    discount_total_mxn = Decimal("0")
 
-        for item_data in data.items:
-            product_result = await session.execute(
-                select(Product).where(
-                    Product.id == item_data.product_id,
-                    Product.deleted_at.is_(None),
-                )
+    for item_data in data.items:
+        product_result = await session.execute(
+            select(Product).where(
+                Product.id == item_data.product_id,
+                Product.deleted_at.is_(None),
             )
-            product = product_result.scalar_one_or_none()
-            if product is None:
+        )
+        product = product_result.scalar_one_or_none()
+        if product is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Producto no encontrado: {item_data.product_id}",
+            )
+        if not product.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Producto inactivo: {product.sku}",
+            )
+
+        unit_price = _resolve_unit_price(product, item_data.price_tier)
+        discount = item_data.discount_mxn
+        qty = item_data.quantity
+        line_subtotal = (unit_price * qty) - discount
+
+        if line_subtotal < Decimal("0"):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Descuento mayor al subtotal para producto: {product.sku}",
+            )
+
+        subtotal_mxn += line_subtotal
+        discount_total_mxn += discount
+
+        # Inventory decrement
+        if product.track_inventory:
+            if product.stock_quantity < qty:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Producto no encontrado: {item_data.product_id}",
+                    detail=f"Stock insuficiente para {product.sku}: disponible={product.stock_quantity}",
                 )
-            if not product.is_active:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Producto inactivo: {product.sku}",
-                )
+            product.stock_quantity = product.stock_quantity - qty  # type: ignore[assignment]
 
-            unit_price = _resolve_unit_price(product, item_data.price_tier)
-            discount = item_data.discount_mxn
-            qty = item_data.quantity
-            line_subtotal = (unit_price * qty) - discount
-
-            if line_subtotal < Decimal("0"):
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Descuento mayor al subtotal para producto: {product.sku}",
-                )
-
-            subtotal_mxn += line_subtotal
-            discount_total_mxn += discount
-
-            # Inventory decrement
-            if product.track_inventory:
-                if product.stock_quantity < qty:
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"Stock insuficiente para {product.sku}: disponible={product.stock_quantity}",
-                    )
-                product.stock_quantity = product.stock_quantity - qty  # type: ignore[assignment]
-
-                movement = StockMovement(
-                    product_id=product.id,
-                    movement_type="sale_out",
-                    quantity=-qty,
-                    reference_type="sale",
-                    actor_id=cashier_user.id,
-                )
-                session.add(movement)
-
-            sale_item = SaleItem(
+            movement = StockMovement(
                 product_id=product.id,
-                product_name_snapshot=product.name,
-                product_sku_snapshot=product.sku,
-                quantity=qty,
-                unit_price_mxn=unit_price,
-                unit_cost_snapshot=product.last_cost,
-                price_tier_used=item_data.price_tier,
-                discount_mxn=discount,
-                subtotal_mxn=line_subtotal,
-                was_consigned=product.is_consigned,
-                consigned_supplier_id=product.consigned_supplier_id,
+                movement_type="sale_out",
+                quantity=-qty,
+                reference_type="sale",
+                actor_id=cashier_user.id,
             )
-            sale_items.append(sale_item)
+            session.add(movement)
 
-        # ── 3: totals (tax = 0 for this iteration — plug in when tax logic lands) ──
-        tax_total_mxn = Decimal("0")
-        total_mxn = subtotal_mxn + tax_total_mxn  # discounts already in subtotal
-
-        # ── 4: USD conversion ────────────────────────────────────────────────
-        total_usd = (total_mxn / fx_rate).quantize(Decimal("0.0001"), rounding=ROUND_DOWN)
-
-        # ── 5: persist Sale ──────────────────────────────────────────────────
-        sale = Sale(
-            folio=folio,
-            customer_id=data.customer_id,
-            cashier_id=cashier_user.id,
-            cashier_session_id=cashier_session.id,
-            status="completed",
-            subtotal_mxn=subtotal_mxn,
-            tax_mxn=tax_total_mxn,
-            discount_mxn=discount_total_mxn,
-            total_mxn=total_mxn,
-            total_usd=total_usd,
-            fx_rate_used=fx_rate,
-            fx_rate_date=today,
-            notes=data.notes,
+        sale_item = SaleItem(
+            product_id=product.id,
+            product_name_snapshot=product.name,
+            product_sku_snapshot=product.sku,
+            quantity=qty,
+            unit_price_mxn=unit_price,
+            unit_cost_snapshot=product.last_cost,
+            price_tier_used=item_data.price_tier,
+            discount_mxn=discount,
+            subtotal_mxn=line_subtotal,
+            was_consigned=product.is_consigned,
+            consigned_supplier_id=product.consigned_supplier_id,
         )
-        session.add(sale)
-        await session.flush()  # get sale.id
+        sale_items.append(sale_item)
 
-        # Attach sale_id to items and persist
-        for sale_item in sale_items:
-            sale_item.sale_id = sale.id  # type: ignore[assignment]
-            session.add(sale_item)
+    # ── 3: totals (tax = 0 for this iteration — plug in when tax logic lands) ──
+    tax_total_mxn = Decimal("0")
+    total_mxn = subtotal_mxn + tax_total_mxn  # discounts already in subtotal
 
-        # Payments
-        cash_total = Decimal("0")
-        card_total = Decimal("0")
-        gift_card_total = Decimal("0")
+    # ── 4: USD conversion ────────────────────────────────────────────────
+    total_usd = (total_mxn / fx_rate).quantize(Decimal("0.0001"), rounding=ROUND_DOWN)
 
-        for payment_data in data.payments:
-            if payment_data.currency == "USD":
-                amount_in_mxn = (payment_data.amount * fx_rate).quantize(
-                    Decimal("0.0001"), rounding=ROUND_DOWN
-                )
-                fx_used = fx_rate
-            else:
-                amount_in_mxn = payment_data.amount
-                fx_used = Decimal("1")
+    # ── 5: persist Sale ──────────────────────────────────────────────────
+    sale = Sale(
+        folio=folio,
+        customer_id=data.customer_id,
+        cashier_id=cashier_user.id,
+        cashier_session_id=cashier_session.id,
+        status="completed",
+        subtotal_mxn=subtotal_mxn,
+        tax_mxn=tax_total_mxn,
+        discount_mxn=discount_total_mxn,
+        total_mxn=total_mxn,
+        total_usd=total_usd,
+        fx_rate_used=fx_rate,
+        fx_rate_date=today,
+        notes=data.notes,
+    )
+    session.add(sale)
+    await session.flush()  # get sale.id
 
-            payment = Payment(
-                sale_id=sale.id,
-                method=payment_data.method,
-                currency=payment_data.currency,
-                amount=payment_data.amount,
-                amount_in_mxn=amount_in_mxn,
-                fx_rate_used=fx_used,
-                gift_card_id=payment_data.gift_card_id,
-                terminal_reference=payment_data.terminal_reference,
-                card_last4=payment_data.card_last4,
+    # Attach sale_id to items and persist
+    for sale_item in sale_items:
+        sale_item.sale_id = sale.id  # type: ignore[assignment]
+        session.add(sale_item)
+
+    # Payments
+    cash_total = Decimal("0")
+    card_total = Decimal("0")
+    gift_card_total = Decimal("0")
+
+    for payment_data in data.payments:
+        if payment_data.currency == "USD":
+            amount_in_mxn = (payment_data.amount * fx_rate).quantize(
+                Decimal("0.0001"), rounding=ROUND_DOWN
             )
-            session.add(payment)
+            fx_used = fx_rate
+        else:
+            amount_in_mxn = payment_data.amount
+            fx_used = Decimal("1")
 
-            if payment_data.method == "cash":
-                cash_total += amount_in_mxn
-            elif payment_data.method in ("credit_card", "debit_card"):
-                card_total += amount_in_mxn
-            elif payment_data.method == "gift_card":
-                gift_card_total += amount_in_mxn
+        payment = Payment(
+            sale_id=sale.id,
+            method=payment_data.method,
+            currency=payment_data.currency,
+            amount=payment_data.amount,
+            amount_in_mxn=amount_in_mxn,
+            fx_rate_used=fx_used,
+            gift_card_id=payment_data.gift_card_id,
+            terminal_reference=payment_data.terminal_reference,
+            card_last4=payment_data.card_last4,
+        )
+        session.add(payment)
 
-        # ── 6: loyalty points ────────────────────────────────────────────────
-        if data.customer_id is not None:
-            loyalty_result = await session.execute(
-                select(LoyaltyAccount).where(
-                    LoyaltyAccount.customer_id == data.customer_id
-                )
+        if payment_data.method == "cash":
+            cash_total += amount_in_mxn
+        elif payment_data.method in ("credit_card", "debit_card"):
+            card_total += amount_in_mxn
+        elif payment_data.method == "gift_card":
+            gift_card_total += amount_in_mxn
+
+    # ── 6: loyalty points ────────────────────────────────────────────────
+    if data.customer_id is not None:
+        loyalty_result = await session.execute(
+            select(LoyaltyAccount).where(
+                LoyaltyAccount.customer_id == data.customer_id
             )
-            loyalty_account = loyalty_result.scalar_one_or_none()
+        )
+        loyalty_account = loyalty_result.scalar_one_or_none()
 
-            if loyalty_account is None:
-                loyalty_account = LoyaltyAccount(
-                    customer_id=data.customer_id,
-                    points_balance=0,
-                    lifetime_points=0,
-                )
-                session.add(loyalty_account)
-                await session.flush()
-
-            earned_points = int(
-                (total_mxn / LOYALTY_POINTS_PER_MXN).to_integral_value(
-                    rounding=ROUND_DOWN
-                )
+        if loyalty_account is None:
+            loyalty_account = LoyaltyAccount(
+                customer_id=data.customer_id,
+                points_balance=0,
+                lifetime_points=0,
             )
+            session.add(loyalty_account)
+            await session.flush()
 
-            if earned_points > 0:
-                loyalty_account.points_balance += earned_points  # type: ignore[assignment]
-                loyalty_account.lifetime_points += earned_points  # type: ignore[assignment]
-                loyalty_account.last_activity_at = datetime.now(tz=timezone.utc)  # type: ignore[assignment]
-
-                loyalty_tx = LoyaltyTransaction(
-                    account_id=loyalty_account.id,
-                    transaction_type="earn",
-                    points=earned_points,
-                    balance_after=loyalty_account.points_balance,
-                    reference_type="sale",
-                    reference_id=sale.id,
-                    notes=f"Venta {folio}",
-                )
-                session.add(loyalty_tx)
-
-        # ── 7: update cashier session running totals ──────────────────────────
-        cashier_session.total_sales_mxn = (  # type: ignore[assignment]
-            (cashier_session.total_sales_mxn or Decimal("0")) + total_mxn
-        )
-        cashier_session.total_cash_payments = (  # type: ignore[assignment]
-            (cashier_session.total_cash_payments or Decimal("0")) + cash_total
-        )
-        cashier_session.total_card_payments = (  # type: ignore[assignment]
-            (cashier_session.total_card_payments or Decimal("0")) + card_total
-        )
-        cashier_session.total_gift_card_payments = (  # type: ignore[assignment]
-            (cashier_session.total_gift_card_payments or Decimal("0")) + gift_card_total
+        earned_points = int(
+            (total_mxn / LOYALTY_POINTS_PER_MXN).to_integral_value(
+                rounding=ROUND_DOWN
+            )
         )
 
-        # ── 8: audit log ─────────────────────────────────────────────────────
-        audit = AuditLog(
-            actor_id=cashier_user.id,
-            action="sale.created",
-            entity_type="sale",
-            entity_id=sale.id,
-            payload={
-                "folio": folio,
-                "total_mxn": str(total_mxn),
-                "total_usd": str(total_usd),
-                "fx_rate": str(fx_rate),
-                "item_count": len(sale_items),
-            },
-        )
-        session.add(audit)
+        if earned_points > 0:
+            loyalty_account.points_balance += earned_points  # type: ignore[assignment]
+            loyalty_account.lifetime_points += earned_points  # type: ignore[assignment]
+            loyalty_account.last_activity_at = datetime.now(tz=timezone.utc)  # type: ignore[assignment]
 
-        log.info(
-            "sale.created",
-            sale_id=str(sale.id),
-            folio=folio,
-            total_mxn=str(total_mxn),
-            cashier_id=str(cashier_user.id),
-        )
+            loyalty_tx = LoyaltyTransaction(
+                account_id=loyalty_account.id,
+                transaction_type="earn",
+                points=earned_points,
+                balance_after=loyalty_account.points_balance,
+                reference_type="sale",
+                reference_id=sale.id,
+                notes=f"Venta {folio}",
+            )
+            session.add(loyalty_tx)
+
+    # ── 7: update cashier session running totals ──────────────────────────
+    cashier_session.total_sales_mxn = (  # type: ignore[assignment]
+        (cashier_session.total_sales_mxn or Decimal("0")) + total_mxn
+    )
+    cashier_session.total_cash_payments = (  # type: ignore[assignment]
+        (cashier_session.total_cash_payments or Decimal("0")) + cash_total
+    )
+    cashier_session.total_card_payments = (  # type: ignore[assignment]
+        (cashier_session.total_card_payments or Decimal("0")) + card_total
+    )
+    cashier_session.total_gift_card_payments = (  # type: ignore[assignment]
+        (cashier_session.total_gift_card_payments or Decimal("0")) + gift_card_total
+    )
+
+    # ── 8: audit log ─────────────────────────────────────────────────────
+    audit = AuditLog(
+        actor_id=cashier_user.id,
+        action="sale.created",
+        entity_type="sale",
+        entity_id=sale.id,
+        payload={
+            "folio": folio,
+            "total_mxn": str(total_mxn),
+            "total_usd": str(total_usd),
+            "fx_rate": str(fx_rate),
+            "item_count": len(sale_items),
+        },
+    )
+    session.add(audit)
+
+    log.info(
+        "sale.created",
+        sale_id=str(sale.id),
+        folio=folio,
+        total_mxn=str(total_mxn),
+        cashier_id=str(cashier_user.id),
+    )
 
     # ── 9: reload and attach items + payments for the response ───────────────
     loaded_sale = await _load_sale_full(session, sale.id)
@@ -417,53 +416,52 @@ async def void_sale(
             detail="La venta ya está anulada",
         )
 
-    async with session.begin():
-        # Load items for inventory restoration
-        items_result = await session.execute(
-            select(SaleItem).where(SaleItem.sale_id == sale.id)
-        )
-        loaded_items = list(items_result.scalars().all())
-        full_sale = sale
+    # Load items for inventory restoration
+    items_result = await session.execute(
+        select(SaleItem).where(SaleItem.sale_id == sale.id)
+    )
+    loaded_items = list(items_result.scalars().all())
+    full_sale = sale
 
-        for item in loaded_items:
-            product_result = await session.execute(
-                select(Product).where(Product.id == item.product_id)
+    for item in loaded_items:
+        product_result = await session.execute(
+            select(Product).where(Product.id == item.product_id)
+        )
+        product = product_result.scalar_one_or_none()
+        if product is not None and product.track_inventory:
+            product.stock_quantity = product.stock_quantity + item.quantity  # type: ignore[assignment]
+
+            movement = StockMovement(
+                product_id=product.id,
+                movement_type="return_in",
+                quantity=item.quantity,
+                reference_type="sale_void",
+                reference_id=full_sale.id,
+                actor_id=user.id,
+                notes=f"Anulación: {reason}",
             )
-            product = product_result.scalar_one_or_none()
-            if product is not None and product.track_inventory:
-                product.stock_quantity = product.stock_quantity + item.quantity  # type: ignore[assignment]
+            session.add(movement)
 
-                movement = StockMovement(
-                    product_id=product.id,
-                    movement_type="return_in",
-                    quantity=item.quantity,
-                    reference_type="sale_void",
-                    reference_id=full_sale.id,
-                    actor_id=user.id,
-                    notes=f"Anulación: {reason}",
-                )
-                session.add(movement)
+    full_sale.status = "voided"  # type: ignore[assignment]
+    full_sale.cancelled_by = user.id  # type: ignore[assignment]
+    full_sale.cancelled_at = datetime.now(tz=timezone.utc)  # type: ignore[assignment]
+    full_sale.cancel_reason = reason  # type: ignore[assignment]
 
-        full_sale.status = "voided"  # type: ignore[assignment]
-        full_sale.cancelled_by = user.id  # type: ignore[assignment]
-        full_sale.cancelled_at = datetime.now(tz=timezone.utc)  # type: ignore[assignment]
-        full_sale.cancel_reason = reason  # type: ignore[assignment]
+    audit = AuditLog(
+        actor_id=user.id,
+        action="sale.voided",
+        entity_type="sale",
+        entity_id=full_sale.id,
+        payload={"reason": reason, "folio": full_sale.folio},
+    )
+    session.add(audit)
 
-        audit = AuditLog(
-            actor_id=user.id,
-            action="sale.voided",
-            entity_type="sale",
-            entity_id=full_sale.id,
-            payload={"reason": reason, "folio": full_sale.folio},
-        )
-        session.add(audit)
-
-        log.info(
-            "sale.voided",
-            sale_id=str(full_sale.id),
-            folio=full_sale.folio,
-            voided_by=str(user.id),
-            reason=reason,
-        )
+    log.info(
+        "sale.voided",
+        sale_id=str(full_sale.id),
+        folio=full_sale.folio,
+        voided_by=str(user.id),
+        reason=reason,
+    )
 
     return full_sale

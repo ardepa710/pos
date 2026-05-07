@@ -24,4 +24,5 @@ class Base(DeclarativeBase):
 
 async def get_session() -> AsyncSession:  # type: ignore[return]
     async with AsyncSessionLocal() as session:
-        yield session
+        async with session.begin():
+            yield session

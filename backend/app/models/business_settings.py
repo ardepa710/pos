@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
-from sqlalchemy import String, Numeric, Text, DateTime, func, text
+from sqlalchemy import Boolean, String, Numeric, Text, DateTime, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -33,6 +33,11 @@ class BusinessSettings(Base):
     business_type: Mapped[str] = mapped_column(String(30), nullable=False, default="general")
     wizard_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
     support_whatsapp: Mapped[Optional[str]] = mapped_column(String(30))
+    ticket_header: Mapped[Optional[str]] = mapped_column(Text)
+    ticket_footer: Mapped[Optional[str]] = mapped_column(Text)
+    ticket_show_logo: Mapped[bool] = mapped_column(nullable=False, default=True)
+    ticket_show_iva: Mapped[bool] = mapped_column(nullable=False, default=False)
+    ticket_printer_name: Mapped[Optional[str]] = mapped_column(String(255))
     telemetry_enabled: Mapped[bool] = mapped_column(nullable=False, default=False)
     tenant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False,

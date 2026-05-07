@@ -240,7 +240,12 @@ export function PaymentPanel({
   // Shortcut: fill remaining amount
   function fillRemaining() {
     if (meta.isUsd && fxRate > 0) {
-      setAmountInput(mxnToUsd(parseFloat(remainingMxn), fxRate).toFixed(2));
+      // Round UP so the USD equivalent always covers the full MXN balance
+      const usdCeil = new Decimal(remainingMxn)
+        .div(new Decimal(fxRate))
+        .toDecimalPlaces(2, Decimal.ROUND_CEIL)
+        .toFixed(2);
+      setAmountInput(usdCeil);
     } else {
       setAmountInput(remainingMxn);
     }
@@ -537,9 +542,9 @@ export function PaymentPanel({
           onClick={handleCharge}
           className={cn(
             "flex w-full items-center justify-center gap-2 rounded-xl py-3.5",
-            "text-base font-bold text-white transition-all",
+            "text-base font-bold text-white transition",
             canCharge && !charging
-              ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.98]"
+              ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96]"
               : "cursor-not-allowed bg-[var(--text-muted)]",
           )}
         >

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class BusinessSettingsRead(BaseModel):
@@ -28,11 +28,29 @@ class BusinessSettingsRead(BaseModel):
     business_type: str
     wizard_completed: bool
     support_whatsapp: Optional[str]
+    ticket_header: Optional[str]
+    ticket_footer: Optional[str]
+    ticket_show_logo: bool
+    ticket_show_iva: bool
+    ticket_printer_name: Optional[str]
     telemetry_enabled: bool
     updated_at: datetime
 
 
 class BusinessSettingsUpdate(BaseModel):
+    # Normalise empty strings to None so exclude_none=True skips them and
+    # they never overwrite existing values with an empty string in the DB.
+    @field_validator(
+        "ticket_header", "ticket_footer", "address", "receipt_footer",
+        "logo_url", "logo_small_url", "favicon_url",
+        mode="before",
+    )
+    @classmethod
+    def empty_str_to_none(cls, v: object) -> object:
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
     business_name: Optional[str] = Field(None, max_length=120)
     rfc: Optional[str] = Field(None, max_length=20)
     address: Optional[str] = None
@@ -50,4 +68,9 @@ class BusinessSettingsUpdate(BaseModel):
     business_type: Optional[str] = None
     wizard_completed: Optional[bool] = None
     support_whatsapp: Optional[str] = Field(None, max_length=30)
+    ticket_header: Optional[str] = None
+    ticket_footer: Optional[str] = None
+    ticket_show_logo: Optional[bool] = None
+    ticket_show_iva: Optional[bool] = None
+    ticket_printer_name: Optional[str] = Field(None, max_length=255)
     telemetry_enabled: Optional[bool] = None

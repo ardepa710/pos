@@ -75,7 +75,7 @@ export function PurchaseList() {
         const supplier = suppliers.find((s) => s.id === row.supplier_id);
         return (
           <span className="text-[var(--text-primary)]">
-            {supplier?.name ?? row.supplier_id}
+            {supplier?.legal_name ?? row.supplier_id}
           </span>
         );
       },
@@ -106,9 +106,7 @@ export function PurchaseList() {
       header: t.purchases.total_cost,
       sortable: true,
       className: "text-right",
-      accessor: (row) => (
-        <CurrencyDisplay amount={row.total_cost_mxn} size="sm" />
-      ),
+      accessor: (row) => <CurrencyDisplay amount={row.total} size="sm" />,
     },
     {
       key: "status",
@@ -160,7 +158,7 @@ export function PurchaseList() {
             <option value="">Todos los proveedores</option>
             {suppliers.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name}
+                {s.legal_name}
               </option>
             ))}
           </select>

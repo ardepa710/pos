@@ -96,7 +96,7 @@ async def change_password(
     current_user.password_hash = hash_password(body.new_password)
     current_user.must_change_password = False
     session.add(current_user)
-    await session.commit()
+    await session.flush()
 
     log.info("auth.password_changed", user_id=str(current_user.id))
     return {"ok": True}

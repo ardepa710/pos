@@ -210,9 +210,9 @@ export function DataTable<T>({
               disabled={currentPage <= 1}
               onClick={() => handlePageChange(currentPage - 1)}
               className={cn(
-                "px-3 py-1.5 rounded border border-[var(--border)] transition-colors",
+                "px-3 py-2 rounded border border-[var(--border)] transition active:scale-[0.96]",
                 currentPage <= 1
-                  ? "opacity-40 cursor-not-allowed"
+                  ? "opacity-40 cursor-not-allowed active:scale-100"
                   : "hover:bg-[var(--bg-card-elevated)] cursor-pointer",
               )}
             >

@@ -202,7 +202,7 @@ export function CustomerSelector({
                     {c.full_name}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">
-                    {c.phone ?? c.email ?? `${c.loyalty_points} pts`}
+                    {c.phone ?? c.email ?? `${c.loyalty_points ?? 0} pts`}
                   </span>
                 </button>
               ))

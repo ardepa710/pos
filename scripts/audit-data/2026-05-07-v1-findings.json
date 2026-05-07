@@ -1,0 +1,195 @@
+{
+  "project": "POS — Punto de Venta",
+  "date": "2026-05-07",
+  "version": "v1",
+  "auditor": "Claude Code (automated)",
+  "scope": [
+    "Auth & Access Control",
+    "Privacy Boundaries",
+    "API Security",
+    "Data Integrity",
+    "Production Hygiene"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "HIGH",
+      "title": "Rate limiting completely absent",
+      "what": "No rate limiting middleware exists on any endpoint — auth, read, or write",
+      "file": "backend/app/main.py (all routers)",
+      "why": "An attacker can brute-force the /api/v1/auth/login endpoint indefinitely, enumerate user accounts, or launch a denial-of-service attack against any endpoint without throttling",
+      "fix": "Add slowapi middleware. Apply 5 req/min to /api/v1/auth/login, 60 req/min to write endpoints, 300 req/min to read endpoints. Store rate limit state in memory or Redis.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.6"],
+        "hipaa": ["164.312(a)(2)(i)"],
+        "cmmc": ["AC.2.006", "SC.3.178"],
+        "iso27001": ["A.12.6.1", "A.13.1.1"]
+      }
+    },
+    {
+      "id": "F002",
+      "severity": "HIGH",
+      "title": "Audit logs absent for user mutations and settings changes",
+      "what": "No audit log entries created when users are created/modified/deleted or when business settings change",
+      "file": "backend/app/routers/users.py, backend/app/routers/settings.py",
+      "why": "A compromised admin account could modify users or settings with no forensic trail. Cannot detect unauthorized privilege escalation or configuration tampering after the fact",
+      "fix": "Add audit_log entries in user_service (create, update, delete) and settings_service (update). Use existing AuditLog model. Log: actor_id, action, entity_type, entity_id, payload diff, timestamp.",
+      "controls": {
+        "soc2": ["CC6.4", "CC7.2"],
+        "hipaa": ["164.312(b)", "164.308(a)(1)(ii)(D)"],
+        "cmmc": ["AU.2.041", "AU.2.042"],
+        "iso27001": ["A.12.4.1", "A.12.4.3"]
+      }
+    },
+    {
+      "id": "F003",
+      "severity": "MEDIUM",
+      "title": "Default admin password 'Admin123!' hardcoded as fallback",
+      "what": "ADMIN_INITIAL_PASSWORD defaults to 'Admin123!' in config.py and is present in the .env file",
+      "file": "backend/app/config.py:49, .env:57",
+      "why": "If the install script is skipped or .env not customized, the admin account has a known default password attackable via credential stuffing",
+      "fix": "Remove default value from config.py (make it required). Force password change on first login. Generate a random password in the install script and display it once only.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": ["164.308(a)(5)(ii)(D)"],
+        "cmmc": ["IA.1.077"],
+        "iso27001": ["A.9.4.3"]
+      }
+    },
+    {
+      "id": "F004",
+      "severity": "MEDIUM",
+      "title": "JWT access token expiry set to 8 hours (480 minutes)",
+      "what": "ACCESS_TOKEN_EXPIRE_MINUTES defaults to 480 — tokens remain valid for a full work shift even after logout",
+      "file": "backend/app/config.py:14",
+      "why": "A stolen token (via XSS, network sniff, or log leak) remains valid for up to 8 hours. No token revocation mechanism exists to invalidate a token before expiry.",
+      "fix": "Reduce to 60 minutes. Implement refresh-token rotation or a token revocation list (Redis set of invalidated JTIs). Log out should invalidate the token server-side.",
+      "controls": {
+        "soc2": ["CC6.5"],
+        "hipaa": ["164.312(a)(2)(iii)"],
+        "cmmc": ["AC.1.002", "IA.3.083"],
+        "iso27001": ["A.9.4.2"]
+      }
+    },
+    {
+      "id": "F005",
+      "severity": "MEDIUM",
+      "title": "SSRF risk: logo_url downloaded server-side without domain allowlist",
+      "what": "Print Bridge fetches logo_url via urllib.request.urlopen with no domain validation, and backend passes any logo_url stored in business settings",
+      "file": "print_bridge/main.py (_gdi_draw_logo), backend/app/routers/sales.py:282-287",
+      "why": "An admin-level attacker can set logo_url to an internal network address (e.g., http://192.168.1.1/admin) causing Print Bridge to probe internal services. Also enables request forgery against internal HTTP endpoints.",
+      "fix": "Validate logo_url is HTTPS with an allowlisted domain in business_settings validator. In Print Bridge, also validate URL scheme and hostname before fetching. Add 5-second timeout and 2MB max size (already has 5s timeout — add size limit).",
+      "controls": {
+        "soc2": ["CC6.2", "CC6.6"],
+        "hipaa": [],
+        "cmmc": ["SC.3.178", "SI.3.171"],
+        "iso27001": ["A.13.1.1", "A.14.2.1"]
+      }
+    },
+    {
+      "id": "F006",
+      "severity": "MEDIUM",
+      "title": "Missing CSP and HSTS headers in Caddy reverse proxy",
+      "what": "Caddyfile includes X-Frame-Options, X-Content-Type-Options, Referrer-Policy, X-XSS-Protection but is missing Content-Security-Policy and Strict-Transport-Security",
+      "file": "caddy/Caddyfile:17-25",
+      "why": "Absence of CSP leaves XSS attacks unmitigated at transport layer. Missing HSTS means if HTTPS is ever enabled, browsers will not enforce it, allowing SSL-strip attacks.",
+      "fix": "Add: header Content-Security-Policy \"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'\". Add HSTS when HTTPS is configured.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.6"],
+        "hipaa": ["164.312(a)(2)(i)"],
+        "cmmc": ["SC.3.181"],
+        "iso27001": ["A.14.2.1"]
+      }
+    },
+    {
+      "id": "F007",
+      "severity": "MEDIUM",
+      "title": "Tenant isolation not enforced at DB query level",
+      "what": "All service queries do not filter by tenant_id. Models have tenant_id with a hardcoded default UUID but queries never enforce tenant boundaries",
+      "file": "backend/app/services/*.py (multiple service files)",
+      "why": "If multi-tenant deployment is ever attempted, all data from all tenants would be accessible to any authenticated user. Also allows future IDOR bugs if tenant_id filtering is added inconsistently.",
+      "fix": "Add tenant_id to all WHERE clauses now, even as single-tenant. Create a TenantContext dependency that injects tenant_id from the authenticated user. Fail closed: 404 if entity.tenant_id != current_user.tenant_id.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.3"],
+        "hipaa": ["164.312(a)(1)"],
+        "cmmc": ["AC.2.147"],
+        "iso27001": ["A.9.1.2"]
+      }
+    },
+    {
+      "id": "F008",
+      "severity": "LOW",
+      "title": "SQLAlchemy echo enabled in non-production environments",
+      "what": "database.py uses echo=not settings.is_production, logging all SQL statements including WHERE clause values",
+      "file": "backend/app/database.py:8",
+      "why": "SQL logs can expose customer names, product names, and partial financial data. If development logs are forwarded to a log aggregator, PII leaks to that system.",
+      "fix": "Set echo=False by default. Add a separate DEBUG_SQL=false env var to enable selectively. Never enable echo in environments that process real customer data.",
+      "controls": {
+        "soc2": ["CC7.2"],
+        "hipaa": ["164.312(b)"],
+        "cmmc": ["AU.2.041"],
+        "iso27001": ["A.12.4.1"]
+      }
+    },
+    {
+      "id": "F009",
+      "severity": "LOW",
+      "title": "backend/.env.test committed to version control",
+      "what": "backend/.env.test contains test database credentials and a fixed SECRET_KEY and is tracked by git",
+      "file": "backend/.env.test",
+      "why": "Although credentials are for a test DB (not real secrets), this establishes a bad pattern. It also exposes the exact SECRET_KEY format expected. Developers may accidentally base production secrets on test values.",
+      "fix": "Add backend/.env.test to .gitignore. Use environment variables or a CI secret for test runs. Provide a .env.test.example with placeholder values instead.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": [],
+        "cmmc": ["CM.3.165"],
+        "iso27001": ["A.14.2.3"]
+      }
+    },
+    {
+      "id": "F010",
+      "severity": "LOW",
+      "title": "next.config.ts has no security headers configuration",
+      "what": "Frontend Next.js app defines no headers() function in next.config.ts — relies entirely on the Caddy proxy for security headers",
+      "file": "frontend/next.config.ts",
+      "why": "If frontend is accessed directly (dev server, behind a different proxy, or Caddy misconfiguration), browsers receive no security headers. Especially relevant during development where Caddy is not used.",
+      "fix": "Add headers() export to next.config.ts with X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and CSP. Defense-in-depth: headers at both proxy and app level.",
+      "controls": {
+        "soc2": ["CC6.1"],
+        "hipaa": [],
+        "cmmc": ["SC.3.181"],
+        "iso27001": ["A.14.2.1"]
+      }
+    },
+    {
+      "id": "F011",
+      "severity": "INFO",
+      "title": "CORS allows all methods and headers (origins correctly restricted)",
+      "what": "CORSMiddleware uses allow_methods=['*'] and allow_headers=['*']. Origins are properly restricted to configured env var (default: localhost only)",
+      "file": "backend/app/main.py:44-45",
+      "why": "Low risk given origin restriction. However, wildcard methods/headers in combination with allow_credentials=True could be tightened. If origins are misconfigured to '*' in production, this becomes exploitable.",
+      "fix": "Consider restricting to explicit methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] and headers: ['Content-Type', 'Authorization']. Verify CORS_ORIGINS env var is always set explicitly in production deployments.",
+      "controls": {
+        "soc2": ["CC6.6"],
+        "hipaa": [],
+        "cmmc": ["SC.3.178"],
+        "iso27001": ["A.13.1.1"]
+      }
+    },
+    {
+      "id": "F012",
+      "severity": "INFO",
+      "title": "No multi-factor authentication for admin or supervisor accounts",
+      "what": "Authentication is username+password only. No TOTP, hardware key, or second factor exists for privileged roles.",
+      "file": "backend/app/routers/auth.py",
+      "why": "If admin credentials are compromised (phishing, reuse), an attacker gains full system access with no second barrier. Especially relevant since admin can void sales, modify settings, and view all reports.",
+      "fix": "Add TOTP (Google Authenticator/Authy) as an optional second factor, required for admin and supervisor roles. Libraries: pyotp + QR code enrollment flow.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": ["164.308(a)(5)(ii)(C)"],
+        "cmmc": ["IA.3.083"],
+        "iso27001": ["A.9.4.2"]
+      }
+    }
+  ]
+}

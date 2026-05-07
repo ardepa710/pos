@@ -39,10 +39,12 @@ function daysAgoISODate(n: number) {
 }
 
 interface ProductSalesRow {
+  product_id: string;
   sku: string;
   name: string;
-  qty_sold: string;
+  quantity_sold: string;
   revenue_mxn: string;
+  stock_current: string;
 }
 
 export function ProductsReport() {
@@ -97,11 +99,11 @@ export function ProductsReport() {
       sortable: true,
     },
     {
-      key: "qty_sold",
+      key: "quantity_sold",
       header: "Cantidad vendida",
       accessor: (row) => (
         <span className="tabular-nums">
-          {parseFloat(row.qty_sold).toLocaleString("es-MX")}
+          {parseFloat(row.quantity_sold).toLocaleString("es-MX")}
         </span>
       ),
       className: "text-right",
@@ -213,7 +215,7 @@ export function ProductsReport() {
         <DataTable
           columns={columns}
           data={data}
-          keyExtractor={(row) => row.sku}
+          keyExtractor={(row) => row.product_id}
           emptyMessage="Sin ventas en el período seleccionado."
           pageSize={25}
         />

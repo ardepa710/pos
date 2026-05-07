@@ -126,7 +126,7 @@ export function CustomerDetail({ customer, onClose }: CustomerDetailProps) {
               </span>
             </div>
             <p className="text-4xl font-bold tabular-nums text-[var(--accent)]">
-              {customer.loyalty_points.toLocaleString("es-MX")}
+              {(customer.loyalty_points ?? 0).toLocaleString("es-MX")}
             </p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               puntos acumulados

@@ -117,8 +117,8 @@ export function OpenSessionModal({
             disabled={loading}
             className={cn(
               "flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold",
-              "bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)]",
-              "disabled:cursor-not-allowed disabled:opacity-60",
+              "bg-[var(--accent)] text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.96]",
+              "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
             )}
           >
             {loading ? (

@@ -39,9 +39,9 @@ function daysAgoISODate(n: number) {
 interface CustomerSalesRow {
   customer_id: string;
   full_name: string;
-  purchase_count: number;
-  total_mxn: string;
-  loyalty_points: number;
+  code: string;
+  total_orders: number;
+  revenue_mxn: string;
 }
 
 export function CustomersReport() {
@@ -78,31 +78,20 @@ export function CustomersReport() {
       sortable: true,
     },
     {
-      key: "purchase_count",
+      key: "total_orders",
       header: "# Compras",
       accessor: (row) => (
         <span className="tabular-nums">
-          {row.purchase_count.toLocaleString("es-MX")}
+          {row.total_orders.toLocaleString("es-MX")}
         </span>
       ),
       className: "text-right",
       sortable: true,
     },
     {
-      key: "total_mxn",
+      key: "revenue_mxn",
       header: `Total ${t.currency.mxn}`,
-      accessor: (row) => <CurrencyDisplay amount={row.total_mxn} />,
-      className: "text-right",
-      sortable: true,
-    },
-    {
-      key: "loyalty_points",
-      header: t.customers.loyalty_points,
-      accessor: (row) => (
-        <span className="tabular-nums">
-          {row.loyalty_points.toLocaleString("es-MX")}
-        </span>
-      ),
+      accessor: (row) => <CurrencyDisplay amount={row.revenue_mxn} />,
       className: "text-right",
       sortable: true,
     },

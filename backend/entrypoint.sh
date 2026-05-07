@@ -13,7 +13,7 @@ from app.config import settings
 
 async def bootstrap():
     async with AsyncSessionLocal() as session:
-        user = await get_or_create_admin(session, settings)
+        user = await get_or_create_admin(session, settings.admin_initial_password)
         if user:
             print(f'Admin user ready: {user.username}')
 
@@ -21,8 +21,9 @@ asyncio.run(bootstrap())
 "
 
 echo "Starting POS backend..."
+LOG_LEVEL_LOWER=$(echo "${LOG_LEVEL:-info}" | tr '[:upper:]' '[:lower:]')
 exec uvicorn app.main:app \
     --host 0.0.0.0 \
     --port "${APP_PORT:-8000}" \
     --workers "${WORKERS:-1}" \
-    --log-level "${LOG_LEVEL:-info}"
+    --log-level "${LOG_LEVEL_LOWER}"

@@ -14,7 +14,7 @@ export interface CartItem {
   discount_mxn: string; // Decimal string
   subtotal_mxn: string; // computed: quantity * price - discount
   track_inventory: boolean;
-  stock: number;
+  stock_quantity: string;
 }
 
 function computeSubtotal(
@@ -111,7 +111,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
               discount_mxn,
             ),
             track_inventory: product.track_inventory,
-            stock: product.stock,
+            stock_quantity: String(product.stock_quantity),
           },
         ],
       };

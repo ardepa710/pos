@@ -26,7 +26,7 @@ export function CatalogManager() {
           type="button"
           onClick={() => setActiveTab("products")}
           className={cn(
-            "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+            "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition active:scale-[0.96]",
             activeTab === "products"
               ? "bg-[var(--accent)] text-white"
               : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-elevated)]",
@@ -40,7 +40,7 @@ export function CatalogManager() {
           type="button"
           onClick={() => setActiveTab("categories")}
           className={cn(
-            "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+            "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition active:scale-[0.96]",
             activeTab === "categories"
               ? "bg-[var(--accent)] text-white"
               : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-elevated)]",

@@ -1,0 +1,9 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+# Logo rendering on GDI / ESC/POS raster (all platforms)
+Pillow>=10.0.0
+# Windows only
+pywin32>=306; sys_platform == "win32"
+# Direct USB ESC/POS (Linux/Raspberry Pi — optional, used when CUPS unavailable)
+pyusb>=1.2.1; sys_platform == "linux"

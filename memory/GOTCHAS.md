@@ -56,3 +56,45 @@
 
 - All tables have tenant_id column with placeholder '00000000-0000-0000-0000-000000000001'::uuid
 - This is the hook for future multi-branch support — do not remove or repurpose
+
+## Docker boot sequence (hard-won fixes — 2026-05-06)
+
+- **alembic/env.py must use sync engine**: `engine_from_config` + `pool.NullPool`, NOT `async_engine_from_config`.
+  Even though the app uses asyncpg, alembic runs synchronously. `async_engine_from_config` with a
+  `postgresql://` URL crashes with "asyncio extension requires async driver".
+- **asyncpg rejects `sslmode=disable`**: That param belongs to psycopg2. For internal Docker networks,
+  just omit SSL entirely: `postgresql+asyncpg://user:pass@host:5432/db` (no query params).
+  DATABASE_SYNC_URL (psycopg2) can keep `postgresql://...` without sslmode since internal too.
+- **bcrypt 4.x breaks passlib**: `passlib[bcrypt]>=1.7.4` pulls bcrypt 4.x which raises
+  `ValueError: password cannot be longer than 72 bytes` in passlib's wrap-bug detection routine.
+  Pin: `bcrypt>=3.2.0,<4.0.0` in pyproject.toml.
+- **pydantic-settings list[str] needs JSON format**: `CORS_ORIGINS=url1,url2` fails.
+  Must be `CORS_ORIGINS='["url1","url2"]'` (JSON array string) in docker-compose.yml env section.
+- **uvicorn --log-level requires lowercase**: `LOG_LEVEL=INFO` crashes uvicorn. Normalize in
+  entrypoint.sh: `LOG_LEVEL_LOWER=$(echo "${LOG_LEVEL:-info}" | tr '[:upper:]' '[:lower:]')`.
+- **pydantic EmailStr requires `pydantic[email]`**: Just `pydantic>=2.7.0` is not enough.
+  Must be `pydantic[email]>=2.7.0` in pyproject.toml.
+- **entrypoint.sh admin bootstrap**: pass `settings.admin_initial_password` (str), not `settings`
+  (the whole Settings object) to `get_or_create_admin()`.
+- **api.ts import type must include all types used in signatures**: After refactoring api.ts to
+  re-export from types/index.ts, only importing `UUID, ISODate, Decimal` was not enough — every
+  type used in function return signatures (`UserRead`, `ProductRead`, etc.) must also be in the
+  `import type { ... }` statement, not just the `export type { ... }` re-export block.
+
+## Next.js Standalone Build Hot-Patching (2026-05-06)
+
+- **Source files don't exist in the container**: The frontend runs as a pre-compiled Next.js standalone
+  build. Editing `frontend/src/**` has zero effect until the image is rebuilt. For in-container fixes,
+  patch the compiled JS chunk directly.
+- **Hot-patch workflow**:
+  1. Find the chunk: `docker exec pos-frontend find /app/.next/static/chunks -name "*.js" | grep pos`
+  2. `docker cp pos-frontend:/app/.next/static/chunks/app/.../page-HASH.js ./chunk.js`
+  3. Edit with PowerShell `$content.Replace()` — MUST call `Set-Content ... -Encoding UTF8 -NoNewline`
+     explicitly to persist. Assigning to `$content` in memory without Set-Content → silently lost.
+  4. Verify patches with `$content -match 'pattern'` before saving.
+  5. `docker cp ./chunk.js pos-frontend:/app/.next/static/chunks/app/.../page-HASH.js`
+  6. Hard reload browser (Ctrl+Shift+R) — normal navigation serves cached chunk.
+- **Minified variable names change with every build**: After rebuild, re-identify variable mapping by
+  searching for known strings (e.g. `closeSession`, `close_session`, `Cerrar`) in the new chunk.
+- **report_service.py `get_sales_by_period`**: Returns field `"sale_count"` (was `"count"` in original).
+  Frontend ReportsPage expects `sale_count`. Mismatched key causes silent `undefined.toLocaleString` crash.

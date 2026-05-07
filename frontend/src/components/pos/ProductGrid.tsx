@@ -44,7 +44,11 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
   }, []);
 
   function handleAdd(product: ProductRead) {
-    if (product.track_inventory && product.stock <= 0) return;
+    if (
+      product.track_inventory &&
+      parseFloat(String(product.stock_quantity)) <= 0
+    )
+      return;
 
     // Visual flash feedback
     setFlash((prev) => ({ ...prev, [product.id]: true }));
@@ -55,7 +59,7 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
     onAddItem(product);
   }
 
-  const products = data?.items ?? [];
+  const products: ProductRead[] = data?.items ?? [];
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -133,11 +137,10 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
         ) : (
           <div className="grid grid-cols-2 gap-2 pb-2 lg:grid-cols-3">
             {products.map((product) => {
-              const outOfStock = product.track_inventory && product.stock <= 0;
+              const stockNum = parseFloat(String(product.stock_quantity));
+              const outOfStock = product.track_inventory && stockNum <= 0;
               const lowStock =
-                product.track_inventory &&
-                product.stock > 0 &&
-                product.stock <= 5;
+                product.track_inventory && stockNum > 0 && stockNum <= 5;
               const isFlashing = flash[product.id];
 
               return (
@@ -173,13 +176,13 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                       {outOfStock
                         ? t.sales.out_of_stock
                         : lowStock
-                          ? `${product.stock} ↓`
-                          : product.stock}
+                          ? `${stockNum} ↓`
+                          : stockNum}
                     </span>
                   )}
 
                   {/* Consignment badge */}
-                  {product.is_consignment && (
+                  {product.is_consigned && (
                     <span className="mb-1 self-start rounded-sm bg-[var(--info-subtle)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--info)]">
                       {t.sales.consignment_badge}
                     </span>

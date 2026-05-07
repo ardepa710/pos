@@ -273,7 +273,7 @@ export function RedeemGiftCardModal({
                 type="submit"
                 isLoading={isRedeeming}
                 isDisabled={isRedeeming || !isCardUsable || !amount}
-                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white border-0 font-medium"
+                className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96] text-white border-0 font-medium transition"
               >
                 {t.gift_cards.redeem}
               </Button>

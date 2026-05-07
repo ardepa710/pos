@@ -48,7 +48,7 @@ export function ConsignmentSettleForm({
   });
 
   const watchedSales = watch("gross_sales_mxn");
-  const consignedValue = parseFloat(consignment.total_cost_mxn || "0");
+  const consignedValue = parseFloat(String(consignment.total ?? "0"));
   const grossSales = parseFloat(watchedSales || "0");
   const commission =
     grossSales > consignedValue ? grossSales - consignedValue : 0;
@@ -129,17 +129,14 @@ export function ConsignmentSettleForm({
                     {t.purchases.supplier}
                   </p>
                   <p className="text-sm font-medium text-[var(--text-primary)]">
-                    {supplier?.name ?? consignment.supplier_id}
+                    {supplier?.legal_name ?? consignment.supplier_id}
                   </p>
                 </div>
                 <div className="px-4 py-3">
                   <p className="text-xs text-[var(--text-muted)] mb-0.5">
                     Valor consignado
                   </p>
-                  <CurrencyDisplay
-                    amount={consignment.total_cost_mxn}
-                    size="sm"
-                  />
+                  <CurrencyDisplay amount={consignment.total} size="sm" />
                 </div>
               </div>
               <div className="px-4 py-3">
@@ -216,10 +213,7 @@ export function ConsignmentSettleForm({
                   <span className="text-[var(--text-secondary)]">
                     Valor consignado
                   </span>
-                  <CurrencyDisplay
-                    amount={consignment.total_cost_mxn}
-                    size="sm"
-                  />
+                  <CurrencyDisplay amount={consignment.total} size="sm" />
                 </div>
                 <div className="flex items-center justify-between px-4 py-3 text-sm font-medium">
                   <span className="text-[var(--text-primary)]">
@@ -254,7 +248,7 @@ export function ConsignmentSettleForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition active:scale-[0.96] disabled:opacity-50 disabled:active:scale-100"
             >
               <DollarSign size={15} />
               {isSubmitting ? t.action.loading : t.purchases.settle}

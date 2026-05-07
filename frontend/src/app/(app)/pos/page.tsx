@@ -16,8 +16,7 @@ const posQueryClient = new QueryClient({
 export default function POSPage() {
   return (
     <QueryClientProvider client={posQueryClient}>
-      {/* Fill the full available height without the shell header */}
-      <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+      <div className="flex h-full w-full overflow-hidden">
         <POSTerminal />
       </div>
     </QueryClientProvider>

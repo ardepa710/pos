@@ -41,7 +41,7 @@ export function PageHeader({
           className={cn(
             "inline-flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium",
             "bg-[var(--accent)] text-[var(--accent-foreground)]",
-            "transition-colors hover:bg-[var(--accent-hover)]",
+            "transition hover:bg-[var(--accent-hover)] active:scale-[0.96]",
             "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
           )}
         >

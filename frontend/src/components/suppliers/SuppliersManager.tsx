@@ -76,7 +76,7 @@ export function SuppliersManager() {
       sortable: true,
       accessor: (row) => (
         <span className="font-medium text-[var(--text-primary)]">
-          {row.name}
+          {row.legal_name}
         </span>
       ),
     },
@@ -196,7 +196,7 @@ export function SuppliersManager() {
           deleteTarget && deactivateMutation.mutate(deleteTarget)
         }
         title="Desactivar proveedor"
-        message={`¿Deseas desactivar a "${deleteTarget?.name}"? Podrás reactivarlo editándolo más tarde.`}
+        message={`¿Deseas desactivar a "${deleteTarget?.legal_name}"? Podrás reactivarlo editándolo más tarde.`}
         confirmLabel="Desactivar"
         variant="warning"
         isLoading={deactivateMutation.isPending}

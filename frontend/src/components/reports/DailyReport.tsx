@@ -179,8 +179,8 @@ export function DailyReport() {
           onClick={handleDownloadPdf}
           disabled={!data || downloading}
           className={cn(
-            "inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition-colors",
-            "hover:bg-[var(--bg-card-elevated)] disabled:opacity-40 disabled:cursor-not-allowed",
+            "inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition",
+            "hover:bg-[var(--bg-card-elevated)] active:scale-[0.96] disabled:active:scale-100 disabled:opacity-40 disabled:cursor-not-allowed",
           )}
         >
           <FileDown size={16} />

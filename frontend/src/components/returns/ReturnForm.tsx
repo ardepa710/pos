@@ -28,6 +28,7 @@ type Step = 1 | 2 | 3 | 4;
 type RefundMethod = "cash" | "gift_card" | "store_credit";
 
 interface ReturnItem {
+  sale_item_id: string;
   product_id: string;
   product_name: string;
   original_qty: number;
@@ -114,11 +115,12 @@ export function ReturnForm({ isOpen, onClose, onCreated }: ReturnFormProps) {
       // Seed items from sale
       setItems(
         found.items.map((si) => ({
+          sale_item_id: si.id,
           product_id: si.product_id,
-          product_name: si.product_name,
+          product_name: si.product_name_snapshot,
           original_qty: Number(si.quantity),
           return_qty: Number(si.quantity),
-          unit_price: si.unit_price,
+          unit_price: si.unit_price_mxn,
           checked: true,
         })),
       );
@@ -209,12 +211,10 @@ export function ReturnForm({ isOpen, onClose, onCreated }: ReturnFormProps) {
         items: items
           .filter((it) => it.checked && it.return_qty > 0)
           .map((it) => ({
-            product_id: it.product_id,
-            quantity: it.return_qty,
-            unit_price: it.unit_price,
-            subtotal: (parseFloat(it.unit_price) * it.return_qty).toFixed(2),
+            original_sale_item_id: it.sale_item_id,
+            quantity_returned: String(it.return_qty),
+            unit_price_mxn: it.unit_price,
           })),
-        total_mxn: totalRefund,
         refund_method: refundMethod,
         reason: reason.trim(),
       };
@@ -621,7 +621,7 @@ export function ReturnForm({ isOpen, onClose, onCreated }: ReturnFormProps) {
               type="button"
               onPress={goToStep2}
               isDisabled={!sale}
-              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white border-0 font-medium"
+              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96] text-white border-0 font-medium transition"
             >
               {t.action.next}
               <ChevronRight size={15} aria-hidden />
@@ -631,7 +631,7 @@ export function ReturnForm({ isOpen, onClose, onCreated }: ReturnFormProps) {
             <Button
               type="button"
               onPress={goToStep3}
-              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white border-0 font-medium"
+              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96] text-white border-0 font-medium transition"
             >
               {t.action.next}
               <ChevronRight size={15} aria-hidden />
@@ -641,7 +641,7 @@ export function ReturnForm({ isOpen, onClose, onCreated }: ReturnFormProps) {
             <Button
               type="button"
               onPress={goToStep4}
-              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white border-0 font-medium"
+              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96] text-white border-0 font-medium transition"
             >
               {t.action.next}
               <ChevronRight size={15} aria-hidden />
@@ -653,7 +653,7 @@ export function ReturnForm({ isOpen, onClose, onCreated }: ReturnFormProps) {
               onPress={handleSubmit}
               isLoading={isSubmitting}
               isDisabled={isSubmitting}
-              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white border-0 font-medium"
+              className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96] text-white border-0 font-medium transition"
             >
               Procesar devolución
             </Button>

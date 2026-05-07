@@ -22,6 +22,7 @@ class PurchaseItemRead(BaseModel):
 
     id: uuid.UUID
     product_id: uuid.UUID
+    product_name: Optional[str] = None
     quantity: Decimal
     unit_cost: Decimal
     subtotal: Decimal

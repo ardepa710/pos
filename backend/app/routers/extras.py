@@ -39,8 +39,7 @@ async def issue_gift_card(
     _user: SupervisorUser,
 ) -> GiftCardRead:
     """Issue a new gift card. Requires supervisor or admin role."""
-    async with session.begin():
-        gift_card = await gift_card_service.issue_gift_card(session, data)
+    gift_card = await gift_card_service.issue_gift_card(session, data)
     return GiftCardRead.model_validate(gift_card)
 
 
@@ -71,10 +70,9 @@ async def redeem_gift_card(
     _user: CurrentUser,
 ) -> GiftCardRead:
     """Redeem an amount from the gift card identified by *code*."""
-    async with session.begin():
-        gift_card = await gift_card_service.redeem_gift_card(
-            session, code=code, amount=body.amount
-        )
+    gift_card = await gift_card_service.redeem_gift_card(
+        session, code=code, amount=body.amount
+    )
     return GiftCardRead.model_validate(gift_card)
 
 
@@ -89,9 +87,8 @@ async def void_gift_card(
     _user: SupervisorUser,
 ) -> GiftCardRead:
     """Void a gift card. Requires supervisor or admin role."""
-    async with session.begin():
-        gift_card = await gift_card_service.get_gift_card_by_code(session, code)
-        gift_card = await gift_card_service.void_gift_card(session, gift_card)
+    gift_card = await gift_card_service.get_gift_card_by_code(session, code)
+    gift_card = await gift_card_service.void_gift_card(session, gift_card)
     return GiftCardRead.model_validate(gift_card)
 
 

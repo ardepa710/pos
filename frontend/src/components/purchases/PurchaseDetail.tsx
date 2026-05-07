@@ -51,7 +51,7 @@ export function PurchaseDetail({
                   {t.purchases.supplier}
                 </p>
                 <p className="text-sm font-medium text-[var(--text-primary)]">
-                  {supplier?.name ?? purchase.supplier_id}
+                  {supplier?.legal_name ?? purchase.supplier_id}
                 </p>
               </div>
               <div className="px-4 py-3">
@@ -66,13 +66,13 @@ export function PurchaseDetail({
               </div>
             </div>
 
-            {purchase.reference_number && (
+            {purchase.folio && (
               <div className="px-4 py-3">
                 <p className="text-xs text-[var(--text-muted)] mb-0.5">
                   {t.purchases.reference}
                 </p>
                 <p className="text-sm text-[var(--text-primary)]">
-                  {purchase.reference_number}
+                  {purchase.folio}
                 </p>
               </div>
             )}
@@ -119,8 +119,8 @@ export function PurchaseDetail({
                   </tr>
                 </thead>
                 <tbody>
-                  {purchase.items?.length > 0 ? (
-                    purchase.items.map((item, idx) => (
+                  {(purchase.items?.length ?? 0) > 0 ? (
+                    purchase.items!.map((item, idx) => (
                       <tr
                         key={idx}
                         className="border-t border-[var(--border)] bg-[var(--bg-base)] hover:bg-[var(--bg-card-elevated)] transition-colors"
@@ -161,10 +161,7 @@ export function PurchaseDetail({
                       {t.purchases.total_cost}
                     </td>
                     <td className="px-3 py-2.5 text-right">
-                      <CurrencyDisplay
-                        amount={purchase.total_cost_mxn}
-                        size="sm"
-                      />
+                      <CurrencyDisplay amount={purchase.total} size="sm" />
                     </td>
                   </tr>
                 </tfoot>

@@ -141,13 +141,13 @@ export function ProductForm({
         price_b: product.price_b ?? "",
         price_c: product.price_c ?? "",
         track_inventory: product.track_inventory,
-        stock_quantity: String(product.stock ?? 0),
+        stock_quantity: String(product.stock_quantity ?? 0),
         min_stock_alert: String(
           (product as ProductRead & { min_stock_alert?: number })
             .min_stock_alert ?? 0,
         ),
         is_active: product.is_active,
-        is_consignment: product.is_consignment,
+        is_consignment: product.is_consigned,
         consigned_supplier_id: product.consigned_supplier_id ?? "",
       });
     }
@@ -168,11 +168,11 @@ export function ProductForm({
         price_b: values.price_b || undefined,
         price_c: values.price_c || undefined,
         track_inventory: values.track_inventory,
-        stock: values.track_inventory
-          ? Number(values.stock_quantity ?? 0)
+        stock_quantity: values.track_inventory
+          ? String(values.stock_quantity ?? "0")
           : undefined,
         is_active: values.is_active,
-        is_consignment: values.is_consignment,
+        is_consigned: values.is_consignment,
         consigned_supplier_id: values.is_consignment
           ? values.consigned_supplier_id || undefined
           : undefined,
@@ -424,7 +424,7 @@ export function ProductForm({
                     <option value="">Seleccionar proveedor…</option>
                     {suppliers?.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.name}
+                        {s.legal_name}
                       </option>
                     ))}
                   </select>

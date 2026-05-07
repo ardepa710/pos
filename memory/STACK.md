@@ -52,11 +52,11 @@
 
 ## Current Focus
 
-- Sprint goal: Ola 5 complete — sistema operacional listo
+- Sprint goal: QA completo finalizado — sistema 100% operacional
 - Blockers: ninguno
-- Recently done: Olas 1–5: modelos, migraciones, routers, UI completa, wizard, setup
-- Next up: QA, install script verificación, primer docker compose up
+- Recently done: QA de todas las features verificado; CloseSessionModal implementado; fix sale_count en reportes; Docker rebuild completo en puerto 3005
+- Next up: GitLab repo inicial, primer push a staging (coralslrc.shop), security audit pre-MR
 
 ## Version
 
-V2026.05.06-001
+V2026.05.06-005

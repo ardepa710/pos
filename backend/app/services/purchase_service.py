@@ -28,6 +28,16 @@ log = structlog.get_logger()
 # Internal helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+
+async def _attach_product_names(session: AsyncSession, items: list[PurchaseItem]) -> None:
+    if not items:
+        return
+    ids = [item.product_id for item in items]
+    result = await session.execute(select(Product.id, Product.name).where(Product.id.in_(ids)))
+    name_map = {row.id: row.name for row in result}
+    for item in items:
+        item.__dict__["product_name"] = name_map.get(item.product_id, "")
+
 _TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
@@ -228,7 +238,7 @@ async def create_purchase(
     )
 
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(purchase)
     except Exception as exc:
         await session.rollback()
@@ -243,6 +253,7 @@ async def create_purchase(
         select(PurchaseItem).where(PurchaseItem.purchase_id == purchase.id)
     )
     purchase.__dict__["items"] = list(items_result.scalars().all())
+    await _attach_product_names(session, purchase.__dict__["items"])
 
     log.info("purchase.created", purchase_id=str(purchase.id), folio=folio, total=str(total))
     return purchase
@@ -266,6 +277,7 @@ async def get_purchase(session: AsyncSession, purchase_id: uuid.UUID) -> Purchas
         select(PurchaseItem).where(PurchaseItem.purchase_id == purchase.id)
     )
     purchase.__dict__["items"] = list(items_result.scalars().all())
+    await _attach_product_names(session, purchase.__dict__["items"])
     return purchase
 
 
@@ -297,6 +309,7 @@ async def list_purchases(
             select(PurchaseItem).where(PurchaseItem.purchase_id == purchase.id)
         )
         purchase.__dict__["items"] = list(items_result.scalars().all())
+        await _attach_product_names(session, purchase.__dict__["items"])
 
     return purchases
 
@@ -385,7 +398,7 @@ async def record_consignment_in(
     )
 
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(purchase)
     except Exception as exc:
         await session.rollback()
@@ -399,6 +412,7 @@ async def record_consignment_in(
         select(PurchaseItem).where(PurchaseItem.purchase_id == purchase.id)
     )
     purchase.__dict__["items"] = list(items_result.scalars().all())
+    await _attach_product_names(session, purchase.__dict__["items"])
 
     log.info("consignment.in_created", purchase_id=str(purchase.id), folio=folio)
     return purchase
@@ -516,7 +530,7 @@ async def settle_consignment(
     )
 
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(settlement)
     except Exception as exc:
         await session.rollback()
@@ -566,5 +580,6 @@ async def list_consignments(
             select(PurchaseItem).where(PurchaseItem.purchase_id == purchase.id)
         )
         purchase.__dict__["items"] = list(items_result.scalars().all())
+        await _attach_product_names(session, purchase.__dict__["items"])
 
     return purchases

@@ -30,20 +30,31 @@ export function AppearanceSettings() {
     queryFn: () => settingsApi.getBusiness(token),
   });
 
-  const [theme, setTheme] = useState<Theme>(settings?.theme ?? "system");
+  // Derive theme directly from query — no local state to get out of sync
+  const theme: Theme = settings?.theme ?? "system";
 
   const updateMutation = useMutation({
     mutationFn: (newTheme: Theme) =>
       settingsApi.updateBusiness(token, { theme: newTheme }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["business-settings"] });
+    onMutate: (newTheme) => {
+      // Optimistic update so button responds immediately
+      queryClient.setQueryData(
+        ["business-settings"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (old: any) => (old ? { ...old, theme: newTheme } : old),
+      );
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["business-settings"], updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["business-settings"] });
     },
   });
 
   function handleThemeChange(val: Theme) {
-    setTheme(val);
     updateMutation.mutate(val);
   }
 
@@ -61,7 +72,7 @@ export function AppearanceSettings() {
               type="button"
               onClick={() => handleThemeChange(value)}
               className={cn(
-                "flex flex-col items-center gap-2 rounded-xl border p-4 text-sm font-medium transition-colors",
+                "flex flex-col items-center gap-2 rounded-xl border p-4 text-sm font-medium transition active:scale-[0.96]",
                 theme === value
                   ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]"
                   : "border-[var(--border)] bg-[var(--bg-base)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-elevated)]",

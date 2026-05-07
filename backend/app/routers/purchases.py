@@ -27,7 +27,7 @@ DbSession = Annotated[AsyncSession, Depends(get_session)]
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-@router.get("/", response_model=list[PurchaseRead])
+@router.get("", response_model=list[PurchaseRead])
 async def list_purchases(
     _current_user: CurrentUser,
     session: DbSession,
@@ -44,7 +44,7 @@ async def list_purchases(
     )
 
 
-@router.post("/", response_model=PurchaseRead, status_code=201)
+@router.post("", response_model=PurchaseRead, status_code=201)
 async def create_purchase(
     data: PurchaseCreate,
     current_user: SupervisorUser,

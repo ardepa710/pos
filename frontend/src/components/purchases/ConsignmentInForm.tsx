@@ -118,7 +118,7 @@ export function ConsignmentInForm({
         items: data.items.map((item) => ({
           product_id: item.product_id,
           quantity: item.quantity,
-          unit_cost_mxn: item.unit_cost_mxn,
+          unit_cost: item.unit_cost_mxn,
         })),
       });
       onSuccess();
@@ -172,7 +172,7 @@ export function ConsignmentInForm({
                   <option value="">Seleccionar proveedor…</option>
                   {suppliers.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name}
+                      {s.legal_name}
                     </option>
                   ))}
                 </select>
@@ -366,7 +366,7 @@ export function ConsignmentInForm({
             <button
               type="submit"
               disabled={isSubmitting || fields.length === 0}
-              className="rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)] transition active:scale-[0.96] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
             >
               {isSubmitting ? t.action.loading : "Registrar consignación"}
             </button>

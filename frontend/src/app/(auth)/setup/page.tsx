@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button, Input, Select, SelectItem } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { Store, ChevronRight, Check } from "lucide-react";
+import { FormField } from "@/components/ui";
 import { settingsApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 const BUSINESS_TYPES = [
   { key: "general", label: "General" },
@@ -42,8 +43,14 @@ const STEPS = [
   { step: 3 as Step, label: "Listo" },
 ];
 
+const INPUT_CLS = cn(
+  "w-full rounded-lg border border-[var(--border)] bg-[var(--bg-input)]",
+  "px-3 py-2 text-sm text-[var(--text-primary)] outline-none",
+  "placeholder:text-[var(--text-muted)]",
+  "transition-colors focus:border-[var(--border-focus)]",
+);
+
 export default function SetupPage() {
-  const router = useRouter();
   const { token } = useAuth();
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
@@ -53,6 +60,7 @@ export default function SetupPage() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -64,6 +72,7 @@ export default function SetupPage() {
   });
 
   const businessName = watch("business_name");
+  const businessType = watch("business_type");
 
   async function onSubmit(data: FormData) {
     setLoading(true);
@@ -135,7 +144,6 @@ export default function SetupPage() {
         {/* Card */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-8 shadow-[var(--shadow-modal)]">
           {step === 3 ? (
-            /* Completion screen */
             <div className="flex flex-col items-center gap-4 py-4 text-center">
               <div className="w-16 h-16 rounded-full bg-[var(--success-subtle)] flex items-center justify-center">
                 <Check size={32} className="text-[var(--success)]" />
@@ -148,7 +156,9 @@ export default function SetupPage() {
               </p>
               <Button
                 className="mt-4 bg-[var(--accent)] text-white w-full"
-                onPress={() => router.replace("/pos")}
+                onPress={() => {
+                  window.location.replace("/pos");
+                }}
               >
                 Ir al Punto de Venta
               </Button>
@@ -163,22 +173,31 @@ export default function SetupPage() {
                   <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                     ¿Cómo se llama tu negocio?
                   </h2>
-                  <Input
+
+                  <FormField
                     label={t.settings.business_name}
-                    placeholder="Ej. Tienda El Sol"
-                    autoFocus
-                    {...register("business_name")}
-                    isInvalid={!!errors.business_name}
-                    errorMessage={errors.business_name?.message}
-                  />
-                  <Input
-                    label="WhatsApp de soporte (opcional)"
-                    placeholder="+52 55 1234 5678"
-                    {...register("support_whatsapp")}
-                  />
+                    required
+                    error={errors.business_name?.message}
+                  >
+                    <input
+                      {...register("business_name")}
+                      autoFocus
+                      placeholder="Ej. Tienda El Sol"
+                      className={INPUT_CLS}
+                    />
+                  </FormField>
+
+                  <FormField label="WhatsApp de soporte (opcional)">
+                    <input
+                      {...register("support_whatsapp")}
+                      placeholder="+52 55 1234 5678"
+                      className={INPUT_CLS}
+                    />
+                  </FormField>
+
                   <Button
                     type="button"
-                    className="bg-[var(--accent)] text-white"
+                    className="bg-[var(--accent)] text-white border-0"
                     onPress={() => setStep(2)}
                     isDisabled={!businessName?.trim()}
                     endContent={<ChevronRight size={16} />}
@@ -196,16 +215,29 @@ export default function SetupPage() {
                   <p className="text-sm text-[var(--text-secondary)] -mt-2">
                     Esto ajusta los campos de atributos en los productos.
                   </p>
-                  <Select
-                    label={t.settings.business_type}
-                    {...register("business_type")}
-                    isInvalid={!!errors.business_type}
-                    errorMessage={errors.business_type?.message}
-                  >
+
+                  <div className="grid grid-cols-3 gap-2">
                     {BUSINESS_TYPES.map(({ key, label }) => (
-                      <SelectItem key={key}>{label}</SelectItem>
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setValue("business_type", key)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2.5 text-xs font-medium text-left transition-colors",
+                          businessType === key
+                            ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]"
+                            : "border-[var(--border)] bg-[var(--bg-input)] text-[var(--text-secondary)] hover:border-[var(--border-focus)] hover:text-[var(--text-primary)]",
+                        )}
+                      >
+                        {label}
+                      </button>
                     ))}
-                  </Select>
+                  </div>
+                  {errors.business_type && (
+                    <p className="text-xs text-[var(--error)]">
+                      {errors.business_type.message}
+                    </p>
+                  )}
 
                   {error && (
                     <div className="rounded-lg bg-[var(--error-subtle)] px-4 py-2 text-sm text-[var(--error)]">
@@ -216,15 +248,15 @@ export default function SetupPage() {
                   <div className="flex gap-3">
                     <Button
                       type="button"
-                      variant="flat"
-                      className="flex-1"
+                      variant="bordered"
+                      className="flex-1 border-[var(--border)] text-[var(--text-secondary)]"
                       onPress={() => setStep(1)}
                     >
                       {t.action.back}
                     </Button>
                     <Button
                       type="submit"
-                      className="flex-1 bg-[var(--accent)] text-white"
+                      className="flex-1 bg-[var(--accent)] text-white border-0"
                       isLoading={loading}
                       endContent={!loading && <Check size={16} />}
                     >

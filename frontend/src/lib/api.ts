@@ -1,67 +1,62 @@
 // API client — all backend endpoints
-// Types that mirror backend response schemas
+
+// Re-export all domain types from the single source of truth
+export type {
+  UUID,
+  ISODate,
+  Decimal,
+  BrandingConfig,
+  PaymentMethod,
+  SaleStatus,
+  UserRead,
+  CategoryRead,
+  ProductRead,
+  ProductListResponse,
+  SaleItemRead,
+  PaymentRead,
+  SaleRead,
+  SaleItemCreate,
+  PaymentCreate,
+  SaleCreate,
+  CashierSessionRead,
+  CustomerRead,
+  SupplierRead,
+  PurchaseItemRead,
+  PurchaseRead,
+  GiftCardRead,
+  ReturnRead,
+  BusinessSettings,
+  DailySummary,
+} from "@/types/index";
+
+// Alias for backwards compatibility with components that use the old names
+export type {
+  PaymentRead as SalePaymentRead,
+  PaymentCreate as SalePaymentCreate,
+} from "@/types/index";
 
 import type {
   UUID,
   ISODate,
   Decimal,
   BrandingConfig,
+  UserRead,
+  CategoryRead,
+  ProductRead,
+  ProductListResponse,
+  SaleRead,
+  SaleCreate,
+  CashierSessionRead,
+  CustomerRead,
+  SupplierRead,
+  PurchaseRead,
   GiftCardRead,
   ReturnRead,
+  BusinessSettings,
+  DailySummary,
 } from "@/types/index";
-export type { GiftCardRead, ReturnRead };
 
-// ── Response types ────────────────────────────────────────────────────────
-
-export interface UserRead {
-  id: UUID;
-  username: string;
-  email: string;
-  full_name: string;
-  role: "admin" | "supervisor" | "cashier";
-  must_change_password: boolean;
-  theme_preference: "light" | "dark" | "system";
-  is_active: boolean;
-  created_at: ISODate;
-}
-
-export interface CategoryRead {
-  id: UUID;
-  name: string;
-  description?: string;
-  product_count?: number;
-  created_at: ISODate;
-}
-
-export interface ProductRead {
-  id: UUID;
-  sku: string;
-  name: string;
-  description?: string;
-  category_id?: UUID;
-  category_name?: string;
-  price_general: Decimal;
-  price_a?: Decimal;
-  price_b?: Decimal;
-  price_c?: Decimal;
-  last_cost?: Decimal;
-  stock: number;
-  track_inventory: boolean;
-  is_consignment: boolean;
-  consigned_supplier_id?: UUID;
-  attributes: Record<string, unknown>;
-  is_active: boolean;
-  image_url?: string;
-  created_at: ISODate;
-  updated_at: ISODate;
-}
-
-export interface ProductListResponse {
-  items: ProductRead[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+// ── Request / mutation types (API-layer only) ─────────────────────────────
 
 export interface ProductCreate {
   sku: string;
@@ -73,168 +68,13 @@ export interface ProductCreate {
   price_b?: Decimal;
   price_c?: Decimal;
   last_cost?: Decimal;
-  stock?: number;
+  stock_quantity?: string;
   track_inventory?: boolean;
-  is_consignment?: boolean;
+  is_consigned?: boolean;
   consigned_supplier_id?: UUID;
   attributes?: Record<string, unknown>;
   is_active?: boolean;
-  image_url?: string;
-}
-
-export interface SaleItemRead {
-  id: UUID;
-  product_id: UUID;
-  product_name: string;
-  product_sku: string;
-  quantity: number;
-  unit_price: Decimal;
-  discount_pct: Decimal;
-  subtotal: Decimal;
-  is_consignment: boolean;
-}
-
-export interface SalePaymentRead {
-  id: UUID;
-  method: string;
-  amount: Decimal;
-  currency: string;
-  terminal_reference?: string;
-}
-
-export interface SaleRead {
-  id: UUID;
-  folio: string;
-  status: "draft" | "completed" | "cancelled" | "refunded";
-  customer_id?: UUID;
-  customer_name?: string;
-  cashier_id: UUID;
-  cashier_name: string;
-  session_id: UUID;
-  items: SaleItemRead[];
-  payments: SalePaymentRead[];
-  subtotal: Decimal;
-  tax_amount: Decimal;
-  discount_amount: Decimal;
-  total_mxn: Decimal;
-  change_mxn: Decimal;
-  notes?: string;
-  voided_reason?: string;
-  created_at: ISODate;
-  completed_at?: ISODate;
-}
-
-export interface SaleItemCreate {
-  product_id: UUID;
-  quantity: number;
-  unit_price: Decimal;
-  discount_pct?: Decimal;
-}
-
-export interface SalePaymentCreate {
-  method: string;
-  amount: Decimal;
-  currency?: string;
-  terminal_reference?: string;
-}
-
-export interface SaleCreate {
-  customer_id?: UUID;
-  items: SaleItemCreate[];
-  payments: SalePaymentCreate[];
-  notes?: string;
-}
-
-export interface CashierSessionRead {
-  id: UUID;
-  cashier_id: UUID;
-  cashier_name: string;
-  status: "open" | "closed";
-  starting_cash_mxn: Decimal;
-  physical_cash_mxn?: Decimal;
-  expected_cash_mxn?: Decimal;
-  cash_difference_mxn?: Decimal;
-  total_sales_mxn?: Decimal;
-  sale_count?: number;
-  opened_at: ISODate;
-  closed_at?: ISODate;
-}
-
-export interface CustomerRead {
-  id: UUID;
-  name: string;
-  email?: string;
-  phone?: string;
-  rfc?: string;
-  address?: string;
-  loyalty_points: number;
-  notes?: string;
-  is_active: boolean;
-  created_at: ISODate;
-}
-
-export interface SupplierRead {
-  id: UUID;
-  name: string;
-  contact_name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  notes?: string;
-  is_active: boolean;
-  created_at: ISODate;
-}
-
-// GiftCardRead and ReturnRead are imported from @/types/index and re-exported above
-
-export interface PurchaseRead {
-  id: UUID;
-  supplier_id: UUID;
-  supplier_name: string;
-  cashier_id: UUID;
-  items: Array<{
-    product_id: UUID;
-    product_name: string;
-    quantity: number;
-    unit_cost: Decimal;
-    subtotal: Decimal;
-  }>;
-  total: Decimal;
-  notes?: string;
-  created_at: ISODate;
-}
-
-export interface DailySummary {
-  date: string;
-  total_sales_mxn: Decimal;
-  total_returns_mxn: Decimal;
-  net_mxn: Decimal;
-  sale_count: number;
-  return_count: number;
-  payment_breakdown: Record<string, Decimal>;
-  top_products: Array<{
-    product_id: UUID;
-    product_name: string;
-    quantity: number;
-    total_mxn: Decimal;
-  }>;
-}
-
-export interface BusinessSettings {
-  business_name: string;
-  business_type: string;
-  rfc?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  logo_url?: string;
-  receipt_footer?: string;
-  tax_rate: Decimal;
-  currency: string;
-  accept_usd: boolean;
-  support_whatsapp?: string;
-  theme?: "light" | "dark" | "system";
-  wizard_completed: boolean;
+  thumbnail_url?: string;
 }
 
 // ── Core ──────────────────────────────────────────────────────────────────
@@ -262,20 +102,37 @@ async function apiFetch<T>(
   });
 
   if (res.status === 401) {
-    // Clear auth state and redirect to login — import store directly (not hook)
-    const { useAuthStore } = await import("@/store/auth");
-    useAuthStore.getState().clearAuth();
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
+    // Only auto-redirect on 401 for authenticated (token-bearing) requests.
+    // Unauthenticated requests (e.g. login) should let the error propagate
+    // to the caller so the form can display "wrong credentials".
+    if (token) {
+      const { useAuthStore } = await import("@/store/auth");
+      useAuthStore.getState().clearAuth();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
     }
-    throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
   }
 
   if (!res.ok) {
     let errorMessage = `Error ${res.status}`;
     try {
       const body = await res.json();
-      errorMessage = body?.detail ?? body?.message ?? errorMessage;
+      const detail = body?.detail ?? body?.message;
+      if (Array.isArray(detail)) {
+        // FastAPI 422 validation errors: [{loc, msg, type}, ...]
+        errorMessage = detail
+          .map((e: { msg?: string; loc?: string[] }) => {
+            const field = e.loc ? e.loc[e.loc.length - 1] : "";
+            return field
+              ? `${field}: ${e.msg}`
+              : (e.msg ?? "Error de validación");
+          })
+          .join(" | ");
+      } else if (typeof detail === "string") {
+        errorMessage = detail;
+      }
     } catch {
       // Response body was not JSON — keep default message
     }
@@ -433,6 +290,12 @@ export const salesApi = {
       "/v1/sales/fx-rate",
       { token },
     ),
+
+  printReceipt: (token: string, saleId: string) =>
+    apiFetch<{ status: string; printer: string }>(`/v1/sales/${saleId}/print`, {
+      method: "POST",
+      token,
+    }),
 };
 
 // ── Customers ─────────────────────────────────────────────────────────────
@@ -585,6 +448,12 @@ export const settingsApi = {
       method: "POST",
       token,
     }),
+
+  getPrinters: (token: string) =>
+    apiFetch<{ printers: string[]; available: boolean; message?: string }>(
+      "/v1/settings/printers",
+      { token },
+    ),
 };
 
 // ── Users ─────────────────────────────────────────────────────────────────
@@ -595,6 +464,7 @@ export interface UserCreate {
   email: string;
   role: "admin" | "supervisor" | "cashier";
   password: string;
+  is_active?: boolean;
 }
 
 export interface UserUpdate {

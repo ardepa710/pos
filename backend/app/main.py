@@ -13,6 +13,8 @@ from app.routers.users import router as users_router
 from app.routers.sales import router as sales_router
 from app.routers.purchases import router as purchases_router
 from app.routers.extras import router as extras_router
+from app.routers.customers import router as customers_router
+from app.routers.suppliers import router as suppliers_router
 
 log = structlog.get_logger()
 
@@ -32,6 +34,7 @@ app = FastAPI(
     docs_url=None if settings.is_production else "/docs",
     redoc_url=None if settings.is_production else "/redoc",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 app.add_middleware(
@@ -51,6 +54,8 @@ app.include_router(purchases_router)
 app.include_router(extras_router)
 app.include_router(reports.router)
 app.include_router(settings_router.router)
+app.include_router(customers_router)
+app.include_router(suppliers_router)
 
 
 @app.get("/health", tags=["system"])

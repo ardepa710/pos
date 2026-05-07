@@ -12,6 +12,7 @@ import { ProductGrid } from "./ProductGrid";
 import { Cart } from "./Cart";
 import { PaymentPanel } from "./PaymentPanel";
 import { OpenSessionModal } from "./OpenSessionModal";
+import { CloseSessionModal } from "./CloseSessionModal";
 import { ReceiptModal } from "./ReceiptModal";
 import { LoadingSpinner } from "@/components/ui";
 
@@ -39,6 +40,7 @@ export function POSTerminal() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [completedSale, setCompletedSale] = useState<SaleRead | null>(null);
   const [charging, setCharging] = useState(false);
+  const [showCloseSession, setShowCloseSession] = useState(false);
 
   // ── Session check ──────────────────────────────────────────────────────
 
@@ -82,26 +84,48 @@ export function POSTerminal() {
     if (!session || items.length === 0) return;
     setCharging(true);
     try {
-      const salePayloads = payments.map((p) => ({
-        method: p.method,
-        amount_mxn: p.amount_mxn,
-        ...(p.amount_usd && { amount_usd: p.amount_usd }),
-        ...(p.terminal_reference && {
-          terminal_reference: p.terminal_reference,
-        }),
-      }));
+      // Map frontend payment shape → backend PaymentCreate
+      // Frontend uses cash_mxn/cash_usd; backend uses method + currency + amount
+      const TIER_MAP: Record<number, string> = {
+        1: "general",
+        2: "a",
+        3: "b",
+        4: "c",
+      };
+
+      const salePayloads = payments.map((p) => {
+        let method = p.method;
+        let currency = "MXN";
+        let amount = p.amount_mxn;
+
+        if (p.method === "cash_mxn") {
+          method = "cash";
+          currency = "MXN";
+        } else if (p.method === "cash_usd") {
+          method = "cash";
+          currency = "USD";
+          amount = p.amount_usd ?? p.amount_mxn;
+        }
+
+        return {
+          method,
+          currency,
+          amount,
+          ...(p.terminal_reference && {
+            terminal_reference: p.terminal_reference,
+          }),
+        };
+      });
 
       const saleItems = items.map((i) => ({
         product_id: i.product_id,
         quantity: String(i.quantity),
-        unit_price_mxn: i.unit_price_mxn,
-        discount_mxn: new Decimal(i.discount_mxn).greaterThan(0)
-          ? i.discount_mxn
-          : undefined,
+        price_tier: TIER_MAP[i.price_tier] ?? "general",
+        ...(new Decimal(i.discount_mxn).greaterThan(0) && {
+          discount_mxn: i.discount_mxn,
+        }),
       }));
 
-      // Cast through unknown: types/index.ts SaleCreate is the authoritative
-      // schema; api.ts has an older draft with different field names.
       const sale = await salesApi.create(token, {
         customer_id: customer_id ?? undefined,
         items: saleItems,
@@ -121,6 +145,11 @@ export function POSTerminal() {
 
   function handleNewSale() {
     setCompletedSale(null);
+  }
+
+  function handleSessionClosed() {
+    setSession(null);
+    setShowCloseSession(false);
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -148,37 +177,63 @@ export function POSTerminal() {
         <ReceiptModal sale={completedSale} onNewSale={handleNewSale} />
       )}
 
-      {/* 3-column POS layout */}
-      <div className="flex h-full overflow-hidden">
-        {/* Column 1 — Product grid (40%) */}
+      {/* Close session modal */}
+      {showCloseSession && session && (
+        <CloseSessionModal
+          token={token}
+          session={session}
+          onSessionClosed={handleSessionClosed}
+          onCancel={() => setShowCloseSession(false)}
+        />
+      )}
+
+      {/* 2-column POS layout */}
+      <div className="flex h-full w-full overflow-hidden">
+        {/* Left — Product grid (55%) */}
         <section
           className="flex flex-col border-r border-[var(--border)] p-3"
-          style={{ width: "40%", minWidth: 0 }}
+          style={{ width: "55%", minWidth: 0 }}
         >
+          {/* Session toolbar */}
+          {session && (
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowCloseSession(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--error)] hover:text-[var(--error)]"
+              >
+                <span>⬛</span>
+                Cerrar caja
+              </button>
+            </div>
+          )}
           <ProductGrid token={token} onAddItem={handleAddItem} />
         </section>
 
-        {/* Column 2 — Cart (30%) */}
-        <section
-          className="flex flex-col border-r border-[var(--border)]"
-          style={{ width: "30%", minWidth: 0 }}
-        >
-          {user && <Cart token={token} user={user} fxRate={fxRate} />}
-        </section>
-
-        {/* Column 3 — Payment panel (30%) */}
+        {/* Right — Cart (top) + Payment (bottom), stacked vertically (45%) */}
         <section
           className="flex flex-col"
-          style={{ width: "30%", minWidth: 0 }}
+          style={{ width: "45%", minWidth: 0 }}
         >
-          <PaymentPanel
-            token={token}
-            totalMxn={total_mxn}
-            fxRate={fxRate}
-            fxRateDate={fxRateDate}
-            onCharge={handleCharge}
-            charging={charging}
-          />
+          {/* Cart — upper portion */}
+          <div
+            className="overflow-hidden border-b border-[var(--border)]"
+            style={{ flex: "0 0 38%" }}
+          >
+            {user && <Cart token={token} user={user} fxRate={fxRate} />}
+          </div>
+
+          {/* Payment panel — lower portion */}
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <PaymentPanel
+              token={token}
+              totalMxn={total_mxn}
+              fxRate={fxRate}
+              fxRateDate={fxRateDate}
+              onCharge={handleCharge}
+              charging={charging}
+            />
+          </div>
         </section>
       </div>
     </>

@@ -38,6 +38,7 @@ class CustomerRead(BaseModel):
     address: Optional[str]
     price_tier: str
     is_default: bool
+    is_active: bool = True
     notes: Optional[str]
     created_at: datetime
 

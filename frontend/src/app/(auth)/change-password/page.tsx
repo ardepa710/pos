@@ -118,6 +118,7 @@ export default function ChangePasswordPage() {
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   const {
     register,
@@ -132,12 +133,17 @@ export default function ChangePasswordPage() {
     },
   });
 
-  // Redirect to login if not authenticated
+  // Wait one render cycle for Zustand persist to hydrate from localStorage
   useEffect(() => {
-    if (!isAuthenticated) {
+    setHasHydrated(true);
+  }, []);
+
+  // Redirect to login if not authenticated (only after hydration)
+  useEffect(() => {
+    if (hasHydrated && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [hasHydrated, isAuthenticated, router]);
 
   const onSubmit = async (values: ChangePasswordFormValues) => {
     if (!token) return;
@@ -158,8 +164,8 @@ export default function ChangePasswordPage() {
     }
   };
 
-  // Render nothing while redirect is in flight
-  if (!isAuthenticated) return null;
+  // Render nothing until hydrated or if redirecting to login
+  if (!hasHydrated || !isAuthenticated) return null;
 
   return (
     <main
@@ -263,7 +269,7 @@ export default function ChangePasswordPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+            className="w-full rounded-lg py-2.5 text-sm font-semibold transition active:scale-[0.96] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 mt-1"
             style={{
               backgroundColor: "var(--accent)",
               color: "var(--accent-foreground)",

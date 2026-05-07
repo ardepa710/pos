@@ -65,7 +65,7 @@ async def create_category(
     )
     session.add(cat)
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(cat)
     except Exception as exc:
         await session.rollback()
@@ -87,7 +87,7 @@ async def update_category(
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(cat, field, value)
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(cat)
     except Exception as exc:
         await session.rollback()
@@ -103,7 +103,7 @@ async def update_category(
 async def delete_category(session: AsyncSession, cat: Category) -> None:
     """Soft-delete a category (sets deleted_at = now)."""
     cat.deleted_at = datetime.now(tz=timezone.utc)
-    await session.commit()
+    await session.flush()
     log.info("catalog.category.deleted", category_id=str(cat.id))
 
 
@@ -200,7 +200,7 @@ async def create_product(
     )
     session.add(product)
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(product)
     except Exception as exc:
         await session.rollback()
@@ -222,7 +222,7 @@ async def update_product(
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(product)
     except Exception as exc:
         await session.rollback()
@@ -238,7 +238,7 @@ async def update_product(
 async def soft_delete_product(session: AsyncSession, product: Product) -> None:
     """Soft-delete a product (sets deleted_at = now)."""
     product.deleted_at = datetime.now(tz=timezone.utc)
-    await session.commit()
+    await session.flush()
     log.info("catalog.product.deleted", product_id=str(product.id))
 
 
@@ -302,7 +302,7 @@ async def adjust_stock(
     session.add(movement)
 
     try:
-        await session.commit()
+        await session.flush()
         await session.refresh(movement)
         await session.refresh(product)
     except Exception as exc:

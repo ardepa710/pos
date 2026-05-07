@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import structlog
+import httpx
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.config import settings as app_settings
 
 from app.database import get_session
 from app.schemas.business_settings import BusinessSettingsRead, BusinessSettingsUpdate
@@ -67,3 +69,25 @@ async def complete_wizard(
     settings = await settings_service.mark_wizard_completed(session)
     log.info("settings.wizard_completed", user_id=str(current_user.id))
     return BusinessSettingsRead.model_validate(settings)
+
+
+@router.get(
+    "/printers",
+    summary="Listar impresoras disponibles vía Print Bridge",
+)
+async def list_printers(
+    _user: CurrentUser,
+) -> dict:
+    """Return available printer names by proxying to the Print Bridge daemon.
+
+    Returns empty list if Print Bridge is not enabled or not reachable.
+    """
+    if not app_settings.print_bridge_enabled:
+        return {"printers": [], "available": False, "message": "Print Bridge no habilitado. Configure PRINT_BRIDGE_ENABLED=true y reinicie."}
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{app_settings.print_bridge_url}/printers")
+            resp.raise_for_status()
+            return resp.json()
+    except Exception:
+        return {"printers": [], "available": False, "message": "Print Bridge no disponible. Verifique que esté corriendo en el host."}

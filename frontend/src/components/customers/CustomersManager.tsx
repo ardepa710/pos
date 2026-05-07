@@ -102,7 +102,7 @@ export function CustomersManager() {
       className: "text-right",
       accessor: (row) => (
         <span className="tabular-nums text-[var(--accent)] font-medium">
-          {row.loyalty_points.toLocaleString("es-MX")}
+          {(row.loyalty_points ?? 0).toLocaleString("es-MX")}
         </span>
       ),
     },

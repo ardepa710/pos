@@ -38,9 +38,11 @@ const roleBadgeMap: Record<string, string> = {
 
 interface SidebarProps {
   onClose?: () => void;
+  businessName?: string;
+  logoUrl?: string;
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose, businessName, logoUrl }: SidebarProps) {
   const pathname = usePathname();
   const { user, clearAuth } = useAuthStore();
 
@@ -60,7 +62,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         flexShrink: 0,
       }}
     >
-      {/* Header — business name */}
+      {/* Header — logo or business name */}
       <div
         style={{
           padding: "1.25rem 1rem",
@@ -68,34 +70,49 @@ export function Sidebar({ onClose }: SidebarProps) {
           display: "flex",
           alignItems: "center",
           gap: "0.625rem",
+          minHeight: "4rem",
         }}
       >
-        <div
-          style={{
-            width: "2rem",
-            height: "2rem",
-            borderRadius: "var(--radius-sm)",
-            backgroundColor: "var(--accent)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <Store size={16} color="white" />
-        </div>
-        <span
-          style={{
-            fontWeight: 700,
-            fontSize: "0.9375rem",
-            color: "var(--text-on-dark)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          POS
-        </span>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={businessName ?? "POS"}
+            style={{
+              height: "2rem",
+              objectFit: "contain",
+              maxWidth: "160px",
+            }}
+          />
+        ) : (
+          <>
+            <div
+              style={{
+                width: "2rem",
+                height: "2rem",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: "var(--accent)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Store size={16} color="white" />
+            </div>
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: "0.9375rem",
+                color: "var(--text-on-dark)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {businessName ?? "POS"}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Navigation */}

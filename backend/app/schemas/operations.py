@@ -55,7 +55,7 @@ class SaleItemCreate(BaseModel):
 
 
 class PaymentCreate(BaseModel):
-    method: str = Field(pattern="^(cash|credit_card|debit_card|gift_card|transfer|other)$")
+    method: str = Field(pattern="^(cash|credit_card|debit_card|gift_card|transfer|loyalty_points|other)$")
     currency: str = Field(default="MXN", pattern="^(MXN|USD)$")
     amount: Decimal = Field(gt=Decimal("0"))
     gift_card_id: Optional[uuid.UUID] = None
@@ -70,7 +70,7 @@ class PaymentCreate(BaseModel):
 
 
 class SaleCreate(BaseModel):
-    customer_id: uuid.UUID
+    customer_id: Optional[uuid.UUID] = None
     items: list[SaleItemCreate] = Field(min_length=1)
     payments: list[PaymentCreate] = Field(min_length=1)
     cashier_session_id: Optional[uuid.UUID] = None
@@ -107,7 +107,7 @@ class SaleRead(BaseModel):
     model_config = {"from_attributes": True}
     id: uuid.UUID
     folio: str
-    customer_id: uuid.UUID
+    customer_id: Optional[uuid.UUID]
     cashier_id: uuid.UUID
     status: str
     subtotal_mxn: Decimal

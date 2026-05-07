@@ -48,7 +48,8 @@ export function StockAdjustModal({
 
   const deltaNum = delta === "" ? 0 : parseInt(delta, 10);
   const isValidDelta = delta !== "" && !isNaN(deltaNum) && deltaNum !== 0;
-  const preview = product.stock + (isValidDelta ? deltaNum : 0);
+  const preview =
+    parseFloat(String(product.stock_quantity)) + (isValidDelta ? deltaNum : 0);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -61,7 +62,7 @@ export function StockAdjustModal({
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            delta: deltaNum,
+            quantity: deltaNum,
             reason: reason.trim() || undefined,
           }),
         },
@@ -164,7 +165,7 @@ export function StockAdjustModal({
                   Existencia actual
                 </span>
                 <span className="text-2xl font-semibold tabular-nums text-[var(--text-primary)]">
-                  {product.stock}
+                  {parseFloat(String(product.stock_quantity))}
                 </span>
               </div>
 

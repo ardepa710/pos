@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     telemetry_enabled: bool = Field(default=False, alias="TELEMETRY_ENABLED")
     telemetry_endpoint: str = Field(default="", alias="TELEMETRY_ENDPOINT")
 
+    # Admin bootstrap
+    admin_initial_password: str = Field(default="Admin123!", alias="ADMIN_INITIAL_PASSWORD")
+
     # Support
     support_whatsapp: str = Field(default="", alias="SUPPORT_WHATSAPP")
 
