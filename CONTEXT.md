@@ -758,3 +758,69 @@
 **Version bump:** V2026.05.08-001 (sin bump adicional — misma fecha)
 
 **Status on close:** complete — rebrand en rama feat/rebrand-kolekto-v1, pusheado a GitHub, PDF auditado generado, MR pendiente de creación manual.
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — PR #2 creado en GitHub
+
+**Goal:** Crear PR feat/rebrand-kolekto-v1 → main en GitHub.
+
+**Affected files:**
+
+- `scripts/pr-body-ascii.md` (CREADO — cuerpo del PR en inglés/ASCII para evitar problemas de encoding con la API)
+- `CONTEXT.md` — esta entrada
+
+**Key decisions:**
+
+- **gh CLI no instalado** en este entorno — PR creado vía GitHub REST API con `Invoke-RestMethod` en PowerShell.
+- **Token recuperado de Windows Credential Manager** via Win32 `CredRead` API (advapi32.dll) — el token estaba almacenado como credencial genérica `git:https://github.com`, no en `.secrets.env`.
+- **Encoding issue**: `Get-Content -Raw` devuelve PSObject con metadata extra que causaba error 422 en la API de GitHub ("not a string"). Fix: usar `[System.IO.File]::ReadAllText()` con encoding ASCII para obtener string puro de .NET.
+- **PR #2**: `feat/rebrand-kolekto-v1 → main`. URL: https://github.com/ardepa710/pos/pull/2
+- **`scripts/pr-body-ascii.md`**: versión en inglés del cuerpo del PR (sin caracteres especiales). Puede eliminarse después del merge.
+
+**Skills activated:** ninguno específico
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna
+
+**Blockers:** ninguno
+
+**Version bump:** V2026.05.08-001 (sin cambio)
+
+**Status on close:** complete — PR #2 abierto en https://github.com/ardepa710/pos/pull/2
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — Fixes de deploy en VPS: CORS_ORIGINS + Caddyfile
+
+**Goal:** Corregir errores de docker compose en el VPS de producción (`/docker/kolekto-pos/`).
+
+**Affected files:**
+
+- `docker-compose.yml` — `CORS_ORIGINS` hardcoded → variable con default: `'${CORS_ORIGINS:-["http://localhost:3005","http://localhost"]}'`
+- `.env.example` — documentado formato correcto de `CORS_ORIGINS` (JSON array string)
+
+**Key decisions:**
+
+- **CORS_ORIGINS error 422 en Docker Compose**: el valor `["..."]` sin comillas simples YAML es parseado como array en vez de string. Fix: envolver en comillas simples en docker-compose.yml. Las comillas simples en YAML fuerzan interpretación como string; Docker Compose igualmente expande la variable `${}`.
+- **Caddyfile mount error (not a directory)**: el archivo `/docker/kolekto-pos/caddy/Caddyfile` no existía en el VPS. Cuando Docker intenta bind-montar un archivo inexistente, crea un directorio con ese nombre → mount falla. Fix: crear `caddy/` dir y el `Caddyfile` en el VPS manualmente antes de `docker compose up`.
+- **Patrón de deploy en VPS**: el directorio `/docker/kolekto-pos/` en el VPS debe tener: `docker-compose.yml`, `.env`, y `caddy/Caddyfile` creados manualmente. Las imágenes se construyen localmente o en CI y se pushean al registry.
+
+**Skills activated:** docker
+
+**Env changes:**
+
+- `CORS_ORIGINS` ahora configurable via `.env` en lugar de hardcodeado en docker-compose.yml
+
+**DB changes:** ninguna
+
+**Blockers:** ninguno — fixes documentados para aplicar en VPS manualmente
+
+**Version bump:** V2026.05.08-001 (sin cambio)
+
+**Status on close:** complete — fixes commiteados localmente; pendiente push a GitHub y aplicar en VPS

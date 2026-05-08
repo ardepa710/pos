@@ -163,7 +163,9 @@ async def authenticate_user(
     user = await get_user_by_username(session, username)
     if user is None:
         # Run verify anyway to avoid timing attacks that reveal username existence
-        verify_password(password, "$2b$12$dummyhashplaceholderfortimingXXXXXXXXXXXXXXXXXXXX")
+        # Valid bcrypt hash of a random string — used only for constant-time dummy comparison.
+        # Never matches any real password; prevents timing attacks that reveal username existence.
+        verify_password(password, "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RVH1zM6yi")
         return None
 
     if not verify_password(password, user.password_hash):

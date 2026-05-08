@@ -13,9 +13,10 @@ from app.config import settings
 
 async def bootstrap():
     async with AsyncSessionLocal() as session:
-        user = await get_or_create_admin(session, settings.admin_initial_password)
-        if user:
-            print(f'Admin user ready: {user.username}')
+        async with session.begin():  # auto-commits on exit, rolls back on exception
+            user = await get_or_create_admin(session, settings.admin_initial_password)
+            if user:
+                print(f'Admin user ready: {user.username}')
 
 asyncio.run(bootstrap())
 "
