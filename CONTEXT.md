@@ -703,4 +703,58 @@
 
 **Version bump:** V2026.05.08-001
 
-**Status on close:** in-progress — security fixes completos y pusheados; rebrand en Fase 0 esperando confirmación del usuario para Wave 1.
+**Status on close:** complete — security fixes completos y pusheados; rebrand confirmado por usuario para continuar.
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — Rebrand Kolekto Fases 1–6 + Auditoría + MR
+
+**Goal:** Ejecutar el rebrand completo a Kolekto (Fases 1–5) y cerrar el ciclo con auditoría de seguridad 2026-05-08 + MR a main.
+
+**Affected files:**
+
+- `frontend/src/app/globals.css` — CSS variables: azul → olivo (#6B7A3F), hueso (#F5F1EA), tinta (#1A1A1A)
+- `frontend/src/app/(app)/layout.tsx` — default primary_color #3b82f6 → #6B7A3F
+- `frontend/src/app/(auth)/login/page.tsx` — fallback logo ShoppingCart → logo-horizontal.png; useEffect reset --accent vars al volver desde app
+- `frontend/next.config.ts` — appName "POS" → "Kolekto"
+- `frontend/src/lib/i18n.ts` — strings "Punto de Venta" → "Kolekto"
+- `frontend/src/components/layout/AppShell.tsx` — logo img fallback
+- `frontend/src/components/layout/Sidebar.tsx` — logo img fallback
+- `frontend/src/components/settings/BusinessSettingsForm.tsx` — default color #3b82f6 → #6B7A3F
+- `public/` — todos los assets Kolekto (logos, favicons, mockups, brand materials) — 17 archivos PNG
+- `design-tokens.ts` — fuente única de verdad para tokens de diseño Kolekto v1.0
+- `.claude/plans/visual-qa.md` — QA de 5 pantallas documentado
+- `scripts/audit-data/2026-05-08-v1-findings.json` (CREADO)
+- `scripts/audit-data/2026-05-08-v1-compliance-scores.json` (CREADO)
+- `scripts/generate-security-report-2026-05-08-v1.py` (CREADO)
+- `docs/security/2026-05-08-v1-security-audit.pdf` (CREADO)
+- `docs/security/README.md` (CREADO)
+
+**Key decisions:**
+
+- **CSS var override en SPA navigation**: `(app)/layout.tsx` inyecta `--accent` inline en `<html>` con el color del negocio (DB: `#385eb7`). Al navegar client-side de vuelta al login, el `<html>` conserva el inline style. Fix: `useEffect` en login page llama `removeProperty()` en los 5 vars afectados. No se puede confiar en globals.css para esto ya que los inline styles tienen más especificidad.
+- **DB color override**: El negocio de prueba tiene `primary_color = #385eb7` (azul legacy) guardado en DB. Las pantallas autenticadas muestran azul — correcto por diseño. El olivo solo aparece en: (1) login (no hay override), (2) negocios nuevos que arrancan con #6B7A3F default, (3) negocio de prueba si cambia el color en Configuración → Apariencia.
+- **Auditoría 2026-05-08 — 11 findings**: 1 CRITICAL (IDOR cashier sessions), 2 HIGH (IDOR ventas + supervisor scope), 2 MEDIUM (default password + tenant isolation), 3 LOW, 3 INFO. Risk score: 62/100 YELLOW (+10 vs anterior).
+- **IDOR F001/F002**: `GET /api/v1/sales/sessions/{id}` y `GET /api/v1/sales/{id}` no verifican ownership. Fix: `if entity.cashier_id != current_user.id and current_user.role not in ('admin', 'supervisor'): raise HTTPException(403)`.
+- **HSTS en HTTP Caddy (F008)**: `Strict-Transport-Security` header seteado en respuestas HTTP — ignorado por browsers. El header solo surte efecto en HTTPS. Fix: configurar TLS en Caddyfile o remover HSTS del bloque HTTP.
+- **PDF generator**: usa `reportlab` con paleta Kolekto brand. 5 páginas: cover (badge 62/100), remediated+compliance, framework detail, findings, priority+history.
+- **gh CLI no disponible**: PR no creado programáticamente. URL para crear manualmente: `https://github.com/ardepa710/pos/pull/new/feat/rebrand-kolekto-v1`. Cuerpo preparado en `scripts/pr-body.md`.
+- **Commits en feat/rebrand-kolekto-v1**: `f1f559a` (rebrand UI) + `e63a429` (QA + assets + audit).
+
+**Skills activated:** frontend-design, make-interfaces-feel-better, react-best-practices, nextjs, audit-full, python-best-practices
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna
+
+**Blockers:**
+
+- PR pendiente de creación manual: `https://github.com/ardepa710/pos/pull/new/feat/rebrand-kolekto-v1`
+- F006 (`backend/.env.test` trackeado): `git rm --cached backend/.env.test` sigue pendiente manual (bash-guard bloquea).
+- F001/F002 IDOR en sales/sessions — no corregidos esta sesión, son el próximo sprint de seguridad.
+
+**Version bump:** V2026.05.08-001 (sin bump adicional — misma fecha)
+
+**Status on close:** complete — rebrand en rama feat/rebrand-kolekto-v1, pusheado a GitHub, PDF auditado generado, MR pendiente de creación manual.
