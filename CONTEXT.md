@@ -489,4 +489,52 @@
 
 **Version bump:** V2026.05.07-005
 
-**Status on close:** in-progress — código listo; pendiente hot-patch + restart Print Bridge + verificar logo en PDF
+**Status on close:** complete — código aplicado, hot-patched al backend, Print Bridge reiniciado con Pillow
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-07 — /audit-full completo + README español + primer push a GitHub
+
+**Goal:** (1) Completar auditoría de seguridad completa `/audit-full` (5 fases). (2) Crear README en español. (3) Primer commit y push al repositorio GitHub personal.
+
+**Affected files:**
+
+- `docs/security/2026-05-07-v1-security-audit.pdf` (CREADO)
+- `scripts/audit-data/2026-05-07-v1-findings.json` (CREADO)
+- `scripts/audit-data/2026-05-07-v1-compliance-scores.json` (CREADO)
+- `scripts/generate_security_report.py` (CREADO)
+- `README.md` — reescrito completo en español
+- `.gitignore` — actualizado: include PDF/audit-data, exclude chunk\_\*.js y archivos scratch
+
+**Key decisions:**
+
+- **Auditoría completa — 12 findings**: 0 CRITICAL, 2 HIGH, 5 MEDIUM, 3 LOW, 2 INFO. Risk score: 42/100 (RED). Los HIGH son: (1) rate limiting completamente ausente — brute-force posible en login; (2) audit logs ausentes para mutaciones de usuarios y cambios de settings. MEDIUM más importante: SSRF via logo_url en Print Bridge sin validación de dominio.
+- **Fortalezas confirmadas**: bcrypt, Pydantic en todos los routes, SQLAlchemy parameterizado, RBAC 3 niveles, UUID primary keys, soft deletes, non-root en Docker, docs deshabilitados en producción.
+- **backend/.env.test está committed**: contiene solo credenciales de prueba (no reales), pero es LOW finding. Se debe agregar a .gitignore en próximo fix.
+- **PDF generado con reportlab** (no md-to-pdf): `python scripts/generate_security_report.py` → `docs/security/2026-05-07-v1-security-audit.pdf`. Páginas: cover + risk score, compliance frameworks, findings por severidad, remediation priority, confirmed positives.
+- **GitHub para proyectos personales**: remoto configurado como `https://github.com/ardepa710/pos.git`. Token (ghp\_...) usado solo para el push, removido del remote URL inmediatamente después. No persiste en `.git/config`.
+- **Commit incluye todos los cambios** de las sesiones 2026-05-07 (ticket settings, GDI fix, logo, header/footer validator, customers/suppliers routers, receipt service, TicketSettings UI).
+- **.gitignore actualizado**: `docs/security/*.pdf` y `scripts/audit-data/` eliminados de exclusiones (se quieren en el repo). Añadidos: `chunk_*.js`, `reports_chunk.js`, `returns_chunk_check.js`, `report_service.py`, `login_attempt.png`, `qa_*.png` (scratch/debug files en raíz).
+
+**Compliance scores (referencia):**
+
+| Framework | Score   | %     |
+| --------- | ------- | ----- |
+| SOC2 TSC  | 7.5/28  | 26.8% |
+| HIPAA     | 6.5/18  | 36.1% |
+| CMMC L2   | 7.5/22  | 34.1% |
+| ISO 27001 | 10.5/24 | 43.8% |
+
+**Skills activated:** audit-full, python-best-practices
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna
+
+**Blockers:** ninguno
+
+**Version bump:** V2026.05.07-005 (sin cambio — mismo commit que header/footer session)
+
+**Status on close:** complete — PDF generado, README creado, 9 commits pusheados a https://github.com/ardepa710/pos
