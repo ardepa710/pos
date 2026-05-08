@@ -1,0 +1,188 @@
+{
+  "project": "Kolekto — POS",
+  "date": "2026-05-08",
+  "version": "v1",
+  "auditor": "Claude Code (automated)",
+  "scope": [
+    "Auth & Access Control",
+    "Privacy Boundaries",
+    "API Security",
+    "Data Integrity",
+    "Production Hygiene"
+  ],
+  "remediated_from_v1": [
+    "F001-v1: Rate limiting — FIXED (slowapi, login 10/min)",
+    "F002-v1: Audit logs absent — FIXED (all mutations logged)",
+    "F004-v1: JWT 8h expiry — FIXED (60 minutes)",
+    "F006-v1: CSP/HSTS missing in Caddy — FIXED",
+    "F008-v1: SQLAlchemy echo=True — FIXED (echo=False always)",
+    "F010-v1: No security headers in next.config.ts — FIXED"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "CRITICAL",
+      "title": "IDOR on cashier session access — any authenticated user can read any session",
+      "what": "GET /api/v1/sales/sessions/{session_id} fetches any cashier session without verifying the requesting user owns it",
+      "file": "backend/app/routers/sales.py:103–118",
+      "why": "Any cashier (or any other role) can read financial reconciliation data (starting cash, closing amounts, discrepancy) from another cashier's session by guessing or iterating UUIDs. UUID brute-force is impractical, but authenticated insiders can access sensitive data of colleagues.",
+      "fix": "In get_session_by_id: load the session, then check `if cashier_session.cashier_id != current_user.id and current_user.role not in ('admin', 'supervisor'): raise HTTPException(403)`. Add equivalent check in the service layer.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.3", "CC6.7"],
+        "hipaa": ["164.312(a)(1)", "164.312(a)(2)(i)"],
+        "cmmc": ["AC.1.001", "AC.1.002", "AC.2.147"],
+        "iso27001": ["A.5.15", "A.5.18", "A.8.3"]
+      }
+    },
+    {
+      "id": "F002",
+      "severity": "HIGH",
+      "title": "IDOR on individual sale access — any authenticated user can read any sale",
+      "what": "GET /api/v1/sales/{sale_id} returns full sale details (customer, items, payment method, amounts) without ownership or role check",
+      "file": "backend/app/routers/sales.py:198–206",
+      "why": "A cashier can read sales created by other cashiers, accessing customer data, payment references, and business intelligence. An attacker who compromises a low-privilege account can enumerate all sales.",
+      "fix": "Add ownership check: `if sale.cashier_id != current_user.id and current_user.role not in ('admin', 'supervisor'): raise HTTPException(403)`. Apply same pattern to void_sale and any other sale-by-ID endpoints.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.3"],
+        "hipaa": ["164.312(a)(1)"],
+        "cmmc": ["AC.1.001", "AC.2.147"],
+        "iso27001": ["A.5.15", "A.8.3"]
+      }
+    },
+    {
+      "id": "F003",
+      "severity": "HIGH",
+      "title": "Weak supervisor authorization on void_sale — no location/cashier scope enforcement",
+      "what": "POST /api/v1/sales/{sale_id}/void only checks role=supervisor; does not verify the supervisor manages the cashier who created the sale",
+      "file": "backend/app/routers/sales.py:209–221",
+      "why": "A supervisor at one location can void sales created by cashiers at any other location, enabling unauthorized financial manipulation across the business.",
+      "fix": "In void_sale service: check that `sale.cashier_id == current_user.id OR current_user.role == 'admin'`. For multi-location deployments, additionally scope by location_id or supervisor assignment.",
+      "controls": {
+        "soc2": ["CC6.3", "CC6.4"],
+        "hipaa": ["164.308(a)(4)"],
+        "cmmc": ["AC.2.007"],
+        "iso27001": ["A.5.18", "A.8.2"]
+      }
+    },
+    {
+      "id": "F004",
+      "severity": "MEDIUM",
+      "title": "Default admin password 'Admin123!' — startup warning but no enforcement",
+      "what": "ADMIN_INITIAL_PASSWORD defaults to 'Admin123!' in config.py. A warning is logged at startup but nothing blocks the app from running with this default.",
+      "file": "backend/app/config.py:49, backend/app/main.py:30–35",
+      "why": "If ADMIN_INITIAL_PASSWORD is not overridden in the .env file (e.g., fresh install, copied config), the admin account has a publicly known password attackable by credential stuffing.",
+      "fix": "Enforce non-default password at startup: if settings.admin_initial_password == DEFAULT, raise RuntimeError in production (ENV=production). Alternatively, generate a random password and display it once on first boot, then require reset.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": ["164.308(a)(5)(ii)(D)"],
+        "cmmc": ["IA.1.077"],
+        "iso27001": ["A.9.4.3"]
+      }
+    },
+    {
+      "id": "F005",
+      "severity": "MEDIUM",
+      "title": "Tenant isolation absent at DB query level",
+      "what": "All service queries do not filter by tenant_id. Models have tenant_id with a hardcoded default UUID but queries never enforce tenant boundaries.",
+      "file": "backend/app/services/*.py (all service files)",
+      "why": "If multi-tenant deployment is ever attempted, all data from all tenants is accessible to any authenticated user. Also creates IDOR risk if tenant isolation is added inconsistently later.",
+      "fix": "Add tenant_id to all WHERE clauses as a baseline. Create a TenantContext dependency that injects tenant_id from the authenticated user. Fail closed: 404 if entity.tenant_id != current_user.tenant_id.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.3"],
+        "hipaa": ["164.312(a)(1)"],
+        "cmmc": ["AC.2.147"],
+        "iso27001": ["A.9.1.2"]
+      }
+    },
+    {
+      "id": "F006",
+      "severity": "LOW",
+      "title": "backend/.env.test committed to git — test credentials in version control",
+      "what": "backend/.env.test is tracked by git and contains DATABASE_URL, SECRET_KEY (test values). Added to .gitignore but still tracked.",
+      "file": "backend/.env.test",
+      "why": "Although credentials are test-only (not production), this normalizes credential storage in git. Developers may base production configs on this pattern. SECRET_KEY format is exposed.",
+      "fix": "Run `git rm --cached backend/.env.test` to untrack. Provide backend/.env.test.example with placeholder values. Already added to .gitignore in a prior fix.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": [],
+        "cmmc": ["CM.3.165"],
+        "iso27001": ["A.14.2.3"]
+      }
+    },
+    {
+      "id": "F007",
+      "severity": "LOW",
+      "title": "Missing rate limit on gift card redemption endpoint",
+      "what": "POST /api/v1/gift-cards/{code}/redeem has no @limiter.limit decorator, allowing unrestricted gift card code enumeration.",
+      "file": "backend/app/routers/extras.py:61–76",
+      "why": "Attackers can rapidly test gift card codes to find valid balances and drain them, especially if code format is predictable or sequential.",
+      "fix": "Add `@limiter.limit('5/minute')` decorator to the redeem endpoint. Consider also limiting the lookup endpoint.",
+      "controls": {
+        "soc2": ["CC6.1", "CC6.6"],
+        "hipaa": [],
+        "cmmc": ["AC.2.006", "SC.3.178"],
+        "iso27001": ["A.12.6.1"]
+      }
+    },
+    {
+      "id": "F008",
+      "severity": "LOW",
+      "title": "HSTS header configured on HTTP-only Caddy — header is ineffective",
+      "what": "Caddyfile sets Strict-Transport-Security header but the server only listens on :80 (HTTP). HSTS is ignored by browsers on non-HTTPS responses.",
+      "file": "caddy/Caddyfile",
+      "why": "The HSTS header provides no protection. If the deployment is ever HTTPS-enabled and HSTS was relied upon for security, it will have never been processed by browsers.",
+      "fix": "Either: (a) configure TLS in the Caddyfile to serve on :443 (Caddy auto-HTTPS handles this with a domain name), or (b) remove the HSTS header from the HTTP block and add it only when HTTPS is configured.",
+      "controls": {
+        "soc2": ["CC6.1"],
+        "hipaa": ["164.312(e)(2)(i)"],
+        "cmmc": ["SC.3.177"],
+        "iso27001": ["A.14.2.1"]
+      }
+    },
+    {
+      "id": "F009",
+      "severity": "INFO",
+      "title": "Login endpoint distinguishes wrong password vs inactive account",
+      "what": "auth.py returns HTTP 401 for bad credentials vs HTTP 403 for inactive account, allowing username enumeration of known-valid-but-inactive users.",
+      "file": "backend/app/routers/auth.py:63–68",
+      "why": "Minor information disclosure: an attacker can determine that a username exists and has been deactivated (vs never existed). Low practical impact in a POS context.",
+      "fix": "Return generic HTTP 401 with identical message for both cases. Move the 'account inactive' distinction to a post-authentication step. Acceptable as-is given POS threat model.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": [],
+        "cmmc": ["IA.1.076"],
+        "iso27001": ["A.9.4.2"]
+      }
+    },
+    {
+      "id": "F010",
+      "severity": "INFO",
+      "title": "CSP includes 'unsafe-inline' and 'unsafe-eval' in script-src",
+      "what": "Both next.config.ts and caddy/Caddyfile include script-src 'unsafe-inline' 'unsafe-eval' in the Content-Security-Policy.",
+      "file": "frontend/next.config.ts:12, caddy/Caddyfile",
+      "why": "These weaknesses are required by Next.js for inline scripts and hot module replacement. They reduce XSS mitigation effectiveness. Accepted risk for this stack.",
+      "fix": "Consider using CSP nonces (Next.js nonce support available in v13+) to eliminate 'unsafe-inline'. 'unsafe-eval' can be removed in production builds. Low priority given Next.js constraints.",
+      "controls": {
+        "soc2": ["CC6.1"],
+        "hipaa": [],
+        "cmmc": ["SC.3.181"],
+        "iso27001": ["A.8.20"]
+      }
+    },
+    {
+      "id": "F011",
+      "severity": "INFO",
+      "title": "No multi-factor authentication for admin or supervisor accounts",
+      "what": "Authentication is username+password only with no second factor for privileged roles.",
+      "file": "backend/app/routers/auth.py",
+      "why": "If admin credentials are compromised, an attacker gains full system access with no second barrier. Admin can void sales, modify settings, and view all reports.",
+      "fix": "Add optional TOTP (pyotp) as a second factor, required for admin/supervisor roles. Phased rollout acceptable.",
+      "controls": {
+        "soc2": ["CC6.2"],
+        "hipaa": ["164.308(a)(5)(ii)(C)"],
+        "cmmc": ["IA.3.083"],
+        "iso27001": ["A.9.4.2"]
+      }
+    }
+  ]
+}

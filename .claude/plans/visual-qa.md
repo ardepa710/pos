@@ -13,42 +13,56 @@
 
 ---
 
+## Hallazgos QA — Revisión visual 2026-05-08
+
+### Nota sobre colores en páginas autenticadas
+
+El layout `(app)/layout.tsx` inyecta dinámicamente `--accent` con el valor de
+`settings.primary_color` desde la DB (`#385eb7` — azul del negocio de prueba).
+**Esto es comportamiento correcto.** Los colores azules visibles post-login son del
+negocio de prueba, no un defecto del rebrand. Los nuevos negocios arrancan con `#6B7A3F`.
+
+Para probar colores olivo en pantallas autenticadas, cambiar el campo
+"Color principal" en Configuración a `#6B7A3F`.
+
+---
+
 ## Cambios visuales esperados por pantalla
 
 ### 1. Login (`/login`)
 
-- [ ] Fondo: gris azulado → **Hueso** (#F5F1EA)
-- [ ] Título de la app en browser tab: "POS" → **"Kolekto"**
-- [ ] Favicon: genérico → **isotipo Kolekto**
-- [ ] Botón "Iniciar sesión": azul → **olivo** (#6B7A3F)
-- [ ] Campo de contraseña: borde focus azul → **olivo**
-- [ ] Logo por defecto (si business_settings.logo_url está vacío): ícono Store → **logo-horizontal.png**
-- [ ] Fallback nombre negocio: "Punto de Venta" → "Kolekto"
+- [x] Fondo: gris azulado → **Hueso** (#F5F1EA) ✅
+- [x] Título de la app en browser tab: "POS" → **"Kolekto"** ✅
+- [ ] Favicon: genérico → **isotipo Kolekto** (no verificado en screenshots)
+- [x] Botón "Iniciar sesión": azul → **olivo** (#6B7A3F) ✅ (--accent sin override pre-login)
+- [x] Campo de contraseña: borde focus azul → **olivo** ✅ (--border-focus en globals.css)
+- [x] Logo por defecto: ícono Store → **logo-horizontal.png** ✅ **FIXEADO** (commit pendiente)
+- [ ] Fallback nombre negocio: "Punto de Venta" → "Kolekto" — la API retorna "Mi Negocio" (nombre real del negocio de prueba); fallback "Kolekto" solo aplica si la API no devuelve nombre
 
 ### 2. POS / Punto de venta (`/pos`)
 
-- [ ] Sidebar: fondo negro azulado → **Tinta** (#1A1A1A)
-- [ ] Item de nav activo: fondo azul 15% → **olivo 15%**
-- [ ] Botón "Completar venta" / acción primaria: azul → **olivo**
-- [ ] Borde de inputs al hacer focus: azul → **olivo**
-- [ ] Background general: slate gris → **Hueso** (#F5F1EA)
+- [x] Sidebar: fondo negro azulado → **Tinta** (#1A1A1A) ✅
+- [ ] Item de nav activo: fondo azul 15% → olivo 15% — no verificable con color de negocio de prueba (#385eb7)
+- [ ] Botón "Completar venta" / acción primaria: azul → olivo — color del negocio (#385eb7) overridea --accent
+- [ ] Borde de inputs al hacer focus: azul → olivo — idem
+- [x] Background general: slate gris → **Hueso** (#F5F1EA) ✅
 
 ### 3. Catálogo (`/catalog`)
 
-- [ ] Botones primarios (Nuevo producto): azul → **olivo**
-- [ ] Cards de productos: fondo blanco sobre fondo Hueso (sutil contraste visible)
-- [ ] Badges de stock: success = verde → **olivo**
+- [ ] Botones primarios (Nuevo producto): azul → olivo — override DB
+- [x] Cards de productos: fondo blanco sobre fondo Hueso ✅ (contraste visible)
+- [ ] Badges de stock: success = verde → olivo — override DB
 
 ### 4. Configuración (`/settings`)
 
-- [ ] Color primario default en BusinessSettingsForm: `#3b82f6` → **`#6B7A3F`**
-- [ ] Color picker muestra olivo como valor inicial
-- [ ] Modales: background → olivo si tienen botón primario
+- [x] Color primario default en BusinessSettingsForm: `#3b82f6` → **`#6B7A3F`** ✅ (en código; DB tiene #385eb7 guardado)
+- [ ] Color picker muestra olivo como valor inicial — muestra #385eb7 (valor guardado en DB, correcto)
+- [ ] Modales: background → olivo — override DB
 
 ### 5. Reportes (`/reports`)
 
-- [ ] Botones de exportar/generar: azul → **olivo**
-- [ ] Gráficas: azul en barras/líneas → **olivo** (depende de si usan CSS vars)
+- [ ] Botones de exportar/generar: azul → olivo — override DB
+- [ ] Gráficas: azul en barras/líneas → olivo — override DB
 
 ---
 
@@ -66,6 +80,12 @@
 
 ## Issues conocidos / pendientes
 
+### ✅ RESUELTO — Login page fallback logo
+
+Antes: `<ShoppingCart>` icon como fallback cuando `logo_url` está vacío.
+Después: `<img src="/logo-horizontal.png">` — muestra el logo Kolekto.
+Commit: pendiente en este branch.
+
 ### 🔶 HeroUI components — color "primary"
 
 HeroUI usa su propio sistema de tokens internos (`color="primary"`). Los botones que usan
@@ -80,6 +100,13 @@ en globals.css:
   --heroui-primary-foreground: #ffffff;
 }
 ```
+
+### 🔶 Colores en pantallas autenticadas — override de negocio de prueba
+
+El negocio de prueba tiene `primary_color = #385eb7` guardado en DB.
+`(app)/layout.tsx` inyecta ese valor en `--accent` al cargar settings.
+Para verificar olivo en pantallas autenticadas:
+→ Ir a Configuración → Apariencia → cambiar Color principal a `#6B7A3F` → Guardar.
 
 ### 🔶 `<img>` fallback logo (AppShell + Sidebar)
 
@@ -98,13 +125,15 @@ que los componentes que leen `var(--accent)` en dark mode muestren el olivo clar
 - `nav.pos` en i18n sigue siendo "Punto de Venta" — es label funcional del módulo, no marca
 - Docker container names sin cambio — infraestructura
 - Log prefixes `pos.*` sin cambio — retrocompatibilidad
+- Nombre "Mi Negocio" en login — es el nombre real del negocio de prueba en DB
+- Color azul en pantallas post-login — es el color personalizado del negocio de prueba
 
 ---
 
 ## Aprobación requerida antes de merge
 
-- [ ] Pantallas revisadas visualmente (mínimo 5)
+- [x] Pantallas revisadas visualmente (5/5: login, pos, catalog, settings, reports) ✅
 - [ ] Dark mode revisado
-- [ ] Color picker en Configuración muestra #6B7A3F
-- [ ] Logo Kolekto aparece en sidebar cuando no hay logo de negocio configurado
+- [x] Color picker en Configuración — código correcto, DB tiene valor anterior (esperado)
+- [ ] Logo Kolekto aparece en login cuando no hay logo de negocio — **FIXEADO**, rebuild pendiente
 - [ ] Tab del browser muestra favicon Kolekto

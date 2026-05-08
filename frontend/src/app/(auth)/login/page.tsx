@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ShoppingCart } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { authApi, fetchBranding } from "@/lib/api";
 import { useAuthStore, selectIsAuthenticated } from "@/store/auth";
 import { t } from "@/lib/i18n";
@@ -47,6 +47,19 @@ export default function LoginPage() {
       router.replace("/pos");
     }
   }, [isAuthenticated, router]);
+
+  // Reset CSS accent vars to Kolekto defaults when entering the auth area.
+  // (app)/layout.tsx injects the business primary_color into --accent on <html> at runtime.
+  // Client-side navigation from the app back to /login does NOT reset inline styles,
+  // so the login button would inherit the business color. We explicitly clear it here.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.removeProperty("--accent");
+    root.style.removeProperty("--accent-hover");
+    root.style.removeProperty("--border-focus");
+    root.style.removeProperty("--info");
+    root.style.removeProperty("--accent-subtle");
+  }, []);
 
   // Load branding (unauthenticated endpoint)
   useEffect(() => {
@@ -99,16 +112,12 @@ export default function LoginPage() {
               className="h-14 w-auto object-contain ring-1 ring-black/10"
             />
           ) : (
-            <div
-              className="flex items-center justify-center w-14 h-14 rounded-xl"
-              style={{ backgroundColor: "var(--accent-subtle)" }}
-            >
-              <ShoppingCart
-                size={28}
-                style={{ color: "var(--accent)" }}
-                aria-hidden="true"
-              />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/logo-horizontal.png"
+              alt="Kolekto"
+              style={{ height: "2.25rem", width: "auto", objectFit: "contain" }}
+            />
           )}
           <h1
             className="text-xl font-semibold tracking-tight"

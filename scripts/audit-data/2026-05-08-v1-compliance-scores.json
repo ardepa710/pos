@@ -1,0 +1,389 @@
+{
+  "project": "Kolekto — POS",
+  "date": "2026-05-08",
+  "version": "v1",
+  "risk_score": 62,
+  "risk_level": "yellow",
+  "finding_counts": {
+    "critical": 1,
+    "high": 2,
+    "medium": 2,
+    "low": 3,
+    "info": 3
+  },
+  "delta_from_previous": {
+    "date": "2026-05-07",
+    "version": "v1",
+    "remediated": 6,
+    "new_findings": 3,
+    "score_delta": "+10"
+  },
+  "frameworks": {
+    "soc2": {
+      "total": 28,
+      "score": 14.5,
+      "percentage": 52,
+      "controls": {
+        "CC6.1": {
+          "score": 0.5,
+          "note": "IDOR findings reduce access control completeness"
+        },
+        "CC6.2": {
+          "score": 1.0,
+          "note": "JWT authentication complete, bcrypt passwords"
+        },
+        "CC6.3": {
+          "score": 0.5,
+          "note": "RBAC present but IDOR bypasses authorization"
+        },
+        "CC6.4": {
+          "score": 1.0,
+          "note": "Audit logging complete on all mutations"
+        },
+        "CC6.5": { "score": 1.0, "note": "60-min token expiry implemented" },
+        "CC6.6": {
+          "score": 0.5,
+          "note": "Rate limiting on auth; missing on gift cards"
+        },
+        "CC6.7": {
+          "score": 0.5,
+          "note": "Response schemas safe; IDOR reduces data access control"
+        },
+        "CC6.8": { "score": 0.5, "note": "N/A for this project type" },
+        "CC6.9": {
+          "score": 0.5,
+          "note": "TLS at Caddy layer; HSTS misconfigured"
+        },
+        "CC7.1": {
+          "score": 1.0,
+          "note": "Structlog structured logging throughout"
+        },
+        "CC7.2": {
+          "score": 0.5,
+          "note": "Logs exist; no automated alerting on auth failures"
+        },
+        "CC7.3": {
+          "score": 0.0,
+          "note": "No documented incident response plan"
+        },
+        "CC7.4": {
+          "score": 0.0,
+          "note": "No incident tracking or escalation procedures"
+        },
+        "CC7.5": {
+          "score": 0.0,
+          "note": "No anomaly detection or SIEM integration"
+        },
+        "CC7.6": {
+          "score": 0.5,
+          "note": "Security audit conducted; not fully automated"
+        },
+        "CC8.1": {
+          "score": 1.0,
+          "note": "Version control, migrations, CI/CD present"
+        },
+        "CC8.2": {
+          "score": 0.5,
+          "note": "RBAC provisioning exists; no formal review process"
+        },
+        "CC8.3": {
+          "score": 0.5,
+          "note": "Audit done; no automated SAST/DAST in pipeline"
+        },
+        "CC8.4": {
+          "score": 0.5,
+          "note": "Code reviewed informally; no formal review gates"
+        },
+        "CC9.1": {
+          "score": 0.5,
+          "note": "Some risk documentation; no formal risk register"
+        },
+        "CC9.2": {
+          "score": 0.5,
+          "note": "Limited vendor dependencies; no formal assessment"
+        },
+        "CC9.3": {
+          "score": 0.0,
+          "note": "No documented business continuity plan"
+        },
+        "CC9.4": { "score": 0.5, "note": "N/A for this project scope" },
+        "A1.1": {
+          "score": 0.5,
+          "note": "Health check endpoint; no HA configuration"
+        },
+        "A1.2": {
+          "score": 0.0,
+          "note": "No performance monitoring or SLA tracking"
+        },
+        "A1.3": {
+          "score": 0.5,
+          "note": "Docker restart policies; no formal RTO/RPO"
+        },
+        "A1.4": {
+          "score": 0.0,
+          "note": "Backup config exists in env vars; not verified active"
+        },
+        "CC6.1b": {
+          "score": 1.0,
+          "note": "Full Pydantic validation on all endpoints"
+        }
+      }
+    },
+    "hipaa": {
+      "total": 18,
+      "score": 8.5,
+      "percentage": 47,
+      "controls": {
+        "§164.308(a)(1)": {
+          "score": 0.5,
+          "note": "Partial risk analysis in audit; no formal risk management program"
+        },
+        "§164.308(a)(1)(ii)(D)": {
+          "score": 0.5,
+          "note": "Security event logging present; no automated alerting"
+        },
+        "§164.308(a)(2)": {
+          "score": 0.0,
+          "note": "No designated security officer"
+        },
+        "§164.308(a)(3)": {
+          "score": 0.5,
+          "note": "RBAC workforce access controls; no clearance process"
+        },
+        "§164.308(a)(4)": {
+          "score": 0.5,
+          "note": "Access management via RBAC; IDOR weakens this"
+        },
+        "§164.308(a)(5)": {
+          "score": 0.0,
+          "note": "No security awareness training program"
+        },
+        "§164.308(a)(5)(ii)(C)": {
+          "score": 0.5,
+          "note": "Login monitoring via audit logs; no automated alerts"
+        },
+        "§164.308(a)(5)(ii)(D)": {
+          "score": 0.5,
+          "note": "Password policies exist; default password risk"
+        },
+        "§164.308(a)(6)": {
+          "score": 0.0,
+          "note": "No documented security incident response procedures"
+        },
+        "§164.308(a)(7)": {
+          "score": 0.0,
+          "note": "No contingency planning documented"
+        },
+        "§164.308(a)(8)": {
+          "score": 0.5,
+          "note": "Security audit conducted; not on regular schedule"
+        },
+        "§164.312(a)(1)": {
+          "score": 0.5,
+          "note": "Access control implemented; IDOR vulnerabilities present"
+        },
+        "§164.312(a)(2)(i)": {
+          "score": 1.0,
+          "note": "Unique user IDs enforced"
+        },
+        "§164.312(a)(2)(iii)": {
+          "score": 0.5,
+          "note": "60-min token expiry; no server-side invalidation on logout"
+        },
+        "§164.312(b)": {
+          "score": 1.0,
+          "note": "Comprehensive audit logging on all mutations"
+        },
+        "§164.312(c)": {
+          "score": 0.5,
+          "note": "Pydantic validation; no hash-based integrity verification"
+        },
+        "§164.312(d)": {
+          "score": 1.0,
+          "note": "JWT authentication implemented correctly"
+        },
+        "§164.312(e)": {
+          "score": 0.5,
+          "note": "TLS at proxy layer; HSTS misconfigured"
+        }
+      }
+    },
+    "cmmc": {
+      "total": 22,
+      "score": 12.0,
+      "percentage": 55,
+      "controls": {
+        "AC.1.001": {
+          "score": 0.5,
+          "note": "Access control policy partially implemented; IDOR findings"
+        },
+        "AC.1.002": {
+          "score": 0.5,
+          "note": "Access limited to authorized users; IDOR bypasses"
+        },
+        "AC.2.006": { "score": 1.0, "note": "Login rate limiting implemented" },
+        "AC.2.007": {
+          "score": 0.5,
+          "note": "Privileged account controls via RBAC; no audit review"
+        },
+        "AC.2.147": {
+          "score": 0.5,
+          "note": "Authorization enforcement partial; tenant isolation absent"
+        },
+        "AU.2.041": {
+          "score": 1.0,
+          "note": "Audit logs created for all mutations"
+        },
+        "AU.2.042": {
+          "score": 1.0,
+          "note": "User identifiability in all audit records"
+        },
+        "AU.3.045": {
+          "score": 0.0,
+          "note": "No automated audit log review or analysis"
+        },
+        "CM.2.061": {
+          "score": 0.5,
+          "note": "Docker Compose baseline; no hardened baseline docs"
+        },
+        "CM.2.064": {
+          "score": 0.5,
+          "note": "Config managed via env vars; no formal governance"
+        },
+        "CM.3.165": { "score": 0.5, "note": "Partial; .env.test still in git" },
+        "IA.1.076": {
+          "score": 1.0,
+          "note": "All users identified and authenticated via JWT"
+        },
+        "IA.1.077": {
+          "score": 0.5,
+          "note": "Password hashing (bcrypt); weak default admin password"
+        },
+        "IA.3.083": { "score": 0.0, "note": "No MFA for any account" },
+        "IR.2.092": { "score": 0.0, "note": "No incident response plan" },
+        "IR.2.093": {
+          "score": 0.0,
+          "note": "No incident tracking or documentation"
+        },
+        "RA.2.137": {
+          "score": 0.5,
+          "note": "Security audit conducted; not on defined schedule"
+        },
+        "RA.3.144": {
+          "score": 0.5,
+          "note": "Manual vulnerability assessment only"
+        },
+        "SC.3.177": {
+          "score": 0.5,
+          "note": "TLS at proxy; HSTS ineffective on HTTP-only config"
+        },
+        "SC.3.178": {
+          "score": 1.0,
+          "note": "Full Pydantic input validation; CORS locked"
+        },
+        "SC.3.181": {
+          "score": 1.0,
+          "note": "Security headers in both next.config.ts and Caddyfile"
+        },
+        "SI.3.171": {
+          "score": 0.5,
+          "note": "SSRF fix applied in v1 (logo_url domain validation)"
+        }
+      }
+    },
+    "iso27001": {
+      "total": 24,
+      "score": 11.0,
+      "percentage": 46,
+      "controls": {
+        "A.5.15": {
+          "score": 0.5,
+          "note": "Access control partially implemented; IDOR findings"
+        },
+        "A.5.16": { "score": 1.0, "note": "User identity management complete" },
+        "A.5.17": {
+          "score": 0.5,
+          "note": "Authentication implemented; no MFA for privileged accounts"
+        },
+        "A.5.18": {
+          "score": 0.5,
+          "note": "Access rights enforced by RBAC; IDOR bypasses"
+        },
+        "A.5.19": {
+          "score": 0.5,
+          "note": "Limited external vendor risk; no formal assessment"
+        },
+        "A.6.1": {
+          "score": 0.0,
+          "note": "No designated information security roles"
+        },
+        "A.6.3": { "score": 0.0, "note": "No security awareness program" },
+        "A.7.1": {
+          "score": 0.5,
+          "note": "N/A cloud-hosted; Docker isolation present"
+        },
+        "A.8.2": {
+          "score": 0.5,
+          "note": "Privileged access via RBAC; no formal review"
+        },
+        "A.8.3": {
+          "score": 0.5,
+          "note": "Information access restriction partial; IDOR"
+        },
+        "A.8.4": {
+          "score": 0.5,
+          "note": "Source code managed; no formal review gates"
+        },
+        "A.8.5": {
+          "score": 0.5,
+          "note": "Authentication implemented; default password risk"
+        },
+        "A.8.6": { "score": 0.0, "note": "No capacity management monitoring" },
+        "A.8.7": {
+          "score": 0.5,
+          "note": "Input validation complete; no anti-malware specific"
+        },
+        "A.8.9": {
+          "score": 0.5,
+          "note": "Config via env vars; some hardening gaps"
+        },
+        "A.8.11": {
+          "score": 0.5,
+          "note": "Schemas prevent PII leakage; no formal masking"
+        },
+        "A.8.12": {
+          "score": 0.5,
+          "note": "Structured logging protects PII; no DLP"
+        },
+        "A.8.16": {
+          "score": 0.5,
+          "note": "Audit logs present; no automated monitoring"
+        },
+        "A.8.20": {
+          "score": 0.5,
+          "note": "CORS locked; security headers implemented"
+        },
+        "A.8.21": {
+          "score": 0.5,
+          "note": "Service security partial; HSTS misconfigured"
+        },
+        "A.8.22": {
+          "score": 0.0,
+          "note": "No network segmentation between services"
+        },
+        "A.8.24": {
+          "score": 0.5,
+          "note": "TLS at proxy; no DB encryption at rest"
+        },
+        "A.8.25": {
+          "score": 0.5,
+          "note": "Secure dev practices followed; no formal SDLC"
+        },
+        "A.8.29": {
+          "score": 1.0,
+          "note": "Security testing conducted via this audit"
+        }
+      }
+    }
+  }
+}
