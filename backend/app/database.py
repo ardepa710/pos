@@ -5,7 +5,7 @@ from app.config import settings
 
 engine = create_async_engine(
     settings.database_url,
-    echo=not settings.is_production,
+    echo=False,  # Never log SQL — may expose PII in query values
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
@@ -24,4 +24,5 @@ class Base(DeclarativeBase):
 
 async def get_session() -> AsyncSession:  # type: ignore[return]
     async with AsyncSessionLocal() as session:
-        yield session
+        async with session.begin():
+            yield session

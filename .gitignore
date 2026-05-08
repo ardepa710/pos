@@ -31,6 +31,7 @@ build/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+backend/.env.test
 
 # IDE
 .vscode/
@@ -63,6 +64,18 @@ print-bridge/build/
 *.spec
 
 # Docs generados
-docs/security/*.pdf
 docs/user-guide/*.pdf
-scripts/audit-data/
+
+# Scratch / debug files in root
+chunk_*.js
+reports_chunk.js
+returns_chunk_check.js
+report_service.py
+
+# TypeScript build info (generated)
+tsconfig.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+
+# QA screenshots (transient)
+login_attempt.png
+qa_*.png

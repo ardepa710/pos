@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = Field(..., alias="SECRET_KEY")
     algorithm: str = Field(default="HS256", alias="ALGORITHM")
-    access_token_expire_minutes: int = Field(default=480, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    access_token_expire_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
 
     # Banxico
     banxico_api_key: str = Field(default="", alias="BANXICO_API_KEY")
@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     # Telemetry
     telemetry_enabled: bool = Field(default=False, alias="TELEMETRY_ENABLED")
     telemetry_endpoint: str = Field(default="", alias="TELEMETRY_ENDPOINT")
+
+    # Admin bootstrap
+    admin_initial_password: str = Field(default="Admin123!", alias="ADMIN_INITIAL_PASSWORD")
 
     # Support
     support_whatsapp: str = Field(default="", alias="SUPPORT_WHATSAPP")

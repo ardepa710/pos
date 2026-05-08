@@ -52,20 +52,257 @@ export interface ExchangeRate {
 export interface Product {
   id: UUID;
   sku: string;
+  barcode?: string;
   name: string;
   description?: string;
   category_id?: UUID;
-  category_name?: string;
   price_general: Decimal;
   price_a?: Decimal;
   price_b?: Decimal;
   price_c?: Decimal;
   last_cost?: Decimal;
-  stock: number;
   track_inventory: boolean;
-  is_consignment: boolean;
+  stock_quantity: Decimal;
+  reorder_point?: Decimal;
+  unit_of_measure: string;
+  is_consigned: boolean;
   consigned_supplier_id?: UUID;
   attributes: Record<string, unknown>;
+  thumbnail_url?: string;
   is_active: boolean;
-  image_url?: string;
+}
+
+// API Response types (mirrors backend schemas)
+export interface UserRead {
+  id: UUID;
+  username: string;
+  email: string;
+  full_name: string;
+  role: "admin" | "supervisor" | "cashier";
+  must_change_password: boolean;
+  theme_preference: "light" | "dark" | "system";
+  is_active: boolean;
+  created_at: ISODate;
+}
+
+export interface CategoryRead {
+  id: UUID;
+  name: string;
+  description?: string;
+  parent_id?: UUID;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface ProductRead extends Product {
+  id: UUID;
+  category?: CategoryRead;
+  created_at: ISODate;
+  updated_at: ISODate;
+}
+
+export interface ProductListResponse {
+  items: ProductRead[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface SaleItemRead {
+  id: UUID;
+  product_id: UUID;
+  product_name_snapshot: string;
+  product_sku_snapshot: string;
+  quantity: Decimal;
+  unit_price_mxn: Decimal;
+  subtotal_mxn: Decimal;
+  discount_mxn: Decimal;
+  was_consigned: boolean;
+}
+
+export interface PaymentRead {
+  id: UUID;
+  method: string;
+  currency: string;
+  amount: Decimal;
+  amount_in_mxn: Decimal;
+  terminal_reference?: string;
+  gift_card_id?: UUID;
+}
+
+export interface SaleRead {
+  id: UUID;
+  folio: string;
+  status: SaleStatus;
+  customer_id?: UUID;
+  customer_name?: string;
+  cashier_id: UUID;
+  subtotal_mxn: Decimal;
+  discount_mxn: Decimal;
+  tax_mxn: Decimal;
+  total_mxn: Decimal;
+  total_usd: Decimal;
+  fx_rate_used: Decimal;
+  fx_rate_date: string;
+  items: SaleItemRead[];
+  payments: PaymentRead[];
+  created_at: ISODate;
+}
+
+export interface CashierSessionRead {
+  id: UUID;
+  cashier_id: UUID;
+  cashier_name: string;
+  status: "open" | "closed";
+  starting_cash_mxn: Decimal;
+  physical_cash_mxn?: Decimal;
+  expected_cash_mxn?: Decimal;
+  cash_difference_mxn?: Decimal;
+  total_sales_mxn?: Decimal;
+  sale_count?: number;
+  opened_at: ISODate;
+  closed_at?: ISODate;
+}
+
+export interface CustomerRead {
+  id: UUID;
+  code: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
+  rfc?: string;
+  address?: string;
+  price_tier: string;
+  is_default: boolean;
+  is_active: boolean;
+  loyalty_points?: number;
+  notes?: string;
+  created_at: ISODate;
+}
+
+export interface SupplierRead {
+  id: UUID;
+  code: string;
+  legal_name: string;
+  contact_name?: string;
+  email?: string;
+  phone?: string;
+  rfc?: string;
+  supplier_type: string;
+  consignment_period_days?: number;
+  consignment_commission_pct?: Decimal;
+  payment_terms_days: number;
+  is_active: boolean;
+  created_at: ISODate;
+}
+
+export interface PurchaseItemRead {
+  id: UUID;
+  product_id: UUID;
+  product_name?: string;
+  quantity: number;
+  unit_cost: Decimal;
+  subtotal: Decimal;
+}
+
+export interface PurchaseRead {
+  id: UUID;
+  folio: string;
+  supplier_id: UUID;
+  purchase_type: "normal" | "consignment_in";
+  status: string;
+  subtotal: Decimal;
+  tax: Decimal;
+  total: Decimal;
+  currency: string;
+  exchange_rate?: Decimal;
+  notes?: string;
+  created_by: UUID;
+  approved_by?: UUID;
+  approved_at?: ISODate;
+  consignment_settled: boolean;
+  consignment_period_start?: string;
+  consignment_period_end?: string;
+  received_at?: ISODate;
+  items: PurchaseItemRead[];
+  created_at: ISODate;
+  updated_at: ISODate;
+}
+
+export interface GiftCardRead {
+  id: UUID;
+  code: string;
+  initial_balance: Decimal;
+  current_balance: Decimal;
+  currency: string;
+  status: "active" | "redeemed" | "expired" | "voided";
+  expires_at?: ISODate;
+  created_at: ISODate;
+}
+
+export interface ReturnRead {
+  id: UUID;
+  folio: string;
+  original_sale_id: UUID;
+  reason: string;
+  total_returned_mxn: Decimal;
+  refund_method: "cash" | "gift_card" | "store_credit";
+  generated_gift_card_id?: UUID;
+  created_at: ISODate;
+}
+
+export interface BusinessSettings {
+  id: UUID;
+  business_name: string;
+  business_type: string;
+  logo_url?: string;
+  logo_small_url?: string;
+  favicon_url?: string;
+  primary_color: string;
+  secondary_color?: string;
+  theme: "light" | "dark" | "system";
+  wizard_completed: boolean;
+  support_whatsapp?: string;
+  font_family?: string;
+  ticket_header?: string;
+  ticket_footer?: string;
+  ticket_show_logo: boolean;
+  ticket_show_iva: boolean;
+  ticket_printer_name?: string;
+}
+
+export interface DailySummary {
+  date: ISODate;
+  total_sales: number;
+  total_revenue_mxn: Decimal;
+  total_revenue_usd: Decimal;
+  cash_total: Decimal;
+  card_total: Decimal;
+  gift_card_total: Decimal;
+  top_products: Array<{ name: string; qty: Decimal; revenue: Decimal }>;
+  cashier_sessions: Array<Record<string, unknown>>;
+  payment_breakdown?: Record<string, Decimal>;
+}
+
+// Sale creation (frontend → API)
+export interface SaleItemCreate {
+  product_id: UUID;
+  quantity: string; // Decimal as string
+  unit_price_mxn: string;
+  discount_mxn?: string;
+  price_tier?: number; // 1-4
+}
+
+export interface PaymentCreate {
+  method: PaymentMethod;
+  amount_mxn: string;
+  amount_usd?: string;
+  terminal_reference?: string; // required for credit_card/debit_card
+}
+
+export interface SaleCreate {
+  customer_id?: UUID;
+  items: SaleItemCreate[];
+  payments: PaymentCreate[];
+  notes?: string;
 }

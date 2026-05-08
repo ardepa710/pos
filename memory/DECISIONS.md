@@ -33,3 +33,15 @@ HMAC-SHA256 en `qr_payload`. Balance via `gift_card_transactions` (append-only).
 ### D008 — tenant_id placeholder
 
 Todas las tablas incluyen `tenant_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000001'` para v2 multi-sucursal.
+
+### D009 — SQLAlchemy 2.0 session pattern
+
+`get_session` gestiona la transacción completa: `async with session.begin(): yield session`.
+No llamar `session.begin()` ni `session.commit()` en routers/services — el context manager lo hace.
+Usar `session.flush()` + `session.refresh()` dentro de servicios para leer `server_default` post-INSERT.
+
+### D010 — CloseSessionModal UI
+
+`salesApi.closeSession` existía desde Ola 2 pero sin UI. Se creó `CloseSessionModal.tsx` separado
+(patrón consistente con `OpenSessionModal`). `POSTerminal` gestiona el estado `showCloseSession`
+y el callback `handleSessionClosed` que resetea `session = null` para volver al flujo de apertura.
