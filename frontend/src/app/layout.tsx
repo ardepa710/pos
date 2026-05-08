@@ -10,8 +10,16 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "POS",
-  description: "Sistema de Punto de Venta",
+  title: "Kolekto",
+  description: "Tu colectivo, conectado.",
+  icons: {
+    icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+    ],
+    apple: { url: "/isotipo.png", sizes: "180x180", type: "image/png" },
+  },
 };
 
 export default function RootLayout({

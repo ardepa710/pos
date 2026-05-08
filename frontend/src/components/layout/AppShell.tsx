@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X, Store } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 interface AppShellProps {
@@ -109,7 +109,7 @@ export function AppShell({ children, businessName, logoUrl }: AppShellProps) {
             {logoUrl ? (
               <img
                 src={logoUrl}
-                alt={businessName ?? "POS"}
+                alt={businessName ?? "Kolekto"}
                 style={{
                   height: "1.75rem",
                   objectFit: "contain",
@@ -117,18 +117,15 @@ export function AppShell({ children, businessName, logoUrl }: AppShellProps) {
                 }}
               />
             ) : (
-              <>
-                <Store size={18} color="var(--accent)" />
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "0.9375rem",
-                    color: "var(--text-on-dark)",
-                  }}
-                >
-                  {businessName ?? "POS"}
-                </span>
-              </>
+              /* Kolekto brand fallback — PNG logo */
+              <img
+                src="/logo-horizontal.png"
+                alt="Kolekto"
+                style={{
+                  height: "1.75rem",
+                  objectFit: "contain",
+                }}
+              />
             )}
           </div>
         </header>

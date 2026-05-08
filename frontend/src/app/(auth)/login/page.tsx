@@ -74,7 +74,7 @@ export default function LoginPage() {
     }
   };
 
-  const businessName = branding?.business_name ?? "Punto de Venta";
+  const businessName = branding?.business_name ?? "Kolekto";
 
   return (
     <main
