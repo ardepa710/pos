@@ -44,7 +44,7 @@ async def create_user(
     session: AsyncSession = Depends(get_session),
 ) -> UserRead:
     """Create a new user. Admin only."""
-    user = await user_service.create_user(session, body)
+    user = await user_service.create_user(session, body, actor_id=_admin.id)
     return UserRead.model_validate(user)
 
 
@@ -120,7 +120,7 @@ async def update_user(
             detail="Usuario no encontrado",
         )
 
-    updated = await user_service.update_user(session, user, body)
+    updated = await user_service.update_user(session, user, body, actor_id=current_user.id)
     return UserRead.model_validate(updated)
 
 
@@ -148,4 +148,4 @@ async def delete_user(
             detail="Usuario no encontrado",
         )
 
-    await user_service.soft_delete_user(session, user)
+    await user_service.soft_delete_user(session, user, actor_id=current_user.id)

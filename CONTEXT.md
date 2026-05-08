@@ -538,3 +538,101 @@
 **Version bump:** V2026.05.07-005 (sin cambio — mismo commit que header/footer session)
 
 **Status on close:** complete — PDF generado, README creado, 9 commits pusheados a https://github.com/ardepa710/pos
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-07 — Branch model setup + PR #1 abierto en GitHub
+
+**Goal:** Crear PR de la sesión actual en GitHub. Establecer modelo de ramas ardepa (`main`/`master`).
+
+**Affected files:**
+
+- `scripts/pr-body.md` (CREADO — cuerpo del PR, puede eliminarse después)
+- `CONTEXT.md` — esta entrada
+
+**Key decisions:**
+
+- **gh CLI no está instalado** en este entorno — PR creado vía GitHub REST API (`Invoke-RestMethod`).
+- **Modelo de ramas establecido**:
+  - `main` → rama de producción — apunta al commit inicial de scaffolding (`3d5705a` Ola 0). Equivale al `main` del modelo ardepa (§24.4).
+  - `master` → rama de integración/desarrollo — contiene todos los commits de trabajo real. Actúa como `development` hasta que se renombre formalmente.
+  - GitHub había auto-inicializado `main` con un commit vacío (`7f7411c`); reemplazado con force-push a `3d5705a`.
+- **PR #1**: `master → main`, título "feat(pos): sistema completo - print bridge GDI, ticket settings, auditoria de seguridad". URL: https://github.com/ardepa710/pos/pull/1
+- **Token GitHub**: usado temporalmente en remote URL para push/API, removido inmediatamente después. No persiste en `.git/config`. Valor en `.env` (no committed).
+- **`scripts/pr-body.md`**: archivo auxiliar creado para pasar el cuerpo del PR a la API. Puede borrarse — no tiene valor permanente.
+
+**Skills activated:** ninguno específico
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna
+
+**Blockers:** ninguno
+
+**Version bump:** V2026.05.07-005 (sin cambio)
+
+**Status on close:** complete — PR #1 abierto en https://github.com/ardepa710/pos/pull/1
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-07 — obsidian-sync manual
+
+**Goal:** Ejecutar hook obsidian-sync manualmente para sincronizar el vault y el dashboard.
+
+**Affected files:** ninguno en el repo — solo escrituras en Obsidian vault y Supabase
+
+**Key decisions:**
+
+- Hook ejecutado con `node ~/.claude/hooks/obsidian-sync.mjs` desde el cwd del proyecto.
+- Resultado: DAILY-OK, MAIN-OK, DASHBOARD-OK — sincronización completa sin errores.
+- Nota vault: `Wiki/002-Personal APP Projects/POS/Daily Job/2026-05-07.md` actualizado.
+- Dashboard Supabase (`tbmproject_projects`, `tbmproject_daily_recaps`) sincronizado para slug `pos`.
+
+**Skills activated:** ninguno
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna (solo mirror en tbmproject\_\*)
+
+**Blockers:** ninguno
+
+**Version bump:** V2026.05.07-005 (sin cambio)
+
+**Status on close:** complete
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — Revisión de pendientes del proyecto
+
+**Goal:** Revisar el estado completo del proyecto y generar lista priorizada de tareas pendientes.
+
+**Affected files:** ninguno
+
+**Key decisions:**
+
+- Sistema v1 completamente funcional — todas las features del plan v1.2 operando.
+- PR #1 abierto en GitHub (master → main) — pendiente de merge.
+- Pendientes priorizados identificados:
+  - **Inmediato**: merge PR #1; `git rm --cached backend/.env.test`
+  - **HIGH security (F001/F002)**: rate limiting con slowapi; audit logs en user_service y settings_service
+  - **MEDIUM security**: SSRF logo_url (F005); CSP header Caddyfile (F006); password admin default (F003); JWT 8h (F004)
+  - **Deuda técnica**: tests (ninguno escrito aún); SQLAlchemy echo; security headers next.config.ts
+  - **Infraestructura**: GitHub Actions CI/CD; deploy staging coralslrc.shop; rename master → development
+
+**Skills activated:** ninguno
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna
+
+**Blockers:** ninguno
+
+**Version bump:** V2026.05.07-005 (sin cambio)
+
+**Status on close:** complete — backlog documentado, sin cambios de código

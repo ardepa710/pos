@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import uuid
+
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.audit_log import AuditLog
 from app.models.business_settings import BusinessSettings
 from app.schemas.business_settings import BusinessSettingsUpdate
 
@@ -33,6 +36,7 @@ async def get_business_settings(session: AsyncSession) -> BusinessSettings:
 async def update_business_settings(
     session: AsyncSession,
     data: BusinessSettingsUpdate,
+    actor_id: uuid.UUID | None = None,
 ) -> BusinessSettings:
     """Apply the non-null fields in *data* to the BusinessSettings row.
 
@@ -50,6 +54,14 @@ async def update_business_settings(
     session.add(settings)
     await session.flush()
     await session.refresh(settings)
+
+    session.add(AuditLog(
+        actor_id=actor_id,
+        action="settings.updated",
+        entity_type="business_settings",
+        entity_id=settings.id,
+        payload={"fields": list(update_dict.keys())},
+    ))
 
     log.info("settings.updated", fields=list(update_dict.keys()))
     return settings

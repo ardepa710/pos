@@ -25,10 +25,12 @@ Port: 9100 (only accessible from localhost / Docker host network)
 from __future__ import annotations
 
 import glob
+import ipaddress
 import logging
 import subprocess
 import sys
 from typing import Any
+from urllib.parse import urlparse
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -230,6 +232,19 @@ def _gdi_draw_logo(dc: Any, logo_url: str, dpi_x: int, dpi_y: int, top_y: int) -
         return top_y
 
     try:
+        parsed = urlparse(logo_url)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            log.warning("Logo URL invalid scheme, skipping: %s", logo_url[:100])
+            return top_y
+        # Block requests to private/loopback IPs (SSRF protection)
+        try:
+            ip = ipaddress.ip_address(parsed.hostname or "")
+            if ip.is_private or ip.is_loopback or ip.is_link_local:
+                log.warning("Logo URL points to private IP, skipping SSRF protection")
+                return top_y
+        except ValueError:
+            pass  # hostname is a domain name, not an IP — that's fine
+
         with urllib.request.urlopen(logo_url, timeout=5) as resp:  # noqa: S310
             img_bytes = resp.read()
 

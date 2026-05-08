@@ -47,7 +47,7 @@ async def update_business(
 
     Only the fields provided in the request body are updated (partial update).
     """
-    settings = await settings_service.update_business_settings(session, data)
+    settings = await settings_service.update_business_settings(session, data, actor_id=current_user.id)
     log.info(
         "settings.business_updated",
         user_id=str(current_user.id),

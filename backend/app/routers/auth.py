@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.main import limiter
 from app.schemas.user import TokenResponse, UserRead
 from app.security import create_access_token
 from app.security.dependencies import CurrentUser
@@ -38,7 +39,9 @@ class ChangePasswordBody(BaseModel):
     response_model=TokenResponse,
     summary="Iniciar sesión",
 )
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     form: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> TokenResponse:
@@ -77,7 +80,9 @@ async def login(
     summary="Cambiar contraseña",
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit("10/minute")
 async def change_password(
+    request: Request,
     body: ChangePasswordBody,
     current_user: CurrentUser,
     session: AsyncSession = Depends(get_session),

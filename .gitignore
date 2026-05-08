@@ -31,6 +31,7 @@ build/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+backend/.env.test
 
 # IDE
 .vscode/

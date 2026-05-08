@@ -51,6 +51,13 @@ class BusinessSettingsUpdate(BaseModel):
             return None
         return v
 
+    @field_validator("logo_url", "logo_small_url", "favicon_url", mode="after")
+    @classmethod
+    def must_be_https(cls, v: str | None) -> str | None:
+        if v is not None and not v.startswith("https://"):
+            raise ValueError("La URL debe usar HTTPS")
+        return v
+
     business_name: Optional[str] = Field(None, max_length=120)
     rfc: Optional[str] = Field(None, max_length=20)
     address: Optional[str] = None
