@@ -41,7 +41,7 @@ services:
       DEMO_MODE: ${DEMO_MODE:-false}
       BUSINESS_NAME: ${BUSINESS_NAME:-Mi Negocio}
       BUSINESS_TYPE: ${BUSINESS_TYPE:-general}
-      CORS_ORIGINS: '["http://localhost:3005","http://localhost"]'
+      CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:3005","http://localhost"]}'
       BACKUP_PATH: /backups
       SUPPORT_WHATSAPP: ${SUPPORT_WHATSAPP:-}
       TELEMETRY_ENABLED: ${TELEMETRY_ENABLED:-false}
