@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.main import limiter
+from app.limiter import limiter
 from app.schemas.user import TokenResponse, UserRead
 from app.security import create_access_token
 from app.security.dependencies import CurrentUser

@@ -4,11 +4,11 @@ from typing import AsyncGenerator
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 from app.config import settings
+from app.limiter import limiter
 from app.jobs.banxico_job import start_scheduler, stop_scheduler
 from app.routers import catalog, reports, settings as settings_router
 from app.routers.auth import router as auth_router
@@ -20,9 +20,6 @@ from app.routers.customers import router as customers_router
 from app.routers.suppliers import router as suppliers_router
 
 log = structlog.get_logger()
-
-limiter = Limiter(key_func=get_remote_address)
-
 
 _DEFAULT_ADMIN_PASSWORD = "Admin123!"  # noqa: S105 — this is the known insecure default, not a real secret
 
