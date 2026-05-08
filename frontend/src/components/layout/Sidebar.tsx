@@ -13,7 +13,6 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  Store,
 } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
@@ -76,7 +75,7 @@ export function Sidebar({ onClose, businessName, logoUrl }: SidebarProps) {
         {logoUrl ? (
           <img
             src={logoUrl}
-            alt={businessName ?? "POS"}
+            alt={businessName ?? "Kolekto"}
             style={{
               height: "2rem",
               objectFit: "contain",
@@ -84,34 +83,12 @@ export function Sidebar({ onClose, businessName, logoUrl }: SidebarProps) {
             }}
           />
         ) : (
-          <>
-            <div
-              style={{
-                width: "2rem",
-                height: "2rem",
-                borderRadius: "var(--radius-sm)",
-                backgroundColor: "var(--accent)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Store size={16} color="white" />
-            </div>
-            <span
-              style={{
-                fontWeight: 700,
-                fontSize: "0.9375rem",
-                color: "var(--text-on-dark)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {businessName ?? "POS"}
-            </span>
-          </>
+          /* Kolekto brand fallback — PNG logo */
+          <img
+            src="/logo-horizontal.png"
+            alt="Kolekto"
+            style={{ height: "32px", objectFit: "contain" }}
+          />
         )}
       </div>
 

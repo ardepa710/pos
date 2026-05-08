@@ -636,3 +636,125 @@
 **Version bump:** V2026.05.07-005 (sin cambio)
 
 **Status on close:** complete — backlog documentado, sin cambios de código
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — Security remediations F001-F010 + Rebrand Kolekto Fase 0
+
+**Goal:** (1) Corregir todos los findings corregibles del audit 2026-05-07-v1. (2) Arrancar rebrand completo a Kolekto — Fase 0 discovery.
+
+**Affected files:**
+
+- `backend/app/limiter.py` (CREADO — extrae Limiter para evitar import circular)
+- `backend/app/main.py` — import limiter desde app.limiter; startup warning default password
+- `backend/app/routers/auth.py` — @limiter.limit("10/minute") en login + change-password
+- `backend/app/config.py` — ACCESS_TOKEN_EXPIRE_MINUTES default: 480 → 60
+- `backend/app/database.py` — echo=False siempre (era echo=not is_production)
+- `backend/app/services/user_service.py` — AuditLog en create/update/delete con actor_id
+- `backend/app/services/settings_service.py` — AuditLog en update con actor_id
+- `backend/app/routers/users.py` — pasa actor_id a service functions
+- `backend/app/routers/settings.py` — pasa actor_id a service function
+- `backend/app/schemas/business_settings.py` — validador HTTPS-only en logo_url
+- `backend/pyproject.toml` — añadido slowapi>=0.1.9
+- `print_bridge/main.py` — validación URL scheme + rechazo IPs privadas/loopback antes de urlopen
+- `caddy/Caddyfile` — Content-Security-Policy + Strict-Transport-Security headers
+- `frontend/next.config.ts` — headers() export con CSP + X-Frame-Options + demás
+- `.gitignore` — backend/.env.test añadido para evitar tracking futuro
+- `.claude/plans/discovery-report.md` (CREADO)
+- `.claude/plans/rebrand-kolekto-plan.md` (CREADO)
+
+**Key decisions:**
+
+- **Circular import fix**: `limiter` movido de `main.py` a `app/limiter.py` — routers importan desde ahí, main.py también.
+- **F001 rate limiting**: 10 req/min en auth endpoints. Estrategia: por IP (get_remote_address), estado en memoria (no Redis). Suficiente para instalación single-tenant.
+- **F002 audit logs**: actor_id threading via parámetro opcional en service functions — retrocompatible. Payload incluye lista de campos modificados (no valores) para no loguear PII.
+- **F003 default password**: advertencia en startup (log.warning) en lugar de eliminar el default — menos disruptivo para first-run experience.
+- **F004 JWT**: default reducido a 60 min. No se implementó refresh token rotation (F004 completo) — fuera de alcance del sprint.
+- **F005 SSRF**: doble validación — schema Pydantic rechaza no-HTTPS en backend; print_bridge valida scheme + resuelve hostname y rechaza IPs privadas antes de urlopen.
+- **F006 CSP**: `unsafe-inline` + `unsafe-eval` necesarios para Next.js standalone. HSTS agregado aunque el proxy está en HTTP — preparado para cuando se configure HTTPS.
+- **F007 tenant isolation**: NO corregido — requiere refactor mayor con TenantContext dependency. Documentado como deuda técnica.
+- **F008 SQL echo**: `echo=False` siempre — los valores de queries pueden exponer PII en logs.
+- **F009 .env.test**: solo agregado a .gitignore. `git rm --cached` bloqueado por bash-guard (patrón .env). **Pendiente manual**: `git rm --cached backend/.env.test`.
+- **F010 Next.js headers**: defensa en profundidad — mismos headers que Caddy pero servidos directamente por Next.js para dev server y bypasses de proxy.
+- **Docker rebuild**: imagen reconstruida con `docker compose build --no-cache backend frontend`. Circular import causó error en primer arranque — corregido con app/limiter.py antes del rebuild final.
+- **Commits**: `e5cd5b4` (security F001-F010) + `c948f88` (fix circular import) pusheados a GitHub master.
+
+**Rebrand Kolekto — Fase 0 completada:**
+
+- Rama `feat/rebrand-kolekto-v1` creada desde master.
+- Discovery completo: 4 agentes paralelos auditaron estilos, colores, assets y copy.
+- `design-tokens.ts` ya existe en raíz del proyecto (Kolekto Verde Olivo, untracked) — listo para mover.
+- `/public/` en raíz tiene 17 PNG de marca Kolekto (untracked) — confirmar con usuario antes de mover.
+- Paleta actual (azul #3b82f6) → Kolekto (olivo #6B7A3F): mapeo completo documentado en discovery-report.md.
+- **Pendiente confirmación del usuario**: (1) ¿Los PNG en /public/ son los assets finales? (2) ¿KolektoLogo como SVG desde cero o usar PNGs existentes?
+
+**Skills activated:** fastapi, python-best-practices, nextjs
+
+**Env changes:** ninguna nueva
+
+**DB changes:** ninguna
+
+**Blockers:**
+
+- Confirmación de usuario sobre assets y componente logo antes de ejecutar Wave 1 del rebrand.
+- `git rm --cached backend/.env.test` pendiente manual (bash-guard bloquea el comando).
+
+**Version bump:** V2026.05.08-001
+
+**Status on close:** complete — security fixes completos y pusheados; rebrand confirmado por usuario para continuar.
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — Rebrand Kolekto Fases 1–6 + Auditoría + MR
+
+**Goal:** Ejecutar el rebrand completo a Kolekto (Fases 1–5) y cerrar el ciclo con auditoría de seguridad 2026-05-08 + MR a main.
+
+**Affected files:**
+
+- `frontend/src/app/globals.css` — CSS variables: azul → olivo (#6B7A3F), hueso (#F5F1EA), tinta (#1A1A1A)
+- `frontend/src/app/(app)/layout.tsx` — default primary_color #3b82f6 → #6B7A3F
+- `frontend/src/app/(auth)/login/page.tsx` — fallback logo ShoppingCart → logo-horizontal.png; useEffect reset --accent vars al volver desde app
+- `frontend/next.config.ts` — appName "POS" → "Kolekto"
+- `frontend/src/lib/i18n.ts` — strings "Punto de Venta" → "Kolekto"
+- `frontend/src/components/layout/AppShell.tsx` — logo img fallback
+- `frontend/src/components/layout/Sidebar.tsx` — logo img fallback
+- `frontend/src/components/settings/BusinessSettingsForm.tsx` — default color #3b82f6 → #6B7A3F
+- `public/` — todos los assets Kolekto (logos, favicons, mockups, brand materials) — 17 archivos PNG
+- `design-tokens.ts` — fuente única de verdad para tokens de diseño Kolekto v1.0
+- `.claude/plans/visual-qa.md` — QA de 5 pantallas documentado
+- `scripts/audit-data/2026-05-08-v1-findings.json` (CREADO)
+- `scripts/audit-data/2026-05-08-v1-compliance-scores.json` (CREADO)
+- `scripts/generate-security-report-2026-05-08-v1.py` (CREADO)
+- `docs/security/2026-05-08-v1-security-audit.pdf` (CREADO)
+- `docs/security/README.md` (CREADO)
+
+**Key decisions:**
+
+- **CSS var override en SPA navigation**: `(app)/layout.tsx` inyecta `--accent` inline en `<html>` con el color del negocio (DB: `#385eb7`). Al navegar client-side de vuelta al login, el `<html>` conserva el inline style. Fix: `useEffect` en login page llama `removeProperty()` en los 5 vars afectados. No se puede confiar en globals.css para esto ya que los inline styles tienen más especificidad.
+- **DB color override**: El negocio de prueba tiene `primary_color = #385eb7` (azul legacy) guardado en DB. Las pantallas autenticadas muestran azul — correcto por diseño. El olivo solo aparece en: (1) login (no hay override), (2) negocios nuevos que arrancan con #6B7A3F default, (3) negocio de prueba si cambia el color en Configuración → Apariencia.
+- **Auditoría 2026-05-08 — 11 findings**: 1 CRITICAL (IDOR cashier sessions), 2 HIGH (IDOR ventas + supervisor scope), 2 MEDIUM (default password + tenant isolation), 3 LOW, 3 INFO. Risk score: 62/100 YELLOW (+10 vs anterior).
+- **IDOR F001/F002**: `GET /api/v1/sales/sessions/{id}` y `GET /api/v1/sales/{id}` no verifican ownership. Fix: `if entity.cashier_id != current_user.id and current_user.role not in ('admin', 'supervisor'): raise HTTPException(403)`.
+- **HSTS en HTTP Caddy (F008)**: `Strict-Transport-Security` header seteado en respuestas HTTP — ignorado por browsers. El header solo surte efecto en HTTPS. Fix: configurar TLS en Caddyfile o remover HSTS del bloque HTTP.
+- **PDF generator**: usa `reportlab` con paleta Kolekto brand. 5 páginas: cover (badge 62/100), remediated+compliance, framework detail, findings, priority+history.
+- **gh CLI no disponible**: PR no creado programáticamente. URL para crear manualmente: `https://github.com/ardepa710/pos/pull/new/feat/rebrand-kolekto-v1`. Cuerpo preparado en `scripts/pr-body.md`.
+- **Commits en feat/rebrand-kolekto-v1**: `f1f559a` (rebrand UI) + `e63a429` (QA + assets + audit).
+
+**Skills activated:** frontend-design, make-interfaces-feel-better, react-best-practices, nextjs, audit-full, python-best-practices
+
+**Env changes:** ninguna
+
+**DB changes:** ninguna
+
+**Blockers:**
+
+- PR pendiente de creación manual: `https://github.com/ardepa710/pos/pull/new/feat/rebrand-kolekto-v1`
+- F006 (`backend/.env.test` trackeado): `git rm --cached backend/.env.test` sigue pendiente manual (bash-guard bloquea).
+- F001/F002 IDOR en sales/sessions — no corregidos esta sesión, son el próximo sprint de seguridad.
+
+**Version bump:** V2026.05.08-001 (sin bump adicional — misma fecha)
+
+**Status on close:** complete — rebrand en rama feat/rebrand-kolekto-v1, pusheado a GitHub, PDF auditado generado, MR pendiente de creación manual.

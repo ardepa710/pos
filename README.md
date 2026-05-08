@@ -1,6 +1,6 @@
-# POS — Punto de Venta
+# Kolekto — Tu colectivo, conectado.
 
-Sistema de punto de venta (POS) completo, dockerizado y listo para producción, diseñado para pequeños y medianos negocios en México.
+Kolekto es el POS para colectivos de vendedores — dockerizado y listo para producción, diseñado para pequeños y medianos negocios en México.
 
 ---
 

@@ -60,7 +60,7 @@ export function BusinessSettingsForm() {
     defaultValues: {
       business_name: "",
       business_type: "general",
-      primary_color: "#3b82f6",
+      primary_color: "#6B7A3F",
       theme: "system",
       support_whatsapp: "",
       logo_url: "",
@@ -73,7 +73,7 @@ export function BusinessSettingsForm() {
       reset({
         business_name: data.business_name ?? "",
         business_type: data.business_type ?? "general",
-        primary_color: data.primary_color ?? "#3b82f6",
+        primary_color: data.primary_color ?? "#6B7A3F",
         theme: data.theme ?? "system",
         support_whatsapp: data.support_whatsapp ?? "",
         logo_url: data.logo_url ?? "",
@@ -99,7 +99,7 @@ export function BusinessSettingsForm() {
       reset({
         business_name: updated.business_name ?? "",
         business_type: updated.business_type ?? "general",
-        primary_color: updated.primary_color ?? "#3b82f6",
+        primary_color: updated.primary_color ?? "#6B7A3F",
         theme: updated.theme ?? "system",
         support_whatsapp: updated.support_whatsapp ?? "",
         logo_url: updated.logo_url ?? "",
@@ -180,7 +180,7 @@ export function BusinessSettingsForm() {
           <div className="flex items-center gap-3">
             <input
               type="color"
-              value={watch("primary_color") ?? "#3b82f6"}
+              value={watch("primary_color") ?? "#6B7A3F"}
               onChange={(e) =>
                 setValue("primary_color", e.target.value, { shouldDirty: true })
               }
@@ -189,7 +189,7 @@ export function BusinessSettingsForm() {
             <input
               {...register("primary_color")}
               type="text"
-              placeholder="#3b82f6"
+              placeholder="#6B7A3F"
               className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
             />
           </div>

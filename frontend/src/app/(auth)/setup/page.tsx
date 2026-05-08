@@ -160,7 +160,7 @@ export default function SetupPage() {
                   window.location.replace("/pos");
                 }}
               >
-                Ir al Punto de Venta
+                Ir a Kolekto
               </Button>
             </div>
           ) : (
