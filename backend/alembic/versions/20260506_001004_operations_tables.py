@@ -102,7 +102,7 @@ def upgrade() -> None:
         "sales",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
         sa.Column("folio", sa.String(20), nullable=False),
-        sa.Column("customer_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("customers.id"), nullable=False),
+        sa.Column("customer_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("customers.id"), nullable=True),
         sa.Column("cashier_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id"), nullable=False),
         sa.Column("cashier_session_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("cashier_sessions.id")),
         sa.Column("status", sa.String(20), nullable=False, server_default="completed"),
