@@ -1,9 +1,18 @@
 name: pos
 
-# Production compose file — used on the VPS.
-# Images are pulled from ghcr.io, NOT built locally.
-# Deploy with: TAG=<sha> docker compose -f docker-compose.prod.yml up -d
-# Or simply:   docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
+# ─────────────────────────────────────────────────────────────────────────────
+# POS — Production compose file
+#
+# Zero-dependency setup on any machine with Docker:
+#
+#   curl -O https://raw.githubusercontent.com/ardepa710/pos/main/docker-compose.prod.yml
+#   curl -O https://raw.githubusercontent.com/ardepa710/pos/main/.env.example
+#   cp .env.example .env && nano .env
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Images are pulled from ghcr.io — no git clone, no build step required.
+# The Caddyfile is embedded below (configs:) — no external files needed.
+# ─────────────────────────────────────────────────────────────────────────────
 
 services:
   db:
@@ -34,7 +43,7 @@ services:
       DATABASE_SYNC_URL: postgresql://pos_user:${DB_PASSWORD}@pos-db:5432/pos_db
       SECRET_KEY: ${JWT_SECRET}
       ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-480}
       BANXICO_API_KEY: ${BANXICO_API_KEY:-}
       LICENSE_MODE: ${LICENSE_MODE:-none}
       LICENSE_PUBLIC_KEY: ${LICENSE_PUBLIC_KEY:-}
@@ -80,8 +89,10 @@ services:
     container_name: pos-proxy
     ports:
       - "${PORT:-3005}:80"
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddydata:/data
       - caddyconfig:/config
     depends_on:
@@ -90,6 +101,36 @@ services:
     restart: unless-stopped
     networks:
       - pos-internal
+
+# ── Inline Caddyfile — no external file needed ────────────────────────────────
+configs:
+  caddyfile:
+    content: |
+      :80 {
+          handle /api/* {
+              reverse_proxy backend:8000
+          }
+          handle /health {
+              reverse_proxy backend:8000
+          }
+          handle {
+              reverse_proxy frontend:3000
+          }
+          header {
+              X-Frame-Options DENY
+              X-Content-Type-Options nosniff
+              Referrer-Policy strict-origin-when-cross-origin
+              X-XSS-Protection "1; mode=block"
+              Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+              -Server
+          }
+          encode gzip
+          log {
+              output stdout
+              format json
+              level INFO
+          }
+      }
 
 volumes:
   pgdata:
