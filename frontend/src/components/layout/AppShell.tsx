@@ -14,132 +14,58 @@ export function AppShell({ children, businessName, logoUrl }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-        backgroundColor: "var(--bg-base)",
-      }}
-    >
+    <div className="flex min-h-screen bg-[var(--bg-base)]">
       {/* Desktop sidebar */}
-      <div
-        style={{
-          display: "none",
-          position: "sticky",
-          top: 0,
-          height: "100vh",
-        }}
-        className="sidebar-desktop"
-      >
+      <div className="sidebar-desktop hidden sticky top-0 h-screen">
         <Sidebar businessName={businessName} logoUrl={logoUrl} />
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 40,
-            display: "flex",
-          }}
-        >
+        <div className="fixed inset-0 z-40 flex">
           {/* Backdrop */}
           <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-            }}
+            className="absolute inset-0 bg-black/50"
             onClick={() => setMobileOpen(false)}
           />
           {/* Sidebar panel */}
-          <div style={{ position: "relative", zIndex: 50 }}>
+          <div className="relative z-50">
             <Sidebar onClose={() => setMobileOpen(false)} />
           </div>
         </div>
       )}
 
       {/* Main content area */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 0,
-        }}
-      >
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <header
-          className="topbar-mobile"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            padding: "0.75rem 1rem",
-            borderBottom: "1px solid var(--border)",
-            backgroundColor: "var(--bg-sidebar)",
-          }}
-        >
+        <header className="topbar-mobile flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-sidebar)]">
           <button
             onClick={() => setMobileOpen(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "2.25rem",
-              height: "2.25rem",
-              borderRadius: "var(--radius)",
-              border: "none",
-              backgroundColor: "transparent",
-              color: "var(--text-on-dark)",
-              cursor: "pointer",
-            }}
+            className="flex items-center justify-center w-9 h-9 rounded-[var(--radius)] border-none bg-transparent text-[var(--text-on-dark)] cursor-pointer"
             aria-label="Abrir menú"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-          >
+          <div className="flex items-center gap-2">
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt={businessName ?? "Kolekto"}
-                style={{
-                  height: "1.75rem",
-                  objectFit: "contain",
-                  maxWidth: "120px",
-                }}
+                className="h-7 object-contain max-w-[120px]"
               />
             ) : (
               /* Kolekto brand fallback — PNG logo */
               <img
                 src="/logo-horizontal.png"
                 alt="Kolekto"
-                style={{
-                  height: "1.75rem",
-                  objectFit: "contain",
-                }}
+                className="h-7 object-contain"
               />
             )}
           </div>
         </header>
 
         {/* Page content */}
-        <main
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
+        <main className="flex-1 min-h-0 overflow-y-auto flex flex-col">
           {children}
         </main>
       </div>

@@ -21,6 +21,7 @@ const STATUS_MAP: Record<string, ColorKey> = {
   cancelled: "error",
   voided: "error",
   inactive: "error",
+  out_of_stock: "error",
   closed: "error",
   refunded: "error",
   // Warning
@@ -53,6 +54,7 @@ const LABELS: Record<string, string> = {
   cancelled: "Cancelado",
   voided: "Anulado",
   inactive: "Inactivo",
+  out_of_stock: "Sin stock",
   closed: "Cerrado",
   refunded: "Devuelto",
   warning: "Advertencia",

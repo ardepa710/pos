@@ -119,6 +119,8 @@ export function PaymentPanel({
   const [giftError, setGiftError] = useState<string | null>(null);
   const [payments, setPayments] = useState<PendingPayment[]>([]);
   const [chargeError, setChargeError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editVal, setEditVal] = useState("");
 
   const meta = METHODS.find((m) => m.key === selectedMethod)!;
 
@@ -224,6 +226,36 @@ export function PaymentPanel({
     setChargeError(null);
   }
 
+  function startEditPayment(p: PendingPayment) {
+    const isUsd = p.method === "cash_usd";
+    setEditingId(p.id);
+    setEditVal(isUsd && p.amount_usd ? p.amount_usd : p.amount_mxn);
+  }
+
+  function commitEditPayment(p: PendingPayment) {
+    const raw = parseFloat(editVal || "0");
+    if (isNaN(raw) || raw <= 0) {
+      setEditingId(null);
+      return;
+    }
+    const isUsd = p.method === "cash_usd";
+    const newMxn =
+      isUsd && fxRate > 0 ? usdToMxn(raw, fxRate).toFixed(2) : raw.toFixed(2);
+    setPayments((prev) =>
+      prev.map((pp) =>
+        pp.id === p.id
+          ? {
+              ...pp,
+              amount_mxn: newMxn,
+              ...(isUsd ? { amount_usd: raw.toFixed(2) } : {}),
+            }
+          : pp,
+      ),
+    );
+    setEditingId(null);
+    setChargeError(null);
+  }
+
   async function handleCharge() {
     if (!canCharge) return;
     setChargeError(null);
@@ -261,21 +293,6 @@ export function PaymentPanel({
       className="flex h-full flex-col"
       style={{ background: "var(--payment-panel-bg)" }}
     >
-      {/* FX rate badge */}
-      {fxRate > 0 && (
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2.5">
-          <div className="flex items-center gap-1.5">
-            <ArrowRightLeft size={13} className="text-[var(--text-muted)]" />
-            <span className="text-xs text-[var(--text-muted)]">
-              1 USD = {formatMXN(fxRate)} MXN
-            </span>
-          </div>
-          <span className="text-[10px] text-[var(--text-muted)]">
-            {fxRateDate}
-          </span>
-        </div>
-      )}
-
       {/* Total */}
       <div className="border-b border-[var(--border)] px-4 py-3 text-center">
         <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
@@ -416,6 +433,7 @@ export function PaymentPanel({
                   "transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]",
                 )}
                 title="Llenar con el restante"
+                aria-label="Llenar con el monto restante"
               >
                 Exacto
               </button>
@@ -477,11 +495,33 @@ export function PaymentPanel({
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="tabular-nums text-sm font-semibold text-[var(--text-primary)]">
-                      {p.method === "cash_usd" && p.amount_usd
-                        ? `${formatUSD(p.amount_usd)}`
-                        : formatMXN(p.amount_mxn)}
-                    </span>
+                    {editingId === p.id ? (
+                      <input
+                        autoFocus
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={editVal}
+                        onChange={(e) => setEditVal(e.target.value)}
+                        onBlur={() => commitEditPayment(p)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") commitEditPayment(p);
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                        className="w-20 rounded border border-[var(--border-focus)] bg-[var(--bg-input)] px-2 py-0.5 text-right text-sm font-semibold tabular-nums text-[var(--text-primary)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        title="Editar monto"
+                        onClick={() => startEditPayment(p)}
+                        className="tabular-nums text-sm font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent)]"
+                      >
+                        {p.method === "cash_usd" && p.amount_usd
+                          ? formatUSD(p.amount_usd)
+                          : formatMXN(p.amount_mxn)}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleRemovePayment(p.id)}
@@ -534,29 +574,35 @@ export function PaymentPanel({
         )}
       </div>
 
-      {/* Charge button */}
+      {/* Charge button / empty-state hint */}
       <div className="border-t border-[var(--border)] p-4">
-        <button
-          type="button"
-          disabled={!canCharge || charging}
-          onClick={handleCharge}
-          className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-xl py-3.5",
-            "text-base font-bold text-white transition",
-            canCharge && !charging
-              ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96]"
-              : "cursor-not-allowed bg-[var(--text-muted)]",
-          )}
-        >
-          {charging ? (
-            <LoadingSpinner size="sm" label="Procesando…" />
-          ) : (
-            <>
-              <Banknote size={18} />
-              Cobrar {formatMXN(totalMxn)}
-            </>
-          )}
-        </button>
+        {payments.length === 0 ? (
+          <p className="py-3 text-center text-sm text-[var(--text-muted)]">
+            Agrega un método de pago para continuar
+          </p>
+        ) : (
+          <button
+            type="button"
+            disabled={!canCharge || charging}
+            onClick={handleCharge}
+            className={cn(
+              "flex w-full items-center justify-center gap-2 rounded-xl py-3.5",
+              "text-base font-bold text-white transition",
+              canCharge && !charging
+                ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96]"
+                : "cursor-not-allowed bg-[var(--text-muted)]",
+            )}
+          >
+            {charging ? (
+              <LoadingSpinner size="sm" label="Procesando…" />
+            ) : (
+              <>
+                <Banknote size={18} />
+                Cobrar {formatMXN(totalMxn)}
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

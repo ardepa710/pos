@@ -12,10 +12,8 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,
-  Select,
-  SelectItem,
 } from "@heroui/react";
+import { FormField, Input } from "@/components/ui";
 import { Plus, Pencil, Trash2, ShieldCheck, User } from "lucide-react";
 import { usersApi } from "@/lib/api";
 import type { UserRead } from "@/lib/api";
@@ -29,16 +27,21 @@ import {
 } from "@/components/ui";
 import { t } from "@/lib/i18n";
 
+// Password rules must match backend UserCreate validator:
+//   min 10 chars · at least one uppercase · at least one digit
+const PASSWORD_RULES = z
+  .string()
+  .min(10, "Mínimo 10 caracteres")
+  .refine((v) => /[A-Z]/.test(v), "Debe incluir al menos una mayúscula")
+  .refine((v) => /[0-9]/.test(v), "Debe incluir al menos un número");
+
 const userSchema = z.object({
   username: z.string().min(3, "Mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
-  full_name: z.string().min(1, t.error.required),
+  full_name: z.string().min(2, "Mínimo 2 caracteres"),
   role: z.enum(["admin", "supervisor", "cashier"]),
-  password: z
-    .string()
-    .min(8, t.auth.password_too_short)
-    .optional()
-    .or(z.literal("")),
+  // On create: required and must pass rules. On edit: empty = no change.
+  password: PASSWORD_RULES.or(z.literal("")).optional(),
   is_active: z.boolean().default(true),
 });
 
@@ -266,48 +269,69 @@ export function UsersManager() {
             </ModalHeader>
             <ModalBody className="flex flex-col gap-3">
               {!editTarget && (
-                <Input
+                <FormField
                   label="Usuario"
-                  {...register("username")}
-                  isInvalid={!!errors.username}
-                  errorMessage={errors.username?.message}
-                />
+                  required
+                  error={errors.username?.message}
+                >
+                  <Input
+                    {...register("username")}
+                    hasError={!!errors.username}
+                    placeholder="ej. jperez"
+                  />
+                </FormField>
               )}
-              <Input
-                label={t.auth.username.replace("Usuario", "Nombre completo")}
-                placeholder="Nombre completo"
-                {...register("full_name")}
-                isInvalid={!!errors.full_name}
-                errorMessage={errors.full_name?.message}
-              />
-              <Input
-                label={t.customers.email}
-                type="email"
-                {...register("email")}
-                isInvalid={!!errors.email}
-                errorMessage={errors.email?.message}
-              />
-              <Select
-                label="Rol"
-                {...register("role")}
-                isInvalid={!!errors.role}
-                errorMessage={errors.role?.message}
+              <FormField
+                label="Nombre completo"
+                required
+                error={errors.full_name?.message}
               >
-                <SelectItem key="admin">Administrador</SelectItem>
-                <SelectItem key="supervisor">Supervisor</SelectItem>
-                <SelectItem key="cashier">Cajero</SelectItem>
-              </Select>
-              <Input
+                <Input
+                  {...register("full_name")}
+                  hasError={!!errors.full_name}
+                  placeholder="ej. Juan Pérez"
+                />
+              </FormField>
+              <FormField
+                label={t.customers.email}
+                required
+                error={errors.email?.message}
+              >
+                <Input
+                  {...register("email")}
+                  hasError={!!errors.email}
+                  type="email"
+                  placeholder="ej. juan@correo.com"
+                />
+              </FormField>
+              <FormField label="Rol" required error={errors.role?.message}>
+                <select
+                  {...register("role")}
+                  className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--border-focus)]"
+                >
+                  <option value="admin">Administrador</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="cashier">Cajero</option>
+                </select>
+              </FormField>
+              <FormField
                 label={
                   editTarget
                     ? "Nueva contraseña (vacío = sin cambio)"
                     : t.auth.password
                 }
-                type="password"
-                {...register("password")}
-                isInvalid={!!errors.password}
-                errorMessage={errors.password?.message}
-              />
+                error={errors.password?.message}
+              >
+                <Input
+                  {...register("password")}
+                  hasError={!!errors.password}
+                  type="password"
+                  placeholder="••••••••••"
+                />
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  Mínimo 10 caracteres, una mayúscula y un número.
+                </p>
+              </FormField>
             </ModalBody>
             <ModalFooter>
               <Button variant="flat" onPress={() => setFormOpen(false)}>

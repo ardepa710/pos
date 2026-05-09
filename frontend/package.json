@@ -10,7 +10,9 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:visual": "playwright test tests/visual",
+    "tokens": "npx tsx scripts/generate-tokens.ts"
   },
   "dependencies": {
     "@heroui/react": "^2.6.0",

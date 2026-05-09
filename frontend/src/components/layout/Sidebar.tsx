@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   ShoppingCart,
   Package,
@@ -17,16 +18,72 @@ import {
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
 
-const navItems = [
-  { href: "/pos", icon: ShoppingCart, label: t.nav.sales },
-  { href: "/catalog", icon: Package, label: t.nav.products },
-  { href: "/customers", icon: Users, label: t.nav.customers },
-  { href: "/suppliers", icon: Truck, label: t.nav.suppliers },
-  { href: "/purchases", icon: ShoppingBag, label: t.nav.purchases },
-  { href: "/gift-cards", icon: Gift, label: t.nav.giftCards },
-  { href: "/returns", icon: RotateCcw, label: t.nav.returns },
-  { href: "/reports", icon: BarChart2, label: t.nav.reports },
-  { href: "/settings", icon: Settings, label: t.nav.settings },
+// Role access matrix — which roles can see each nav item.
+// cashier  : POS + Customers (lookup during sales)
+// supervisor: everything except Settings
+// admin    : everything
+type Role = "admin" | "supervisor" | "cashier";
+
+const navItems: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  roles: Role[];
+}[] = [
+  {
+    href: "/pos",
+    icon: ShoppingCart,
+    label: t.nav.pos,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/catalog",
+    icon: Package,
+    label: t.nav.catalog,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/customers",
+    icon: Users,
+    label: t.nav.customers,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/suppliers",
+    icon: Truck,
+    label: t.nav.suppliers,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/purchases",
+    icon: ShoppingBag,
+    label: t.nav.purchases,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/gift-cards",
+    icon: Gift,
+    label: t.nav.gift_cards,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/returns",
+    icon: RotateCcw,
+    label: t.nav.returns,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/reports",
+    icon: BarChart2,
+    label: t.nav.reports,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/settings",
+    icon: Settings,
+    label: t.nav.settings,
+    roles: ["admin"],
+  },
 ];
 
 const roleBadgeMap: Record<string, string> = {
@@ -50,149 +107,63 @@ export function Sidebar({ onClose, businessName, logoUrl }: SidebarProps) {
   }
 
   return (
-    <aside
-      style={{
-        width: "240px",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "var(--bg-sidebar)",
-        borderRight: "1px solid var(--border)",
-        flexShrink: 0,
-      }}
-    >
+    <aside className="w-60 h-screen flex flex-col bg-[var(--bg-sidebar)] border-r border-[var(--border)] shrink-0">
       {/* Header — logo or business name */}
-      <div
-        style={{
-          padding: "1.25rem 1rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.625rem",
-          minHeight: "4rem",
-        }}
-      >
+      <div className="px-4 py-5 border-b border-white/8 flex items-center gap-2.5 min-h-16">
         {logoUrl ? (
           <img
             src={logoUrl}
             alt={businessName ?? "Kolekto"}
-            style={{
-              height: "2rem",
-              objectFit: "contain",
-              maxWidth: "160px",
-            }}
+            className="h-8 object-contain max-w-40"
           />
         ) : (
           /* Kolekto brand fallback — PNG logo */
           <img
             src="/logo-horizontal.png"
             alt="Kolekto"
-            style={{ height: "32px", objectFit: "contain" }}
+            className="h-8 object-contain"
           />
         )}
       </div>
 
       {/* Navigation */}
-      <nav
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0.5rem 0",
-        }}
-      >
-        {navItems.map(({ href, icon: Icon, label }) => {
-          const isActive =
-            href === "/pos"
-              ? pathname === "/pos" || pathname === "/"
-              : pathname.startsWith(href);
+      <nav className="flex-1 overflow-y-auto py-2">
+        {navItems
+          .filter(({ roles }) => !user || roles.includes(user.role as Role))
+          .map(({ href, icon: Icon, label }) => {
+            const isActive =
+              href === "/pos"
+                ? pathname === "/pos" || pathname === "/"
+                : pathname.startsWith(href);
 
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                padding: "0.625rem 1rem",
-                margin: "0.125rem 0.5rem",
-                borderRadius: "var(--radius)",
-                textDecoration: "none",
-                fontSize: "0.875rem",
-                fontWeight: isActive ? 600 : 400,
-                color: isActive
-                  ? "var(--text-on-sidebar-active)"
-                  : "var(--text-on-sidebar)",
-                backgroundColor: isActive
-                  ? "var(--bg-sidebar-active)"
-                  : "transparent",
-                borderLeft: isActive
-                  ? "3px solid var(--accent)"
-                  : "3px solid transparent",
-                transition:
-                  "background-color 150ms ease-in-out, color 150ms ease-in-out",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                    "var(--bg-sidebar-item)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                    "transparent";
-                }
-              }}
-            >
-              <Icon size={18} style={{ flexShrink: 0 }} />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 mx-2 px-3 py-2.5 rounded-[var(--radius)] text-sm no-underline",
+                  "border-l-[3px] transition-colors",
+                  isActive
+                    ? "font-semibold text-[var(--text-on-sidebar-active)] bg-[var(--bg-sidebar-active)] border-l-[var(--accent)]"
+                    : "font-normal text-[var(--text-on-sidebar)] border-transparent hover:bg-[var(--bg-sidebar-item)]",
+                )}
+              >
+                <Icon size={18} className="shrink-0" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
       </nav>
 
       {/* Footer — user info + logout */}
-      <div
-        style={{
-          padding: "0.75rem 1rem",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
+      <div className="px-4 py-3 border-t border-white/8">
         {user && (
-          <div
-            style={{
-              marginBottom: "0.5rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.25rem",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                color: "var(--text-on-dark)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+          <div className="mb-2 flex flex-col gap-1">
+            <span className="text-sm font-semibold text-[var(--text-on-dark)] truncate">
               {user.full_name || user.username}
             </span>
-            <span
-              style={{
-                display: "inline-block",
-                fontSize: "0.6875rem",
-                fontWeight: 600,
-                padding: "0.125rem 0.5rem",
-                borderRadius: "9999px",
-                backgroundColor: "var(--accent-subtle)",
-                color: "var(--accent)",
-                width: "fit-content",
-              }}
-            >
+            <span className="inline-block text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] w-fit">
               {roleBadgeMap[user.role] ?? user.role}
             </span>
           </div>
@@ -200,32 +171,7 @@ export function Sidebar({ onClose, businessName, logoUrl }: SidebarProps) {
 
         <button
           onClick={handleLogout}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            width: "100%",
-            padding: "0.5rem 0.75rem",
-            borderRadius: "var(--radius)",
-            border: "none",
-            backgroundColor: "transparent",
-            color: "var(--text-on-sidebar)",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-            transition:
-              "background-color 150ms ease-in-out, color 150ms ease-in-out",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              "rgba(239, 68, 68, 0.15)";
-            (e.currentTarget as HTMLButtonElement).style.color = "#ef4444";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              "transparent";
-            (e.currentTarget as HTMLButtonElement).style.color =
-              "var(--text-on-sidebar)";
-          }}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-[var(--radius)] border-none bg-transparent text-[var(--text-on-sidebar)] text-sm cursor-pointer transition-colors hover:bg-[var(--error-subtle)] hover:text-[var(--error)]"
         >
           <LogOut size={16} />
           <span>Cerrar sesión</span>

@@ -9,6 +9,7 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuthStore, selectIsAuthenticated } from "@/store/auth";
 import { t } from "@/lib/i18n";
+import { Button, Input } from "@/components/ui";
 
 // ── Validation schema ─────────────────────────────────────────────────────
 
@@ -58,51 +59,33 @@ function PasswordInput({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={id}
-        className="text-sm font-medium"
-        style={{ color: "var(--text-primary)" }}
+        className="text-sm font-medium text-[var(--text-primary)]"
       >
         {label}
       </label>
       <div className="relative">
-        <input
+        <Input
           id={id}
           type={show ? "text" : "password"}
           autoComplete={autoComplete}
           disabled={disabled}
+          hasError={hasError}
           placeholder={placeholder ?? "••••••••"}
           {...registration}
-          className="w-full rounded-lg px-3 py-2.5 pr-10 text-sm outline-none transition-colors disabled:opacity-50"
-          style={{
-            backgroundColor: "var(--bg-input)",
-            border: `1px solid ${hasError ? "var(--error)" : "var(--border)"}`,
-            color: "var(--text-primary)",
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = hasError
-              ? "var(--error)"
-              : "var(--border-focus)";
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = hasError
-              ? "var(--error)"
-              : "var(--border)";
-          }}
+          className="pr-10"
         />
         <button
           type="button"
           aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
           onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
-          style={{ color: "var(--text-muted)" }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-[var(--text-muted)]"
           tabIndex={-1}
         >
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </div>
       {hasError && errorMessage && (
-        <p className="text-xs" style={{ color: "var(--error)" }}>
-          {errorMessage}
-        </p>
+        <p className="text-xs text-[var(--error)]">{errorMessage}</p>
       )}
     </div>
   );
@@ -168,38 +151,22 @@ export default function ChangePasswordPage() {
   if (!hasHydrated || !isAuthenticated) return null;
 
   return (
-    <main
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: "var(--bg-base)" }}
-    >
-      <div
-        className="w-full max-w-md rounded-xl p-8"
-        style={{
-          backgroundColor: "var(--bg-card)",
-          border: "1px solid var(--border)",
-          boxShadow: "var(--shadow-modal)",
-        }}
-      >
+    <main className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-base)]">
+      <div className="w-full max-w-md rounded-xl p-8 bg-[var(--bg-card)] border border-[var(--border)] shadow-[var(--shadow-modal)]">
         {/* Header */}
         <div className="flex flex-col items-center mb-8 gap-3">
-          <div
-            className="flex items-center justify-center w-14 h-14 rounded-xl"
-            style={{ backgroundColor: "var(--accent-subtle)" }}
-          >
+          <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-[var(--accent-subtle)]">
             <Lock
               size={28}
-              style={{ color: "var(--accent)" }}
+              className="text-[var(--accent)]"
               aria-hidden="true"
             />
           </div>
-          <h1
-            className="text-xl font-semibold tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
+          <h1 className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
             Cambiar contraseña
           </h1>
           {user && (
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-sm text-[var(--text-secondary)]">
               Hola,{" "}
               <span className="font-medium">
                 {user.full_name || user.username}
@@ -246,44 +213,30 @@ export default function ChangePasswordPage() {
           />
 
           {/* Password strength hint */}
-          <p className="text-xs -mt-2" style={{ color: "var(--text-muted)" }}>
+          <p className="text-xs -mt-2 text-[var(--text-muted)]">
             Mínimo 8 caracteres
           </p>
 
           {/* Server error */}
           {serverError && (
             <div
-              className="rounded-lg px-4 py-3 text-sm flex items-center gap-2"
+              className="rounded-lg px-4 py-3 text-sm flex items-center gap-2 bg-[var(--error-subtle)] border border-[var(--error)] text-[var(--error)]"
               role="alert"
-              style={{
-                backgroundColor: "var(--error-subtle)",
-                border: "1px solid var(--error)",
-                color: "var(--error)",
-              }}
             >
               <span>{serverError}</span>
             </div>
           )}
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
+            size="lg"
+            isLoading={isSubmitting}
             disabled={isSubmitting}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold transition active:scale-[0.96] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 mt-1"
-            style={{
-              backgroundColor: "var(--accent)",
-              color: "var(--accent-foreground)",
-            }}
-            onMouseEnter={(e) => {
-              if (!isSubmitting)
-                e.currentTarget.style.backgroundColor = "var(--accent-hover)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--accent)";
-            }}
+            className="w-full mt-1"
           >
-            {isSubmitting ? t.action.loading : "Guardar contraseña"}
-          </button>
+            Guardar contraseña
+          </Button>
         </form>
       </div>
     </main>

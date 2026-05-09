@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, BarChart2 } from "lucide-react";
+import { Plus, Pencil, Trash2, BarChart2, AlertTriangle } from "lucide-react";
 import {
   DataTable,
   SearchInput,
@@ -158,7 +158,13 @@ export function ProductList() {
             )}
           >
             {stockNum}
-            {isLow && <span className="ml-1 text-xs">⚠</span>}
+            {isLow && (
+              <AlertTriangle
+                size={11}
+                className="ml-1 inline-block shrink-0 text-[var(--warning)]"
+                aria-label="Stock bajo"
+              />
+            )}
           </span>
         );
       },
@@ -166,7 +172,7 @@ export function ProductList() {
     },
     {
       key: "status",
-      header: "Estado",
+      header: t.products.status,
       accessor: (row) => (
         <StatusBadge status={row.is_active ? "active" : "inactive"} size="sm" />
       ),
@@ -208,7 +214,7 @@ export function ProductList() {
           )}
         </div>
       ),
-      className: "w-32",
+      className: "w-24",
     },
   ];
 

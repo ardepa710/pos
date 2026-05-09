@@ -1,44 +1,51 @@
 @import "tailwindcss";
 
 /* ── Design tokens — Kolekto · Verde Olivo ───────────────────── */
+/* AUTO-GENERATED — run `npm run tokens` to regenerate           */
+/* Source of truth: src/lib/design-tokens.ts                       */
 
 :root {
   /* Backgrounds */
-  --bg-base: #f5f1ea; /* Hueso — fondo principal */
+  --bg-base: #f5f1ea;
   --bg-card: #ffffff;
-  --bg-card-elevated: #f0f0e5; /* Verde muy lavado — secciones secundarias */
+  --bg-card-elevated: #f0f0e5;
   --bg-input: #ffffff;
-  --bg-sidebar: #1a1a1a; /* Tinta */
+  --bg-sidebar: #1a1a1a; /* Tinta — always dark */
   --bg-sidebar-item: rgba(255, 255, 255, 0.05);
   --bg-sidebar-active: rgba(107, 122, 63, 0.15); /* Olivo 15% */
 
   /* Borders */
-  --border: #e8e2d5; /* Arena */
-  --border-focus: #6b7a3f; /* Olivo */
+  --border: #e8e2d5;
+  --border-focus: #6b7a3f;
   --border-strong: #d8d2c4;
 
   /* Text */
-  --text-primary: #1a1a1a; /* Tinta */
-  --text-secondary: #3d4326; /* Olivo oscuro */
-  --text-muted: #8c8478; /* Piedra */
-  --text-on-dark: #f5f1ea; /* Hueso */
-  --text-on-sidebar: #e8e2d5; /* Crema */
+  --text-primary: #1a1a1a;
+  --text-secondary: #3d4326;
+  --text-muted: #8c8478;
+  --text-on-dark: #f5f1ea;
+  --text-on-sidebar: #e8e2d5;
   --text-on-sidebar-active: #ffffff;
 
-  /* Brand / Accent — usar con disciplina (CTAs, estados activos, puntos) */
-  --accent: #6b7a3f; /* Olivo */
-  --accent-hover: #5a6835; /* Olivo presionado */
-  --accent-subtle: rgba(107, 122, 63, 0.1);
+  /* Brand / Accent */
+  --accent: #6b7a3f;
+  --accent-hover: #5a6835;
+  --accent-subtle: rgba(
+    107,
+    122,
+    63,
+    0.1
+  ); /* 10% — lighter bg needs less opacity to stay subtle */
   --accent-foreground: #ffffff;
 
   /* Semantic */
-  --success: #6b7a3f; /* Reusamos olivo para success */
+  --success: #6b7a3f;
   --success-subtle: rgba(107, 122, 63, 0.1);
-  --warning: #c49a3f; /* Mostaza */
+  --warning: #c49a3f;
   --warning-subtle: rgba(196, 154, 63, 0.1);
-  --error: #a04540; /* Tinto */
+  --error: #a04540;
   --error-subtle: rgba(160, 69, 64, 0.1);
-  --info: #4a6b7a; /* Azul piedra */
+  --info: #4a6b7a;
   --info-subtle: rgba(74, 107, 122, 0.1);
 
   /* POS-specific */
@@ -48,16 +55,16 @@
   --receipt-bg: #ffffff;
 
   /* Typography */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
   --font-receipt: "Courier Prime", "Courier New", monospace;
 
   /* Spacing */
-  --radius: 0.375rem; /* 6px — inputs, botones */
-  --radius-sm: 0.25rem; /* 4px — checkboxes, badges */
-  --radius-lg: 0.625rem; /* 10px — cards */
+  --radius: 0.375rem;
+  --radius-sm: 0.25rem;
+  --radius-lg: 0.625rem;
 
-  /* Shadows — usar con moderación, preferir bordes */
+  /* Shadows */
   --shadow-card: 0 1px 2px 0 rgb(26 26 26 / 0.04);
   --shadow-elevated:
     0 2px 8px -2px rgb(26 26 26 / 0.06), 0 1px 4px -1px rgb(26 26 26 / 0.04);
@@ -66,24 +73,28 @@
 }
 
 .dark {
-  /* Dark mode — acento se aclara a #A4B364 para mantener contraste WCAG AA */
-  --bg-base: #14150f; /* Noche */
+  --bg-base: #14150f;
   --bg-card: #1f2018;
-  --bg-card-elevated: #2a2c24; /* Carbón */
+  --bg-card-elevated: #2a2c24;
   --bg-input: #1f2018;
   --bg-sidebar: #14150f;
 
   --border: #2a2c24;
-  --border-focus: #a4b364; /* Olivo claro — más contraste en dark */
+  --border-focus: #a4b364;
   --border-strong: #3d3e33;
 
-  --text-primary: #e8e2d5; /* Crema */
-  --text-secondary: #a4b364; /* Olivo claro */
-  --text-muted: #6b665c; /* Piedra cálida */
+  --text-primary: #e8e2d5;
+  --text-secondary: #a4b364;
+  --text-muted: #6b665c;
 
-  --accent: #a4b364; /* Olivo claro */
+  --accent: #a4b364;
   --accent-hover: #b4c374;
-  --accent-subtle: rgba(164, 179, 100, 0.15);
+  --accent-subtle: rgba(
+    164,
+    179,
+    100,
+    0.15
+  ); /* 15% — dark bg needs more opacity to match perceived subtlety */
   --accent-foreground: #14150f;
 
   --success: #a4b364;
@@ -140,8 +151,8 @@ p {
 
 /* ── Demo mode banner ────────────────────────────────────────── */
 .demo-banner {
-  background: #c49a3f; /* Mostaza Kolekto */
-  color: #1a1a1a;
+  background: var(--warning);
+  color: var(--bg-sidebar);
   text-align: center;
   padding: 0.375rem 1rem;
   font-size: 0.75rem;

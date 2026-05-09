@@ -24,6 +24,7 @@ interface DataTableProps<T> {
   totalCount?: number;
   currentPage?: number;
   onPageChange?: (page: number) => void;
+  density?: "compact" | "normal" | "relaxed";
 }
 
 type SortDirection = "asc" | "desc" | null;
@@ -33,7 +34,13 @@ interface SortState {
   direction: SortDirection;
 }
 
-function SkeletonRows({ columns }: { columns: number }) {
+function SkeletonRows({
+  columns,
+  cellPadding,
+}: {
+  columns: number;
+  cellPadding: string;
+}) {
   return (
     <>
       {Array.from({ length: 5 }).map((_, rowIdx) => (
@@ -41,7 +48,7 @@ function SkeletonRows({ columns }: { columns: number }) {
           {Array.from({ length: columns }).map((_, colIdx) => (
             <td
               key={colIdx}
-              className="px-4 py-3 border-b border-[var(--border)]"
+              className={`${cellPadding} border-b border-[var(--border)]`}
             >
               <div className="h-4 rounded bg-[var(--bg-card-elevated)] animate-pulse" />
             </td>
@@ -62,7 +69,14 @@ export function DataTable<T>({
   totalCount,
   currentPage: externalPage,
   onPageChange,
+  density = "normal",
 }: DataTableProps<T>) {
+  const padding = {
+    compact: { cell: "px-3 py-1.5", head: "px-3 py-2" },
+    normal: { cell: "px-4 py-3", head: "px-4 py-3" },
+    relaxed: { cell: "px-4 py-4", head: "px-4 py-4" },
+  }[density];
+
   const [sort, setSort] = useState<SortState>({ key: "", direction: null });
   const [internalPage, setInternalPage] = useState(1);
 
@@ -141,7 +155,7 @@ export function DataTable<T>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-left font-medium text-[var(--text-secondary)] border-b border-[var(--border)]",
+                    `${padding.head} text-left font-medium text-[var(--text-secondary)] border-b border-[var(--border)]`,
                     col.sortable &&
                       "cursor-pointer select-none hover:text-[var(--text-primary)] transition-colors",
                     col.className,
@@ -159,12 +173,15 @@ export function DataTable<T>({
 
           <tbody>
             {isLoading ? (
-              <SkeletonRows columns={columns.length} />
+              <SkeletonRows
+                columns={columns.length}
+                cellPadding={padding.cell}
+              />
             ) : paginatedData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-10 text-center text-[var(--text-muted)]"
+                  className={`${padding.cell.split(" ")[0]} py-10 text-center text-[var(--text-muted)]`}
                 >
                   {emptyMessage}
                 </td>
@@ -176,15 +193,15 @@ export function DataTable<T>({
                   className={cn(
                     "border-b border-[var(--border)] transition-colors hover:bg-[var(--bg-card-elevated)]",
                     idx % 2 === 0
-                      ? "bg-[var(--bg-base)]"
-                      : "bg-[var(--bg-card)]",
+                      ? "bg-[var(--bg-card)]"
+                      : "bg-[var(--bg-base)]",
                   )}
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
                       className={cn(
-                        "px-4 py-3 text-[var(--text-primary)]",
+                        `${padding.cell} text-[var(--text-primary)]`,
                         col.className,
                       )}
                     >
@@ -210,7 +227,7 @@ export function DataTable<T>({
               disabled={currentPage <= 1}
               onClick={() => handlePageChange(currentPage - 1)}
               className={cn(
-                "px-3 py-2 rounded border border-[var(--border)] transition active:scale-[0.96]",
+                "px-3 py-1.5 rounded border border-[var(--border)] transition active:scale-[0.96]",
                 currentPage <= 1
                   ? "opacity-40 cursor-not-allowed active:scale-100"
                   : "hover:bg-[var(--bg-card-elevated)] cursor-pointer",

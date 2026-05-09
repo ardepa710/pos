@@ -200,48 +200,162 @@ export const tokens = {
 };
 
 // ============================================================================
-// CSS VARIABLES EXPORT (para inyección en :root)
+// DS-5: BRAND DEFAULT COLOR
 // ============================================================================
-export const cssVariablesLight = `
-  --color-bg: ${tokens.color.light.bg};
-  --color-surface: ${tokens.color.light.surface};
-  --color-surface-muted: ${tokens.color.light.surfaceMuted};
-  --color-surface-subtle: ${tokens.color.light.surfaceSubtle};
-  --color-text: ${tokens.color.light.text};
-  --color-text-secondary: ${tokens.color.light.textSecondary};
-  --color-text-muted: ${tokens.color.light.textMuted};
-  --color-text-inverse: ${tokens.color.light.textInverse};
-  --color-accent: ${tokens.color.light.accent};
-  --color-accent-hover: ${tokens.color.light.accentHover};
-  --color-accent-subtle: ${tokens.color.light.accentSubtle};
-  --color-border: ${tokens.color.light.border};
-  --color-border-strong: ${tokens.color.light.borderStrong};
-  --color-border-subtle: ${tokens.color.light.borderSubtle};
-  --color-success: ${tokens.color.light.success};
-  --color-warning: ${tokens.color.light.warning};
-  --color-error: ${tokens.color.light.error};
-  --color-info: ${tokens.color.light.info};
+
+/** Default Kolekto brand accent — Olivo. Use this instead of the raw hex literal. */
+export const BRAND_DEFAULT_COLOR = tokens.color.light.accent; // "#6B7A3F"
+
+// ============================================================================
+// DS-4: CSS VARIABLES — typed objects mapping CSS var names to token values
+// ============================================================================
+
+export const cssVarsLight = {
+  "--bg-base": tokens.color.light.bg,
+  "--bg-card": tokens.color.light.surface,
+  "--bg-card-elevated": tokens.color.light.surfaceSubtle,
+  "--bg-input": tokens.color.light.surface,
+  "--border": tokens.color.light.border,
+  "--border-focus": tokens.color.light.accent,
+  "--border-strong": tokens.color.light.borderStrong,
+  "--text-primary": tokens.color.light.text,
+  "--text-secondary": tokens.color.light.textSecondary,
+  "--text-muted": tokens.color.light.textMuted,
+  "--accent": tokens.color.light.accent,
+  "--accent-hover": tokens.color.light.accentHover,
+  "--success": tokens.color.light.success,
+  "--warning": tokens.color.light.warning,
+  "--error": tokens.color.light.error,
+  "--info": tokens.color.light.info,
+} as const;
+
+export const cssVarsDark = {
+  "--bg-base": tokens.color.dark.bg,
+  "--bg-card": tokens.color.dark.surface,
+  "--bg-card-elevated": tokens.color.dark.surfaceMuted,
+  "--bg-input": tokens.color.dark.surface,
+  "--border": tokens.color.dark.border,
+  "--border-focus": tokens.color.dark.accent,
+  "--border-strong": tokens.color.dark.borderStrong,
+  "--text-primary": tokens.color.dark.text,
+  "--text-secondary": tokens.color.dark.textSecondary,
+  "--text-muted": tokens.color.dark.textMuted,
+  "--accent": tokens.color.dark.accent,
+  "--accent-hover": tokens.color.dark.accentHover,
+  "--success": tokens.color.dark.success,
+  "--warning": tokens.color.dark.warning,
+  "--error": tokens.color.dark.error,
+  "--info": tokens.color.dark.info,
+} as const;
+
+// ============================================================================
+// DS-4: generateGlobalCSS — produces the full :root + .dark CSS blocks
+// ============================================================================
+
+export function generateGlobalCSS(): string {
+  const l = tokens.color.light;
+  const d = tokens.color.dark;
+  return `/* ── Design tokens — Kolekto · Verde Olivo ───────────────────── */
+/* AUTO-GENERATED — run \`npm run tokens\` to regenerate           */
+/* Source of truth: src/lib/design-tokens.ts                       */
+
+:root {
+  /* Backgrounds */
+  --bg-base: ${l.bg};
+  --bg-card: ${l.surface};
+  --bg-card-elevated: ${l.surfaceSubtle};
+  --bg-input: ${l.surface};
+  --bg-sidebar: #1a1a1a; /* Tinta — always dark */
+  --bg-sidebar-item: rgba(255, 255, 255, 0.05);
+  --bg-sidebar-active: rgba(107, 122, 63, 0.15); /* Olivo 15% */
+
+  /* Borders */
+  --border: ${l.border};
+  --border-focus: ${l.accent};
+  --border-strong: ${l.borderStrong};
+
+  /* Text */
+  --text-primary: ${l.text};
+  --text-secondary: ${l.textSecondary};
+  --text-muted: ${l.textMuted};
+  --text-on-dark: ${l.textInverse};
+  --text-on-sidebar: ${l.surfaceMuted};
+  --text-on-sidebar-active: #ffffff;
+
+  /* Brand / Accent */
+  --accent: ${l.accent};
+  --accent-hover: ${l.accentHover};
+  --accent-subtle: rgba(107, 122, 63, 0.1);
+  --accent-foreground: #ffffff;
+
+  /* Semantic */
+  --success: ${l.success};
+  --success-subtle: rgba(107, 122, 63, 0.1);
+  --warning: ${l.warning};
+  --warning-subtle: rgba(196, 154, 63, 0.1);
+  --error: ${l.error};
+  --error-subtle: rgba(160, 69, 64, 0.1);
+  --info: ${l.info};
+  --info-subtle: rgba(74, 107, 122, 0.1);
+
+  /* POS-specific */
+  --cart-bg: ${l.bg};
+  --product-card-bg: ${l.surface};
+  --payment-panel-bg: ${l.surfaceSubtle};
+  --receipt-bg: ${l.surface};
+
+  /* Typography */
   --font-sans: ${tokens.font.sans};
   --font-mono: ${tokens.font.mono};
-`;
+  --font-receipt: "Courier Prime", "Courier New", monospace;
 
-export const cssVariablesDark = `
-  --color-bg: ${tokens.color.dark.bg};
-  --color-surface: ${tokens.color.dark.surface};
-  --color-surface-muted: ${tokens.color.dark.surfaceMuted};
-  --color-surface-subtle: ${tokens.color.dark.surfaceSubtle};
-  --color-text: ${tokens.color.dark.text};
-  --color-text-secondary: ${tokens.color.dark.textSecondary};
-  --color-text-muted: ${tokens.color.dark.textMuted};
-  --color-text-inverse: ${tokens.color.dark.textInverse};
-  --color-accent: ${tokens.color.dark.accent};
-  --color-accent-hover: ${tokens.color.dark.accentHover};
-  --color-accent-subtle: ${tokens.color.dark.accentSubtle};
-  --color-border: ${tokens.color.dark.border};
-  --color-border-strong: ${tokens.color.dark.borderStrong};
-  --color-border-subtle: ${tokens.color.dark.borderSubtle};
-  --color-success: ${tokens.color.dark.success};
-  --color-warning: ${tokens.color.dark.warning};
-  --color-error: ${tokens.color.dark.error};
-  --color-info: ${tokens.color.dark.info};
-`;
+  /* Spacing */
+  --radius: ${tokens.radius.md};
+  --radius-sm: ${tokens.radius.sm};
+  --radius-lg: ${tokens.radius.lg};
+
+  /* Shadows */
+  --shadow-card: ${tokens.shadow.sm};
+  --shadow-elevated: ${tokens.shadow.md};
+  --shadow-modal: ${tokens.shadow.lg};
+}
+
+.dark {
+  --bg-base: ${d.bg};
+  --bg-card: ${d.surface};
+  --bg-card-elevated: ${d.surfaceMuted};
+  --bg-input: ${d.surface};
+  --bg-sidebar: ${d.bg};
+
+  --border: ${d.border};
+  --border-focus: ${d.accent};
+  --border-strong: ${d.borderStrong};
+
+  --text-primary: ${d.text};
+  --text-secondary: ${d.textSecondary};
+  --text-muted: ${d.textMuted};
+
+  --accent: ${d.accent};
+  --accent-hover: ${d.accentHover};
+  --accent-subtle: rgba(164, 179, 100, 0.15);
+  --accent-foreground: ${d.bg};
+
+  --success: ${d.success};
+  --success-subtle: rgba(164, 179, 100, 0.15);
+  --warning: ${d.warning};
+  --warning-subtle: rgba(212, 176, 95, 0.15);
+  --error: ${d.error};
+  --error-subtle: rgba(196, 101, 96, 0.15);
+  --info: ${d.info};
+  --info-subtle: rgba(122, 149, 164, 0.15);
+
+  --cart-bg: ${d.bg};
+  --product-card-bg: ${d.surface};
+  --payment-panel-bg: ${d.surfaceMuted};
+  --receipt-bg: ${d.surface};
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.6);
+}`;
+}

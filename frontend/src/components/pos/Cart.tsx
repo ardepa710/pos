@@ -69,7 +69,7 @@ export function Cart({ token, user, fxRate }: CartProps) {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {items.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <ShoppingCart size={40} className="text-[var(--border)]" />
+            <ShoppingCart size={40} className="text-[var(--text-muted)]" />
             <p className="text-sm text-[var(--text-muted)]">
               {t.sales.cart_empty}
             </p>

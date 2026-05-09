@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui";
 import { Store, ChevronRight, Check } from "lucide-react";
 import { FormField } from "@/components/ui";
 import { settingsApi } from "@/lib/api";
@@ -30,7 +30,12 @@ const BUSINESS_TYPES = [
 const schema = z.object({
   business_name: z.string().min(1, t.error.required).max(120),
   business_type: z.string().min(1, t.error.required),
-  support_whatsapp: z.string().optional(),
+  support_whatsapp: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\+?[\d\s\-().]{7,20}$/.test(val.trim()), {
+      message: "Número no válido. Ej: +52 555 000 0000",
+    }),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -73,6 +78,17 @@ export default function SetupPage() {
 
   const businessName = watch("business_name");
   const businessType = watch("business_type");
+
+  async function handleNextStep() {
+    // Best-effort draft save — non-blocking, wizard advances regardless
+    settingsApi
+      .saveDraft(token, {
+        business_name: businessName,
+        support_whatsapp: watch("support_whatsapp") ?? "",
+      })
+      .catch(() => {});
+    setStep(2);
+  }
 
   async function onSubmit(data: FormData) {
     setLoading(true);
@@ -125,7 +141,7 @@ export default function SetupPage() {
                   {step > s ? <Check size={12} /> : s}
                 </div>
                 <span
-                  className={`text-xs hidden sm:inline ${
+                  className={`text-xs ${
                     step === s
                       ? "text-[var(--text-primary)] font-medium"
                       : "text-[var(--text-muted)]"
@@ -155,10 +171,10 @@ export default function SetupPage() {
                 {businessName} está configurado y listo para usarse.
               </p>
               <Button
-                className="mt-4 bg-[var(--accent)] text-white w-full"
-                onPress={() => {
+                onClick={() => {
                   window.location.replace("/pos");
                 }}
+                className="mt-4 w-full"
               >
                 Ir a Kolekto
               </Button>
@@ -187,7 +203,10 @@ export default function SetupPage() {
                     />
                   </FormField>
 
-                  <FormField label="WhatsApp de soporte (opcional)">
+                  <FormField
+                    label="WhatsApp de soporte (opcional)"
+                    error={errors.support_whatsapp?.message}
+                  >
                     <input
                       {...register("support_whatsapp")}
                       placeholder="+52 55 1234 5678"
@@ -197,10 +216,10 @@ export default function SetupPage() {
 
                   <Button
                     type="button"
-                    className="bg-[var(--accent)] text-white border-0"
-                    onPress={() => setStep(2)}
-                    isDisabled={!businessName?.trim()}
-                    endContent={<ChevronRight size={16} />}
+                    onClick={handleNextStep}
+                    disabled={!businessName?.trim()}
+                    icon={<ChevronRight size={16} />}
+                    className="w-full"
                   >
                     Siguiente
                   </Button>
@@ -216,7 +235,7 @@ export default function SetupPage() {
                     Esto ajusta los campos de atributos en los productos.
                   </p>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {BUSINESS_TYPES.map(({ key, label }) => (
                       <button
                         key={key}
@@ -248,17 +267,17 @@ export default function SetupPage() {
                   <div className="flex gap-3">
                     <Button
                       type="button"
-                      variant="bordered"
-                      className="flex-1 border-[var(--border)] text-[var(--text-secondary)]"
-                      onPress={() => setStep(1)}
+                      variant="outline"
+                      onClick={() => setStep(1)}
+                      className="flex-1"
                     >
                       {t.action.back}
                     </Button>
                     <Button
                       type="submit"
-                      className="flex-1 bg-[var(--accent)] text-white border-0"
                       isLoading={loading}
-                      endContent={!loading && <Check size={16} />}
+                      icon={!loading ? <Check size={16} /> : undefined}
+                      className="flex-1"
                     >
                       Finalizar configuración
                     </Button>

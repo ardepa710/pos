@@ -30,9 +30,12 @@ const BUSINESS_TYPES: { value: string; label: string }[] = [
 const schema = z.object({
   business_name: z.string().min(1, t.error.required),
   business_type: z.string().min(1, t.error.required),
-  primary_color: z.string().min(4),
-  theme: z.enum(["light", "dark", "system"]),
-  support_whatsapp: z.string().optional(),
+  support_whatsapp: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\+?[\d\s\-().]{7,20}$/.test(val.trim()), {
+      message: "Número no válido. Ej: +52 555 000 0000",
+    }),
   logo_url: z.string().optional(),
 });
 
@@ -52,16 +55,12 @@ export function BusinessSettingsForm() {
     register,
     handleSubmit,
     reset,
-    watch,
-    setValue,
     formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       business_name: "",
       business_type: "general",
-      primary_color: "#6B7A3F",
-      theme: "system",
       support_whatsapp: "",
       logo_url: "",
     },
@@ -73,8 +72,6 @@ export function BusinessSettingsForm() {
       reset({
         business_name: data.business_name ?? "",
         business_type: data.business_type ?? "general",
-        primary_color: data.primary_color ?? "#6B7A3F",
-        theme: data.theme ?? "system",
         support_whatsapp: data.support_whatsapp ?? "",
         logo_url: data.logo_url ?? "",
       });
@@ -88,19 +85,9 @@ export function BusinessSettingsForm() {
       queryClient.setQueryData(["settings", "business"], updated);
       // Keep layout query in sync so theme/color effects in AppLayout re-fire
       queryClient.setQueryData(["business-settings"], updated);
-      // Apply primary color immediately without waiting for layout re-render
-      if (updated.primary_color) {
-        const root = document.documentElement;
-        root.style.setProperty("--accent", updated.primary_color);
-        root.style.setProperty("--border-focus", updated.primary_color);
-        root.style.setProperty("--info", updated.primary_color);
-        root.style.setProperty("--accent-subtle", updated.primary_color + "1a");
-      }
       reset({
         business_name: updated.business_name ?? "",
         business_type: updated.business_type ?? "general",
-        primary_color: updated.primary_color ?? "#6B7A3F",
-        theme: updated.theme ?? "system",
         support_whatsapp: updated.support_whatsapp ?? "",
         logo_url: updated.logo_url ?? "",
       });
@@ -114,12 +101,6 @@ export function BusinessSettingsForm() {
       </div>
     );
   }
-
-  const THEME_OPTIONS: { value: FormValues["theme"]; label: string }[] = [
-    { value: "light", label: t.settings.theme_light },
-    { value: "dark", label: t.settings.theme_dark },
-    { value: "system", label: t.settings.theme_system },
-  ];
 
   return (
     <form
@@ -175,28 +156,11 @@ export function BusinessSettingsForm() {
           </select>
         </FormField>
 
-        {/* Primary color */}
-        <FormField label={t.settings.primary_color}>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={watch("primary_color") ?? "#6B7A3F"}
-              onChange={(e) =>
-                setValue("primary_color", e.target.value, { shouldDirty: true })
-              }
-              className="h-10 w-14 cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--bg-input)] p-1"
-            />
-            <input
-              {...register("primary_color")}
-              type="text"
-              placeholder="#6B7A3F"
-              className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-            />
-          </div>
-        </FormField>
-
         {/* WhatsApp */}
-        <FormField label="WhatsApp de soporte">
+        <FormField
+          label="WhatsApp de soporte"
+          error={errors.support_whatsapp?.message}
+        >
           <input
             {...register("support_whatsapp")}
             type="tel"
@@ -214,29 +178,6 @@ export function BusinessSettingsForm() {
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
           />
         </FormField>
-      </div>
-
-      {/* Theme radio */}
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-[var(--text-secondary)]">
-          {t.settings.theme}
-        </span>
-        <div className="flex gap-3">
-          {THEME_OPTIONS.map((opt) => (
-            <label
-              key={opt.value}
-              className="inline-flex cursor-pointer items-center gap-2 text-sm text-[var(--text-primary)]"
-            >
-              <input
-                {...register("theme")}
-                type="radio"
-                value={opt.value}
-                className="accent-[var(--accent)]"
-              />
-              {opt.label}
-            </label>
-          ))}
-        </div>
       </div>
 
       {/* Error banner */}

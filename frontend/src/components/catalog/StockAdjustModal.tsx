@@ -218,8 +218,15 @@ export function StockAdjustModal({
                 step="1"
                 value={delta}
                 onChange={(e) => {
-                  setDelta(e.target.value);
-                  setDeltaError("");
+                  const raw = e.target.value;
+                  setDelta(raw);
+                  const n = parseInt(raw, 10);
+                  const curr = parseFloat(String(product.stock_quantity));
+                  if (raw !== "" && !isNaN(n) && n !== 0 && curr + n < 0) {
+                    setDeltaError("El stock no puede quedar negativo.");
+                  } else {
+                    setDeltaError("");
+                  }
                 }}
                 placeholder="Ej: 10 o -5"
                 className={INPUT_CLASS}

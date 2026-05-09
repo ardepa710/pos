@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Decimal from "decimal.js";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,9 @@ export function CartItem({
 }: CartItemProps) {
   const gross = new Decimal(item.unit_price_mxn).mul(item.quantity);
   const hasDiscount = new Decimal(item.discount_mxn).greaterThan(0);
+  const [showDiscount, setShowDiscount] = useState(
+    item.discount_mxn !== "0.00" && item.discount_mxn !== "0",
+  );
 
   return (
     <div
@@ -73,8 +77,8 @@ export function CartItem({
             min="1"
             value={item.quantity}
             onChange={(e) => {
-              const val = parseInt(e.target.value, 10);
-              if (!isNaN(val)) onQuantityChange(item.product_id, val);
+              const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+              onQuantityChange(item.product_id, val);
             }}
             className={cn(
               "h-7 w-10 bg-transparent text-center text-sm font-medium",
@@ -106,44 +110,77 @@ export function CartItem({
         </span>
       </div>
 
-      {/* Row 3: discount (always visible for supervisor/admin, hidden for cashier unless > 0) */}
-      {(canEditPrice || hasDiscount) && (
+      {/* Row 3: discount */}
+      {canEditPrice && (
         <div className="flex items-center gap-2">
-          <label
-            htmlFor={`discount-${item.product_id}`}
-            className="text-xs text-[var(--text-muted)]"
-          >
-            {t.sales.discount}:
-          </label>
-          {canEditPrice ? (
-            <input
-              id={`discount-${item.product_id}`}
-              type="number"
-              min="0"
-              step="0.01"
-              value={item.discount_mxn === "0.00" ? "" : item.discount_mxn}
-              placeholder="0.00"
-              onChange={(e) => {
-                const raw = e.target.value;
-                onDiscountChange(item.product_id, raw === "" ? "0.00" : raw);
-              }}
-              className={cn(
-                "w-24 rounded border border-[var(--border)] bg-[var(--bg-input)]",
-                "px-2 py-0.5 text-right text-xs text-[var(--text-primary)] outline-none",
-                "focus:border-[var(--border-focus)]",
-                "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          {showDiscount ? (
+            <>
+              <label
+                htmlFor={`discount-${item.product_id}`}
+                className="text-xs text-[var(--text-muted)]"
+              >
+                {t.sales.discount}:
+              </label>
+              <input
+                id={`discount-${item.product_id}`}
+                type="number"
+                min="0"
+                step="0.01"
+                value={item.discount_mxn === "0.00" ? "" : item.discount_mxn}
+                placeholder="0.00"
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  onDiscountChange(item.product_id, raw === "" ? "0.00" : raw);
+                }}
+                className={cn(
+                  "w-24 rounded border border-[var(--border)] bg-[var(--bg-input)]",
+                  "px-2 py-0.5 text-right text-xs text-[var(--text-primary)] outline-none",
+                  "focus:border-[var(--border-focus)]",
+                  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                )}
+              />
+              {!hasDiscount && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDiscountChange(item.product_id, "0");
+                    setShowDiscount(false);
+                  }}
+                  className="text-[10px] text-[var(--text-muted)] hover:text-[var(--error)] transition-colors ml-1"
+                  aria-label="Quitar descuento"
+                >
+                  ×
+                </button>
               )}
-            />
+              {hasDiscount && (
+                <span className="text-xs text-[var(--text-muted)]">
+                  bruto {formatMXN(gross.toFixed(2))}
+                </span>
+              )}
+            </>
           ) : (
-            <span className="text-xs text-[var(--warning)]">
-              -{formatMXN(item.discount_mxn)}
-            </span>
+            <button
+              type="button"
+              onClick={() => setShowDiscount(true)}
+              className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+            >
+              + Descuento
+            </button>
           )}
-          {hasDiscount && (
-            <span className="text-xs text-[var(--text-muted)]">
-              bruto {formatMXN(gross.toFixed(2))}
-            </span>
-          )}
+        </div>
+      )}
+      {/* Show discount read-only for cashier when one exists */}
+      {!canEditPrice && hasDiscount && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[var(--text-muted)]">
+            {t.sales.discount}:
+          </span>
+          <span className="text-xs text-[var(--warning)]">
+            -{formatMXN(item.discount_mxn)}
+          </span>
+          <span className="text-xs text-[var(--text-muted)]">
+            bruto {formatMXN(gross.toFixed(2))}
+          </span>
         </div>
       )}
     </div>
