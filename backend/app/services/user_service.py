@@ -183,35 +183,39 @@ async def authenticate_user(
 
 
 async def get_or_create_admin(session: AsyncSession, initial_password: str) -> User:
-    """Ensure at least one admin account exists.
+    """Ensure the admin account exists and its password matches ADMIN_INITIAL_PASSWORD.
 
-    If the users table is empty a default *admin* account is created using
-    *initial_password* (from the ADMIN_INITIAL_PASSWORD env var).
-    The account is flagged *must_change_password=True* so the operator is
-    prompted to set a proper password on first login.
+    On every startup the admin user is upserted:
+      - If no admin exists → create one (username="admin").
+      - If admin exists → always update the password hash from *initial_password*.
+
+    This means changing ADMIN_INITIAL_PASSWORD in the .env and restarting the
+    container is sufficient to reset the admin password on any environment
+    (local, staging, or production VPS).
     """
-    count_result = await session.execute(
-        select(func.count()).select_from(User).where(User.deleted_at.is_(None))
+    result = await session.execute(
+        select(User).where(User.username == "admin", User.deleted_at.is_(None))
     )
-    total: int = count_result.scalar_one()
+    existing = result.scalar_one_or_none()
 
-    if total > 0:
-        # Users already exist — find and return the first admin
-        result = await session.execute(
-            select(User).where(User.role == "admin", User.deleted_at.is_(None)).limit(1)
-        )
-        existing = result.scalar_one_or_none()
-        if existing is not None:
-            return existing
+    if existing is not None:
+        # Always sync password from env — allows operators to rotate via .env restart
+        existing.password_hash = hash_password(initial_password)
+        existing.is_active = True
+        session.add(existing)
+        await session.flush()
+        await session.refresh(existing)
+        log.info("user.admin_password_synced", user_id=str(existing.id))
+        return existing
 
-    # No users at all — bootstrap the system
+    # First boot — bootstrap the admin account
     admin = User(
         username="admin",
         email="admin@local.pos",
         full_name="Administrador",
         password_hash=hash_password(initial_password),
         role="admin",
-        must_change_password=True,
+        must_change_password=False,
     )
     session.add(admin)
     await session.flush()
