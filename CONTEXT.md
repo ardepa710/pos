@@ -41,7 +41,12 @@
 1. Crear PR / MR de `feat/ui-audit-fixes` → `development` (correr `/mr`).
 2. Stage 1 del audit (AUTH-1: migrar login page de inline styles a Tailwind + primitivos) — quedó fuera del scope acordado.
 3. Correr snapshots visuales con `npm run test:visual` una vez la app esté estable en dev.
-   **Status:** complete — PR listo: https://github.com/ardepa710/pos/compare/feat/ui-audit-fixes?expand=1 · fix post-merge: UsersManager `labelPlacement="outside"` en todos los HeroUI Input/Select (labels flotantes se encimaban con valores de react-hook-form)
+   **Status:** complete — PR listo: https://github.com/ardepa710/pos/compare/feat/ui-audit-fixes?expand=1
+
+**Post-commit fixes (uncommitted):**
+
+- `UsersManager.tsx`: reemplazó HeroUI Input/Select por `<FormField>+<Input>` propios; password Zod min 10 + uppercase + digit para coincidir con backend validator
+- `Sidebar.tsx` + `(app)/layout.tsx`: RBAC completo — matriz de permisos por rol; sidebar filtra nav items; layout redirige a `/pos` si ruta no permitida. Cajero: pos, customers, catalog, returns. Supervisor: todo excepto settings. Admin: todo.
 
 [ARCHIVED] ## Session 2026-05-08 — UI Audit + Deploy fixes producción
 

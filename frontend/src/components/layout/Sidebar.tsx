@@ -18,16 +18,72 @@ import {
 import { t } from "@/lib/i18n";
 import { useAuthStore } from "@/store/auth";
 
-const navItems = [
-  { href: "/pos", icon: ShoppingCart, label: t.nav.pos },
-  { href: "/catalog", icon: Package, label: t.nav.catalog },
-  { href: "/customers", icon: Users, label: t.nav.customers },
-  { href: "/suppliers", icon: Truck, label: t.nav.suppliers },
-  { href: "/purchases", icon: ShoppingBag, label: t.nav.purchases },
-  { href: "/gift-cards", icon: Gift, label: t.nav.gift_cards },
-  { href: "/returns", icon: RotateCcw, label: t.nav.returns },
-  { href: "/reports", icon: BarChart2, label: t.nav.reports },
-  { href: "/settings", icon: Settings, label: t.nav.settings },
+// Role access matrix — which roles can see each nav item.
+// cashier  : POS + Customers (lookup during sales)
+// supervisor: everything except Settings
+// admin    : everything
+type Role = "admin" | "supervisor" | "cashier";
+
+const navItems: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  roles: Role[];
+}[] = [
+  {
+    href: "/pos",
+    icon: ShoppingCart,
+    label: t.nav.pos,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/catalog",
+    icon: Package,
+    label: t.nav.catalog,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/customers",
+    icon: Users,
+    label: t.nav.customers,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/suppliers",
+    icon: Truck,
+    label: t.nav.suppliers,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/purchases",
+    icon: ShoppingBag,
+    label: t.nav.purchases,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/gift-cards",
+    icon: Gift,
+    label: t.nav.gift_cards,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/returns",
+    icon: RotateCcw,
+    label: t.nav.returns,
+    roles: ["admin", "supervisor", "cashier"],
+  },
+  {
+    href: "/reports",
+    icon: BarChart2,
+    label: t.nav.reports,
+    roles: ["admin", "supervisor"],
+  },
+  {
+    href: "/settings",
+    icon: Settings,
+    label: t.nav.settings,
+    roles: ["admin"],
+  },
 ];
 
 const roleBadgeMap: Record<string, string> = {
@@ -72,30 +128,32 @@ export function Sidebar({ onClose, businessName, logoUrl }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2">
-        {navItems.map(({ href, icon: Icon, label }) => {
-          const isActive =
-            href === "/pos"
-              ? pathname === "/pos" || pathname === "/"
-              : pathname.startsWith(href);
+        {navItems
+          .filter(({ roles }) => !user || roles.includes(user.role as Role))
+          .map(({ href, icon: Icon, label }) => {
+            const isActive =
+              href === "/pos"
+                ? pathname === "/pos" || pathname === "/"
+                : pathname.startsWith(href);
 
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 mx-2 px-3 py-2.5 rounded-[var(--radius)] text-sm no-underline",
-                "border-l-[3px] transition-colors",
-                isActive
-                  ? "font-semibold text-[var(--text-on-sidebar-active)] bg-[var(--bg-sidebar-active)] border-l-[var(--accent)]"
-                  : "font-normal text-[var(--text-on-sidebar)] border-transparent hover:bg-[var(--bg-sidebar-item)]",
-              )}
-            >
-              <Icon size={18} className="shrink-0" />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 mx-2 px-3 py-2.5 rounded-[var(--radius)] text-sm no-underline",
+                  "border-l-[3px] transition-colors",
+                  isActive
+                    ? "font-semibold text-[var(--text-on-sidebar-active)] bg-[var(--bg-sidebar-active)] border-l-[var(--accent)]"
+                    : "font-normal text-[var(--text-on-sidebar)] border-transparent hover:bg-[var(--bg-sidebar-item)]",
+                )}
+              >
+                <Icon size={18} className="shrink-0" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
       </nav>
 
       {/* Footer — user info + logout */}

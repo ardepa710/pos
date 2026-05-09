@@ -1,17 +1,35 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { hexToRgba } from "@/lib/color";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore, selectIsAuthenticated } from "@/store/auth";
 import { settingsApi } from "@/lib/api";
 import { AppShell } from "@/components/layout/AppShell";
 
+// Routes each role is allowed to visit. Anything not in the list redirects to /pos.
+const ROLE_ALLOWED: Record<string, string[]> = {
+  admin: ["/"], // admin can access everything — wildcard handled below
+  supervisor: [
+    "/pos",
+    "/catalog",
+    "/customers",
+    "/suppliers",
+    "/purchases",
+    "/gift-cards",
+    "/returns",
+    "/reports",
+  ],
+  cashier: ["/pos", "/customers", "/catalog", "/returns"],
+};
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const token = useAuthStore((s) => s.token) ?? "";
+  const user = useAuthStore((s) => s.user);
   const router = useRouter();
+  const pathname = usePathname();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["business-settings"],
@@ -27,6 +45,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (settings && !settings.wizard_completed) router.replace("/setup");
   }, [settings, router]);
+
+  // Route guard — redirect unauthorized roles to /pos
+  useEffect(() => {
+    if (!user) return;
+    const role = user.role as string;
+    if (role === "admin") return; // admin: unrestricted
+    const allowed = ROLE_ALLOWED[role] ?? [];
+    const canVisit = allowed.some((prefix) => pathname.startsWith(prefix));
+    if (!canVisit) router.replace("/pos");
+  }, [user, pathname, router]);
 
   // Apply theme to <html>
   useEffect(() => {
