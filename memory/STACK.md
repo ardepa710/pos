@@ -22,8 +22,6 @@
 
 - DB_PASSWORD
 - JWT_SECRET
-- DATABASE_URL
-- DATABASE_SYNC_URL
 - SECRET_KEY
 - ALGORITHM
 - ACCESS_TOKEN_EXPIRE_MINUTES
@@ -52,11 +50,11 @@
 
 ## Current Focus
 
-- Sprint goal: QA completo finalizado — sistema 100% operacional
+- Sprint goal: imágenes ghcr.io correctas, deploy VPS pendiente
 - Blockers: ninguno
-- Recently done: QA de todas las features verificado; CloseSessionModal implementado; fix sale_count en reportes; Docker rebuild completo en puerto 3005
+- Recently done: fix customer_id nullable (Error 500 al cobrar); fix Docker .env injection (DATABASE_URL removido de .env); imágenes ghcr.io empujadas sha 8386865
 - Next up: GitLab repo inicial, primer push a staging (coralslrc.shop), security audit pre-MR
 
 ## Version
 
-V2026.05.06-005
+V2026.05.09-002
