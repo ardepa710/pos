@@ -1,4 +1,117 @@
-## Session 2026-05-08 — UI Audit completo (Stages 2–5) + Docker deploy
+## Session 2026-05-09-001 — Diagnóstico imagen caché + fix customer_id nullable
+
+**Goal:** Diagnosticar por qué el backend seguía fallando localmente pese al fix de config.py, y corregir error 500 al cobrar.
+**Affected files:**
+
+- `backend/app/models/sale.py` — `customer_id`: `Mapped[uuid.UUID] nullable=False` → `Mapped[Optional[uuid.UUID]] nullable=True` (ventas anónimas deben funcionar sin cliente)
+- `backend/alembic/versions/20260506_001004_operations_tables.py` — `customer_id nullable=False` → `nullable=True`
+
+**Key decisions:**
+
+- **Causa imagen stale:** `docker compose build` usaba caché completo aunque `config.py` había cambiado. El build anterior (sesión 2026-05-08-005) también usó caché, por lo que la imagen en ghcr.io tenía el código VIEJO. Fix: `docker compose build --no-cache backend`.
+- **Señal de imagen stale:** `docker run --rm pos-backend:latest ...` mostraba `ValidationError: DATABASE_URL Field required` — comportamiento del config.py viejo que requería DATABASE_URL como campo obligatorio.
+- **Por qué `DATABASE_URL=` vacío en container:** el contenedor antiguo (creado con docker-compose.yml anterior que sí pasaba `DATABASE_URL`) seguía corriendo. `--force-recreate` solo recrea el container, no rebuildeaba la imagen.
+- **Error 500 al cobrar:** `customer_id NOT NULL` en tabla `sales`. El schema (Pydantic) y el servicio ya lo manejaban como `Optional` — el bug estaba solo en el modelo SQLAlchemy y la migración.
+- **Regla práctica confirmada:** siempre usar `docker compose build --no-cache` antes de un push a ghcr.io para garantizar que la imagen no tiene capas obsoletas del build cache.
+- Las imágenes correctas están en ghcr.io con SHA `6e6c59c` (digest `sha256:ac111c1b...`).
+
+**Skills activated:** context
+**Blockers:** ninguno
+**Version bump:** V2026.05.09-001
+**Next steps:**
+
+1. Probar flujo completo de cobro en local (login → agregar productos → cobrar sin cliente).
+2. Si OK, desplegar en VPS: `docker compose -f docker-compose.prod.yml pull && up -d --force-recreate`.
+3. En VPS con volumen pgdata existente: puede requerir `ALTER USER pos_user WITH PASSWORD 'tu_password'` si el password no coincide.
+4. Abrir PR o mergear `feat/docker-registry-deploy` → `develop`.
+
+**Status:** complete
+
+[ARCHIVED] ## Session 2026-05-08-005 — DATABASE_URL URL-encoding fix + image rebuild
+
+**Goal:** Corregir error de autenticación en backend del VPS causado por caracteres especiales en DB_PASSWORD rompiendo el URL de conexión.
+**Affected files:**
+
+- `backend/app/config.py` — refactor: ya no requiere `DATABASE_URL`/`DATABASE_SYNC_URL` como campos obligatorios. Nuevos campos opcionales: `db_user`, `db_password`, `db_host`, `db_port`, `db_name`. `@model_validator(mode="after")` construye las URLs con `urllib.parse.quote(password, safe="")` — maneja cualquier carácter especial automáticamente. Si se pasan `DATABASE_URL`/`DATABASE_SYNC_URL` explícitas en el env, tienen prioridad.
+- `docker-compose.yml` — reemplaza `DATABASE_URL`/`DATABASE_SYNC_URL` por `DB_PASSWORD` + `DB_HOST=pos-db`
+- `docker-compose.prod.yml` — mismo cambio; `.env` solo necesita `DB_PASSWORD` simple
+- `.env.example` — eliminadas líneas `DATABASE_URL`/`DATABASE_SYNC_URL`; nota actualizada: "Any characters are safe — the backend URL-encodes it automatically"
+- PR #6 actualizado con commit `223630d`
+
+**Key decisions:**
+
+- Causa raíz del bug: `DB_PASSWORD=AAcc7237!@$` → URL interpolada `postgresql://pos_user:AAcc7237!@$@pos-db` → psycopg2 no puede parsear el host → `$@pos-db` como hostname.
+- Fix definitivo: mover la construcción del URL al código Python (`urllib.parse.quote`) en lugar de interpolación de shell/YAML donde los caracteres especiales no tienen escape.
+- `Optional[str] = Field(default=None)` necesario para que pydantic_settings no marque `DATABASE_URL` como required cuando no está en el env.
+- El volumen pgdata local tenía `pos_user` con password diferente al `.env` — resuelto con `ALTER USER pos_user WITH PASSWORD 'pos_password'` directamente en el contenedor.
+- `docker compose up -d` sin `--force-recreate` no aplicaba la nueva imagen — siempre usar `--force-recreate` para garantizar que se usa el image recién buildeado.
+
+**Skills activated:** context
+**Blockers:** ninguno
+**Version bump:** V2026.05.08-005
+**Next steps:**
+
+1. Mergear PR #6 en VPS una vez validado.
+2. En VPS: `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d --force-recreate`
+   **Status:** complete
+
+[ARCHIVED] ## Session 2026-05-08-004 — Docker registry + VPS deploy fixes
+
+**Goal:** Configurar deploy via ghcr.io para que cualquier máquina con Docker pueda levantar el sistema con 2 archivos. Corregir bug de caracteres especiales en DB_PASSWORD.
+**Affected files:**
+
+- `docker-compose.prod.yml` — nuevo: compose autocontenido para VPS/cualquier máquina; usa `image: ghcr.io/ardepa710/pos-*:${TAG:-latest}`; Caddyfile embebido inline con `configs:`; no requiere archivos externos salvo `.env`
+- `docker-compose.yml` — `DATABASE_URL`/`DATABASE_SYNC_URL` ahora se pasan como vars opacas desde `.env` (no se construyen inline con `${DB_PASSWORD}`) para evitar que caracteres especiales rompan la URL
+- `.env.example` — reescrito con secciones REQUIRED/OPTIONAL; incluye `DATABASE_URL` y `DATABASE_SYNC_URL` pre-construidas; nota sobre caracteres seguros en `DB_PASSWORD`; variable `TAG` para pinning de imagen
+- `scripts/deploy.sh` — nuevo: build local → tag SHA+latest → push ghcr.io → SSH deploy opcional
+- `scripts/tag-stable.sh` — nuevo: promueve `:latest` a `:stable`
+- `scripts/vps-setup.md` — nuevo: instrucciones de primera vez en VPS
+
+**Key decisions:**
+
+- `docker-compose.prod.yml` usa `configs: content:` (Docker Compose v2) para embeber el Caddyfile inline — elimina la dependencia del archivo `caddy/Caddyfile` en el host. Validado con `docker compose config --quiet`.
+- `DATABASE_URL`/`DATABASE_SYNC_URL` se mueven al `.env` como strings completas en lugar de construirse en compose con `${DB_PASSWORD}@host`. Razón: DB_PASSWORD con `@`, `$`, `!` rompe el parser de URL de psycopg2 — el error observado fue `could not translate host name "$@pos-db"`.
+- Estrategia de tags: `latest` (cada deploy), `stable` (promoción manual post-QA), SHA corto (inmutable, para rollback).
+- Imágenes en ghcr.io marcadas como públicas por el usuario — cualquier máquina puede hacer `docker pull` sin login.
+- Deploy en VPS es manual (el usuario prefiere SSH directo, no deploy automático desde local).
+- Alembic + volumen pgdata garantizan persistencia de datos y migraciones automáticas al arrancar — no se requiere intervención manual al actualizar.
+
+**Skills activated:** context
+**Blockers:** ninguno
+**Version bump:** V2026.05.08-004
+**Next steps:**
+
+1. Mergear PR #5 en GitHub una vez validado en VPS.
+2. Cuando haya cambios de schema: `alembic revision --autogenerate -m "desc"` → revisar → commit → deploy normal.
+   **Status:** complete
+
+[ARCHIVED] ## Session 2026-05-08-003 — Admin password sync + BUILD_SHA en /health
+
+**Goal:** (1) Hacer que el admin siempre use la contraseña de `ADMIN_INITIAL_PASSWORD` en cada arranque. (2) Añadir SHA del commit al endpoint `/health` para saber qué versión corre en el VPS sin SSH.
+**Affected files:**
+
+- `backend/app/services/user_service.py` — `get_or_create_admin` ahora upserta el `password_hash` del admin en CADA arranque (no solo en first boot). Si el admin existe: actualiza hash + `is_active=True`. Si no existe: lo crea. Log: `user.admin_password_synced`.
+- `backend/Dockerfile` — añadido `ARG BUILD_SHA=unknown` + `ENV BUILD_SHA=${BUILD_SHA}` en runner stage.
+- `backend/app/main.py` — `/health` devuelve `{"status":"ok","build":"<sha>","env":"production"}` leyendo `os.environ.get("BUILD_SHA")`.
+- `docker-compose.yml` — añadido `args: BUILD_SHA: ${BUILD_SHA:-unknown}` al build del backend.
+
+**Key decisions:**
+
+- `get_or_create_admin` cambió de "crear si no existe" a "upsert siempre" — permite rotar contraseña admin cambiando `.env` + `docker compose up -d` en cualquier entorno (local, staging, VPS). Sin necesidad de acceso directo a DB.
+- `BUILD_SHA` se quema en tiempo de build (no en runtime) porque es un valor del proceso de deploy, no un secreto. Se pasa como `BUILD_SHA=$(git rev-parse --short HEAD) docker compose build`.
+- Flujo de verificación de versión en VPS: `curl https://dominio/health` → comparar SHA con GitHub commits.
+- `must_change_password=False` en bootstrap nuevo (antes era `True`) — ya no tiene sentido forzar cambio si la contraseña viene explícitamente del `.env`.
+
+**Skills activated:** context
+**Blockers:** ninguno
+**Version bump:** V2026.05.08-003
+**Next steps:**
+
+1. Evaluar si conviene manejar imágenes Docker con tags (`latest`, `stable`) para simplificar deploy en VPS — usuario preguntó al respecto.
+2. Mergear PR #5 en GitHub una vez validado en VPS.
+   **Status:** complete
+
+[ARCHIVED] ## Session 2026-05-08 — UI Audit completo (Stages 2–5) + Docker deploy
 
 **Goal:** Ejecutar los 45 tasks del UI audit en `feat/ui-audit-fixes`. Stages 2, 3, 4 y 5 completos. Deploy en Docker local.
 **Affected files:**

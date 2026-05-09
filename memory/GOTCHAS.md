@@ -57,6 +57,13 @@
 - All tables have tenant_id column with placeholder '00000000-0000-0000-0000-000000000001'::uuid
 - This is the hook for future multi-branch support — do not remove or repurpose
 
+## Docker + config.py (2026-05-09)
+
+- **Docker Compose v2 on Windows injects ALL `.env` vars into containers**: Every variable defined in `.env` appears as an env var inside the container, even if not listed under `environment:` in docker-compose.yml. If `.env` had `DATABASE_URL=` (empty), the container received an empty string that SQLAlchemy couldn't parse. **Fix**: Remove `DATABASE_URL` and `DATABASE_SYNC_URL` from `.env` entirely — the backend builds them automatically from `DB_PASSWORD` + components via `@model_validator`.
+- **`docker compose build` uses aggressive layer cache — always stale on config changes**: Running `docker compose build` shows all `CACHED` layers even when `config.py` or other Python files changed. The container runs the OLD code. **Fix**: `docker builder prune -f` + `docker compose build --no-cache backend`. Verify the new image: `docker run --rm --entrypoint "" <image> python -c "from app.config import Settings; Settings(DB_PASSWORD='x')"`.
+- **pgdata volume persists the PostgreSQL password across container recreations**: `docker compose down` + `docker compose up` does NOT reset the DB password. The pgdata volume retains the original `POSTGRES_PASSWORD`. **Fix**: `docker exec pos-db psql -U pos_user -d pos_db -c "ALTER USER pos_user WITH PASSWORD 'newpass';"` whenever you need to sync passwords.
+- **`customer_id` must be nullable in `sales`**: The POS service layer already supports anonymous sales (no customer). The SQLAlchemy model and Alembic migration must have `nullable=True` on `customer_id`. If NOT NULL, any anonymous sale raises `IntegrityError: null value in column "customer_id"` at the DB level.
+
 ## Docker boot sequence (hard-won fixes — 2026-05-06)
 
 - **alembic/env.py must use sync engine**: `engine_from_config` + `pool.NullPool`, NOT `async_engine_from_config`.
