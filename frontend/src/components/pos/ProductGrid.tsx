@@ -161,24 +161,20 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                       : "border-[var(--border)]",
                   )}
                 >
-                  {/* Stock badge */}
-                  {product.track_inventory && (
-                    <span
+                  {/* Stock badge — only shown when out-of-stock or low stock */}
+                  {product.track_inventory && (outOfStock || lowStock) && (
+                    <div
                       className={cn(
-                        "absolute right-2 top-2 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                        "absolute bottom-0 left-0 right-0 rounded-b-xl px-2 py-0.5 text-center text-[10px] font-semibold text-white",
                         outOfStock
-                          ? "bg-[var(--error-subtle)] text-[var(--error)]"
-                          : lowStock
-                            ? "bg-[var(--warning-subtle)] text-[var(--warning)]"
-                            : "bg-[var(--success-subtle)] text-[var(--success)]",
+                          ? "bg-[var(--error)]"
+                          : "bg-[var(--warning)]",
                       )}
                     >
                       {outOfStock
                         ? t.sales.out_of_stock
-                        : lowStock
-                          ? `${stockNum} ↓`
-                          : stockNum}
-                    </span>
+                        : `${stockNum} disponibles`}
+                    </div>
                   )}
 
                   {/* Consignment badge */}

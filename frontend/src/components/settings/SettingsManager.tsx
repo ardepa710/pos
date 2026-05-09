@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { PageHeader } from "@/components/ui";
+import { Tabs } from "@/components/ui/Tabs";
 import { BusinessSettingsForm } from "./BusinessSettingsForm";
 import { UsersManager } from "./UsersManager";
 import { AppearanceSettings } from "./AppearanceSettings";
@@ -17,11 +17,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  {
-    key: "business",
-    label:
-      t.settings.business_name.replace(" del negocio", "") + " del negocio",
-  },
+  { key: "business", label: "Negocio" },
   { key: "users", label: t.nav.users },
   { key: "appearance", label: "Apariencia" },
   { key: "ticket" as const, label: "Ticket" },
@@ -35,23 +31,12 @@ export function SettingsManager() {
       <PageHeader title={t.nav.settings} />
 
       {/* Tab bar */}
-      <div className="flex gap-1 rounded-xl bg-[var(--bg-card)] p-1 border border-[var(--border)]">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setActiveTab(tab.key)}
-            className={cn(
-              "flex-1 rounded-lg px-3 py-2 text-sm font-medium transition active:scale-[0.96]",
-              activeTab === tab.key
-                ? "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-elevated)]",
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        variant="segmented"
+        tabs={TABS}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* Tab content */}
       <div>

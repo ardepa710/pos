@@ -1,3 +1,76 @@
+## Session 2026-05-08 — UI Audit completo (Stages 2–5) + Docker deploy
+
+**Goal:** Ejecutar los 45 tasks del UI audit en `feat/ui-audit-fixes`. Stages 2, 3, 4 y 5 completos. Deploy en Docker local.
+**Affected files:**
+
+- `src/components/pos/PaymentPanel.tsx` — C1 charge guard, C8 aria-label, C11 inline edit, C12 FX badge removido
+- `src/components/pos/POSTerminal.tsx` — C2 FX badge en toolbar, C3 Tailwind basis-[], C12 FX aquí
+- `src/components/pos/Cart.tsx` — C7 icon color muted
+- `src/components/pos/CartItem.tsx` — C9 collapsible discount, C10 qty clamp
+- `src/components/pos/ProductGrid.tsx` — C5 badge condition, C6 badge strip absoluta
+- `src/components/pos/OpenSessionModal.tsx` — C13 rm X icon, C14 HeroUI Modal
+- `src/components/pos/CloseSessionModal.tsx` — C14 HeroUI Modal
+- `src/components/pos/ReceiptModal.tsx` — C14 HeroUI Modal
+- `src/components/catalog/ProductList.tsx` — C2 AlertTriangle icon, K3 col width, K11 t.products.status
+- `src/components/catalog/StockAdjustModal.tsx` — K9 live negative-stock validation
+- `src/components/catalog/CategoryList.tsx` — K10 responsive grid form
+- `src/components/ui/DataTable.tsx` — K1 zebra swap, K2 pagination padding, K6 density prop
+- `src/components/ui/StatusBadge.tsx` — K4 out_of_stock status
+- `src/components/settings/AppearanceSettings.tsx` — C2 Check icon, L3 primary color picker + colorMutation
+- `src/components/settings/BusinessSettingsForm.tsx` — L3 rm color/theme fields, L12 WhatsApp refine
+- `src/app/(auth)/setup/page.tsx` — L8 step labels always visible, L9 grid-cols-2 sm:3, L10 saveDraft, L12 WhatsApp refine
+- `src/lib/api.ts` — L10 settingsApi.saveDraft
+- `src/lib/i18n.ts` — P-1 rm legacy nav keys, add t.products.status
+- `src/components/layout/Sidebar.tsx` — P-1 standard nav keys
+- `src/app/globals.css` — P-2 accent-subtle alpha comments
+- `docs/design/SYSTEM.md` — P-3 nuevo: design system docs
+- `frontend/playwright.config.ts` + `tests/visual/` — P-4 visual regression tests
+- `mockups/archive/` + stub redirects — P-5 mockups archivados
+  **Key decisions:**
+- HeroUI `<Modal>` reemplaza todos los backdrop divs manuales (`fixed inset-0`); `isDismissable={false}` en modales de sesión/recibo, `true` en close-session.
+- `--accent-subtle` 0.10 en light / 0.15 en dark: dark surfaces necesitan más opacidad para que el tint sea perceptible — documentado en `globals.css` y `SYSTEM.md`.
+- `saveDraft` en el wizard es best-effort (`.catch(() => {})`) — el wizard avanza independientemente. Ruta: `PATCH /v1/settings/setup/draft`.
+- Legacy nav keys (`sales`, `products`, `giftCards`, `cashier`) eliminados — sólo vivían en `Sidebar.tsx` que ya usaba las variantes estándar.
+- `t.products.status` faltaba en i18n.ts — detectado por `tsc --noEmit`, corregido antes de cerrar.
+- Playwright ya estaba en devDependencies (`^1.44.0`), sólo se crearon config + specs.
+  **Skills activated:** make-interfaces-feel-better, context
+  **Blockers:** ninguno
+  **Version bump:** V2026.05.08-002
+  **Next steps:**
+
+1. Crear PR / MR de `feat/ui-audit-fixes` → `development` (correr `/mr`).
+2. Stage 1 del audit (AUTH-1: migrar login page de inline styles a Tailwind + primitivos) — quedó fuera del scope acordado.
+3. Correr snapshots visuales con `npm run test:visual` una vez la app esté estable en dev.
+   **Status:** complete — obsidian-sync ejecutado manualmente, vault + dashboard actualizados (2026-05-09T00:02)
+
+[ARCHIVED] ## Session 2026-05-08 — UI Audit + Deploy fixes producción
+
+**Goal:** Leer y preparar ejecución del UI audit (45 tareas en 5 stages); corregir bugs críticos de deploy en VPS (admin bootstrap, bcrypt dummy hash, CORS_ORIGINS, Caddyfile).
+**Affected files:**
+
+- `backend/entrypoint.sh` — añadir `session.begin()` al bootstrap del admin
+- `backend/app/services/user_service.py` — reemplazar dummy bcrypt hash malformado
+- `docker-compose.yml` — CORS_ORIGINS con comillas YAML simples y variable de entorno
+- `.env.example` — documentar formato correcto de CORS_ORIGINS
+- `CONTEXT.md` — esta entrada
+  **Key decisions:**
+- `session.begin()` es obligatorio en el entrypoint: `AsyncSessionLocal()` sin `begin()` no hace commit automático — el admin se creaba en memoria pero nunca se persistía en la DB.
+- Dummy bcrypt hash debe ser un hash válido de 60 chars; el placeholder anterior tenía checksum de longitud incorrecta y reventaba passlib con `ValueError` en cualquier login fallido.
+- Para CORS_ORIGINS en docker-compose, la clave es el YAML quoting: `'${VAR:-[...]}'` — sin comillas simples, Docker Compose parsea el `[...]` como array YAML y lanza error 422.
+- Caddyfile en VPS debe existir como archivo antes del primer `docker compose up`; si no existe, Docker crea un directorio con ese nombre y el bind mount falla.
+  **Skills activated:** systematic-debugging, docker, fastapi
+  **Blockers:**
+- PR en GitHub pendiente: no hay `gh` CLI instalado ni GitHub token en `.secrets.env`. URL de creación manual: https://github.com/ardepa710/pos/pull/new/feat/rebrand-kolekto-v1
+- UI audit (45 tareas): pendiente respuesta del usuario a 7 preguntas de alcance (DS-4 delete vs codegen, C4 keyboard shortcuts, K7 bulk-select, L10 setup persistence, P-3/P-4 docs+tests, branch strategy).
+  **Version bump:** V2026.05.08-001
+  **Next steps:**
+
+1. Usuario responde las 7 preguntas del UI audit.
+2. Ejecutar Stage 0 (DS-1 a DS-8) — foundations del design system.
+3. Stage 1 — migrar auth pages de inline styles a Tailwind + primitivos.
+4. Crear PR en GitHub (necesita token o hacerlo desde UI).
+   **Status:** in progress
+
 ## Session 2026-05-06 — Ola 0 arranque del proyecto
 
 **Goal:** Crear fundaciones completas del proyecto POS (meta + skills + scaffolding)
@@ -824,3 +897,38 @@
 **Version bump:** V2026.05.08-001 (sin cambio)
 
 **Status on close:** complete — fixes commiteados localmente; pendiente push a GitHub y aplicar en VPS
+
+[ARCHIVED]
+
+---
+
+## Session 2026-05-08 — Fix bootstrap admin + bcrypt dummy hash + deploy desde cero
+
+**Goal:** Corregir bugs de producción que impedían el login tras deploy limpio en VPS.
+
+**Affected files:**
+
+- `backend/entrypoint.sh` — añadir `async with session.begin():` al bootstrap del admin
+- `backend/app/services/user_service.py` — reemplazar dummy bcrypt hash malformado por hash válido de 60 chars
+- `docker-compose.yml` — CORS_ORIGINS con comillas YAML simples y variable de entorno
+- `.env.example` — documentar formato correcto de CORS_ORIGINS
+
+**Key decisions:**
+
+- **Bug raíz #1 — admin nunca se guarda**: `entrypoint.sh` llamaba `get_or_create_admin` dentro de `AsyncSessionLocal()` sin `session.begin()`. El `session.flush()` escribe en la transacción implícita pero sin un `begin()` explícito no hay commit automático al salir del context manager — la transacción se revierte y el usuario admin desaparece. Fix: `async with session.begin():` hace auto-commit al salir exitosamente.
+- **Bug raíz #2 — 500 en cualquier login fallido**: el dummy hash `$2b$12$dummyhashplaceholderfortimingXXXXXXXXXXXXXXXXXXXX` tiene el checksum de longitud incorrecta (passlib bcrypt exige exactamente 31 chars). Cualquier intento de login con usuario inexistente lanzaba `ValueError: malformed bcrypt hash`. Fix: reemplazado por hash válido `$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RVH1zM6yi`.
+- **Bug raíz #3 — CORS_ORIGINS inválido**: valor `["..."]` sin comillas simples YAML es parseado como array por Docker Compose → error de validación 422. Fix: `'${CORS_ORIGINS:-[...]}'` con comillas simples en docker-compose.yml.
+- **Bug raíz #4 — Caddyfile no existe en VPS**: al hacer bind mount de un archivo inexistente, Docker crea un directorio con ese nombre → mount falla. Fix manual en VPS: `mkdir -p /docker/kolekto-pos/caddy && cat > Caddyfile`.
+- **Commit**: `4101440` pusheado a `feat/rebrand-kolekto-v1`.
+
+**Skills activated:** docker, fastapi, systematic-debugging
+
+**Env changes:** `CORS_ORIGINS` ahora configurable via `.env`
+
+**DB changes:** ninguna de schema
+
+**Blockers:** ninguno
+
+**Version bump:** V2026.05.08-001 (sin cambio)
+
+**Status on close:** complete — 4 bugs de deploy corregidos y pusheados; usuario ejecuta deploy desde cero en VPS con `docker compose down -v && docker compose up -d --build`

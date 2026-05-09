@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Decimal from "decimal.js";
+import { XCircle, ArrowRightLeft } from "lucide-react";
 import { salesApi } from "@/lib/api";
+import { formatMXN } from "@/lib/currency";
 import type { ProductRead } from "@/lib/api";
 import type { SaleRead, CashierSessionRead } from "@/types/index";
 import { useCartStore } from "@/store/cart";
@@ -190,19 +192,30 @@ export function POSTerminal() {
       {/* 2-column POS layout */}
       <div className="flex h-full w-full overflow-hidden">
         {/* Left — Product grid (55%) */}
-        <section
-          className="flex flex-col border-r border-[var(--border)] p-3"
-          style={{ width: "55%", minWidth: 0 }}
-        >
+        <section className="flex flex-col border-r border-[var(--border)] p-3 basis-[55%] min-w-0">
           {/* Session toolbar */}
           {session && (
-            <div className="mb-2 flex justify-end">
+            <div className="mb-2 flex items-center gap-3">
+              {fxRate > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <ArrowRightLeft
+                    size={12}
+                    className="text-[var(--text-muted)]"
+                  />
+                  <span className="text-xs text-[var(--text-muted)]">
+                    1 USD = {formatMXN(fxRate)} MXN
+                  </span>
+                  <span className="text-[10px] text-[var(--text-muted)]">
+                    {fxRateDate}
+                  </span>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setShowCloseSession(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--error)] hover:text-[var(--error)]"
+                className="ml-auto flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--error)] hover:text-[var(--error)]"
               >
-                <span>⬛</span>
+                <XCircle size={14} />
                 Cerrar caja
               </button>
             </div>
@@ -211,10 +224,7 @@ export function POSTerminal() {
         </section>
 
         {/* Right — Cart (top) + Payment (bottom), stacked vertically (45%) */}
-        <section
-          className="flex flex-col"
-          style={{ width: "45%", minWidth: 0 }}
-        >
+        <section className="flex flex-col basis-[45%] min-w-0">
           {/* Cart — upper portion */}
           <div
             className="overflow-hidden border-b border-[var(--border)]"

@@ -443,6 +443,16 @@ export const settingsApi = {
       body: JSON.stringify(data),
     }),
 
+  saveDraft: (
+    token: string,
+    data: { business_name: string; support_whatsapp?: string },
+  ) =>
+    apiFetch<void>("/v1/settings/setup/draft", {
+      method: "PATCH",
+      token,
+      body: JSON.stringify(data),
+    }),
+
   completeWizard: (token: string) =>
     apiFetch<BusinessSettings>("/v1/settings/wizard/complete", {
       method: "POST",

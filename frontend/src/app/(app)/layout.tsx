@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hexToRgba } from "@/lib/color";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore, selectIsAuthenticated } from "@/store/auth";
 import { settingsApi } from "@/lib/api";
@@ -52,7 +53,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--accent", color);
     root.style.setProperty("--border-focus", color);
     root.style.setProperty("--info", color);
-    root.style.setProperty("--accent-subtle", color + "1a");
+    root.style.setProperty("--accent-subtle", hexToRgba(color, 0.1));
   }, [settings?.primary_color]);
 
   if (!isAuthenticated) return null;

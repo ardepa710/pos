@@ -2,12 +2,6 @@
 export const t = {
   // Navigation
   nav: {
-    // Legacy keys (kept for backward compatibility)
-    sales: "Ventas",
-    products: "Productos",
-    giftCards: "Tarjetas de regalo",
-    cashier: "Sesión de caja",
-    // Standard keys
     pos: "Punto de Venta",
     catalog: "Catálogo",
     customers: "Clientes",
@@ -158,6 +152,7 @@ export const t = {
     add_product: "Agregar producto",
     edit_product: "Editar producto",
     search_placeholder: "Buscar por nombre o SKU...",
+    status: "Estado",
   },
 
   // Customers

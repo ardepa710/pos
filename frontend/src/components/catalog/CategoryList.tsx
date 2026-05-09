@@ -274,7 +274,7 @@ export function CategoryList() {
       {canEdit && (
         <form
           onSubmit={handleCreate}
-          className="flex flex-wrap items-end gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-4"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end rounded-lg border border-[var(--border)] bg-[var(--bg-card)] p-4"
         >
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-[var(--text-secondary)]">
@@ -284,7 +284,7 @@ export function CategoryList() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nueva categoría…"
-              className={cn(INPUT_CLASS, "w-52")}
+              className={cn(INPUT_CLASS, "w-full")}
             />
           </div>
 
@@ -296,7 +296,7 @@ export function CategoryList() {
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               placeholder="Descripción opcional"
-              className={cn(INPUT_CLASS, "w-64")}
+              className={cn(INPUT_CLASS, "w-full")}
             />
           </div>
 
