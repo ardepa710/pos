@@ -268,20 +268,25 @@ export function UsersManager() {
               {!editTarget && (
                 <Input
                   label="Usuario"
+                  labelPlacement="outside"
+                  placeholder=" "
                   {...register("username")}
                   isInvalid={!!errors.username}
                   errorMessage={errors.username?.message}
                 />
               )}
               <Input
-                label={t.auth.username.replace("Usuario", "Nombre completo")}
-                placeholder="Nombre completo"
+                label="Nombre completo"
+                labelPlacement="outside"
+                placeholder=" "
                 {...register("full_name")}
                 isInvalid={!!errors.full_name}
                 errorMessage={errors.full_name?.message}
               />
               <Input
                 label={t.customers.email}
+                labelPlacement="outside"
+                placeholder=" "
                 type="email"
                 {...register("email")}
                 isInvalid={!!errors.email}
@@ -289,6 +294,8 @@ export function UsersManager() {
               />
               <Select
                 label="Rol"
+                labelPlacement="outside"
+                placeholder="Selecciona un rol"
                 {...register("role")}
                 isInvalid={!!errors.role}
                 errorMessage={errors.role?.message}
@@ -303,6 +310,8 @@ export function UsersManager() {
                     ? "Nueva contraseña (vacío = sin cambio)"
                     : t.auth.password
                 }
+                labelPlacement="outside"
+                placeholder=" "
                 type="password"
                 {...register("password")}
                 isInvalid={!!errors.password}
