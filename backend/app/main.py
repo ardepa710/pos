@@ -74,7 +74,9 @@ app.include_router(suppliers_router)
 
 @app.get("/health", tags=["system"])
 async def health_check() -> dict[str, str]:
-    return {"status": "ok", "version": "2026.05.06.1", "env": settings.env}
+    import os
+    build_sha = os.environ.get("BUILD_SHA", "unknown")
+    return {"status": "ok", "build": build_sha, "env": settings.env}
 
 
 @app.get("/api/v1/branding", tags=["system"])

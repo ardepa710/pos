@@ -23,6 +23,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        BUILD_SHA: ${BUILD_SHA:-unknown}
     container_name: pos-backend
     # host.docker.internal resolves automatically on Windows/macOS (Docker Desktop).
     # On Linux / Raspberry Pi, Docker does not inject it — this extra_hosts entry
