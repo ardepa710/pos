@@ -1,4 +1,31 @@
-## Session 2026-05-09-001 — Diagnóstico imagen caché + fix customer_id nullable
+## Session 2026-05-09-002 — Obsidian sync, memory update, PR #8
+
+**Goal:** Sincronizar Obsidian vault, actualizar archivos de memoria del proyecto y crear PR con todos los cambios de la sesión.
+**Affected files:**
+
+- `memory/STACK.md` — removidas `DATABASE_URL`/`DATABASE_SYNC_URL` de env vars; versión → V2026.05.09-002; current focus actualizado
+- `memory/GOTCHAS.md` — 4 nuevos gotchas: Docker Compose v2 .env injection, build cache stale, pgdata password persistence, customer_id nullable
+- `CONTEXT.md` — este archivo
+
+**Key decisions:**
+
+- `tbmproject_projects` en Supabase no tiene columna `version` — el versionado se refleja en `badgeText` (`Active — V2026.05.09-002`). La columna version solo existe en los archivos de memoria locales.
+- PR #8 creado en GitHub via REST API (gh CLI no instalado en este entorno).
+- `tsconfig.tsbuildinfo` y `.agents/` ignorados en el commit — artefactos de build/runtime, no deben versionarse.
+
+**Skills activated:** context
+**Blockers:** ninguno
+**Version bump:** V2026.05.09-002
+**Next steps:**
+
+1. Mergear PR #8 → `main` tras revisión.
+2. Deploy VPS: `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d --force-recreate`.
+3. Verificar en VPS: `curl http://localhost:PORT/api/health` retorna SHA `8386865` (o el SHA del build).
+4. Si pgdata existe en VPS: `ALTER USER pos_user WITH PASSWORD '...'` para sincronizar contraseña.
+
+**Status:** complete
+
+[ARCHIVED] ## Session 2026-05-09-001 — Diagnóstico imagen caché + fix customer_id nullable
 
 **Goal:** Diagnosticar por qué el backend seguía fallando localmente pese al fix de config.py, y corregir error 500 al cobrar.
 **Affected files:**
