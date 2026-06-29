@@ -78,6 +78,9 @@ export const t = {
     change: "Cambio",
     paid: "Pagado",
     remaining: "Restante",
+    add_method_hint: "Agrega un método de pago para continuar",
+    gift_inactive: "Tarjeta no activa o ya canjeada",
+    gift_not_found: "Tarjeta no encontrada",
   },
 
   // Currency
@@ -94,6 +97,13 @@ export const t = {
     new_sale: "Nueva venta",
     search_product: "Buscar producto o escanear código",
     cart_empty: "El carrito está vacío",
+    clear_cart_title: "Vaciar carrito",
+    clear_cart_message:
+      "Se quitarán todos los artículos del carrito. Esta acción no se puede deshacer.",
+    surplus: "Sobrante",
+    shortage: "Faltante",
+    balanced: "Caja cuadrada",
+    session_closed: "Sesión cerrada",
     add_customer: "Agregar cliente",
     total: "Total",
     subtotal: "Subtotal",
@@ -101,6 +111,7 @@ export const t = {
     discount: "Descuento",
     change: "Cambio",
     complete_sale: "Completar venta",
+    sale_registered: "Venta registrada",
     cancel_sale: "Cancelar venta",
     receipt: "Recibo",
     print_receipt: "Imprimir recibo",

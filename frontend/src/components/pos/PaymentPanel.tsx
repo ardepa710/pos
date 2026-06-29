@@ -142,6 +142,29 @@ export function PaymentPanel({
   const canCharge =
     paidDec.greaterThanOrEqualTo(totalDec) && payments.length > 0;
 
+  // One-tap charge: when no payments were added yet and the selected method is
+  // plain cash MXN, "Cobrar" charges directly with a synthesized single payment
+  // (empty input = exact total; a typed amount ≥ total = over-tender + change).
+  // Card / gift-card / USD still go through the explicit "Agregar pago" step.
+  const directEligible =
+    !meta.needsTerminal &&
+    !meta.isGiftCard &&
+    !meta.isUsd &&
+    totalDec.greaterThan(0);
+  const directAmountMxn: string | null = (() => {
+    if (!directEligible || payments.length !== 0) return null;
+    if (amountInput.trim() === "") return totalDec.toFixed(2);
+    const dec = new Decimal(resolveAmountMxn());
+    return dec.greaterThanOrEqualTo(totalDec) ? dec.toFixed(2) : null;
+  })();
+  const directChange: string | null = (() => {
+    if (directAmountMxn === null) return null;
+    const c = new Decimal(directAmountMxn).sub(totalDec);
+    return c.greaterThan(0) ? c.toFixed(2) : null;
+  })();
+  const chargeReady =
+    payments.length > 0 ? canCharge : directAmountMxn !== null;
+
   // Resolved MXN amount from current input
   function resolveAmountMxn(): string {
     const raw = parseFloat(amountInput || "0");
@@ -170,7 +193,7 @@ export function PaymentPanel({
     try {
       const card = await giftCardsApi.lookup(token, giftCode.trim());
       if (card.status !== "active") {
-        setGiftError("Tarjeta no activa o ya canjeada");
+        setGiftError(t.payment.gift_inactive);
         return;
       }
       setGiftBalance(card.current_balance);
@@ -179,7 +202,7 @@ export function PaymentPanel({
       const remDec = new Decimal(remainingMxn);
       setAmountInput(Decimal.min(balDec, remDec).toFixed(2));
     } catch {
-      setGiftError("Tarjeta no encontrada");
+      setGiftError(t.payment.gift_not_found);
     } finally {
       setGiftLookupLoading(false);
     }
@@ -269,6 +292,24 @@ export function PaymentPanel({
     }
   }
 
+  // One-tap path: synthesize a single cash payment and charge directly.
+  async function handleChargeDirect() {
+    if (directAmountMxn === null) return;
+    setChargeError(null);
+    const synthesized: PendingPayment = {
+      id: uid(),
+      method: selectedMethod,
+      amount_mxn: directAmountMxn,
+    };
+    try {
+      await onCharge([synthesized]);
+      setPayments([]);
+      setAmountInput("");
+    } catch (err) {
+      setChargeError(err instanceof Error ? err.message : t.error.generic);
+    }
+  }
+
   // Shortcut: fill remaining amount
   function fillRemaining() {
     if (meta.isUsd && fxRate > 0) {
@@ -322,7 +363,7 @@ export function PaymentPanel({
               onClick={() => handleMethodSelect(m.key)}
               className={cn(
                 "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs font-medium",
-                "transition-colors",
+                "transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
                 selectedMethod === m.key
                   ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]"
                   : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]",
@@ -576,32 +617,45 @@ export function PaymentPanel({
 
       {/* Charge button / empty-state hint */}
       <div className="border-t border-[var(--border)] p-4">
-        {payments.length === 0 ? (
+        {payments.length === 0 && directAmountMxn === null ? (
           <p className="py-3 text-center text-sm text-[var(--text-muted)]">
-            Agrega un método de pago para continuar
+            {t.payment.add_method_hint}
           </p>
         ) : (
-          <button
-            type="button"
-            disabled={!canCharge || charging}
-            onClick={handleCharge}
-            className={cn(
-              "flex w-full items-center justify-center gap-2 rounded-xl py-3.5",
-              "text-base font-bold text-white transition",
-              canCharge && !charging
-                ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96]"
-                : "cursor-not-allowed bg-[var(--text-muted)]",
+          <>
+            {directChange && (
+              <div className="mb-2 flex justify-between text-sm text-[var(--text-secondary)]">
+                <span>{t.sales.change}</span>
+                <span className="tabular-nums font-semibold">
+                  {formatMXN(directChange)}
+                </span>
+              </div>
             )}
-          >
-            {charging ? (
-              <LoadingSpinner size="sm" label="Procesando…" />
-            ) : (
-              <>
-                <Banknote size={18} />
-                Cobrar {formatMXN(totalMxn)}
-              </>
-            )}
-          </button>
+            <button
+              type="button"
+              disabled={!chargeReady || charging}
+              onClick={
+                payments.length === 0 ? handleChargeDirect : handleCharge
+              }
+              className={cn(
+                "flex w-full items-center justify-center gap-2 rounded-lg py-3.5",
+                "text-base font-bold text-white transition",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
+                chargeReady && !charging
+                  ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:scale-[0.96]"
+                  : "cursor-not-allowed bg-[var(--text-muted)]",
+              )}
+            >
+              {charging ? (
+                <LoadingSpinner size="sm" label="Procesando…" />
+              ) : (
+                <>
+                  <Banknote size={18} />
+                  Cobrar {formatMXN(totalMxn)}
+                </>
+              )}
+            </button>
+          </>
         )}
       </div>
     </div>

@@ -77,8 +77,8 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
             type="button"
             onClick={() => setCategoryId(null)}
             className={cn(
-              "flex-shrink-0 rounded-full px-3 py-1 text-xs font-medium",
-              "transition-colors",
+              "flex-shrink-0 rounded-full px-3.5 py-2 text-xs font-medium",
+              "transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
               categoryId === null
                 ? "bg-[var(--accent)] text-white"
                 : "border border-[var(--border)] bg-[var(--bg-card-elevated)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]",
@@ -150,9 +150,10 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                   disabled={outOfStock}
                   onClick={() => handleAdd(product)}
                   className={cn(
-                    "relative flex flex-col rounded-xl border p-3 text-left",
+                    "relative flex flex-col rounded-lg border p-3 text-left",
                     "bg-[var(--product-card-bg)] shadow-[var(--shadow-card)]",
-                    "transition-all duration-150",
+                    "transition duration-150",
+                    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
                     outOfStock
                       ? "cursor-not-allowed opacity-50"
                       : "cursor-pointer hover:border-[var(--accent)] hover:shadow-[var(--shadow-elevated)] active:scale-[0.97]",
@@ -165,7 +166,7 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                   {product.track_inventory && (outOfStock || lowStock) && (
                     <div
                       className={cn(
-                        "absolute bottom-0 left-0 right-0 rounded-b-xl px-2 py-0.5 text-center text-[10px] font-semibold text-white",
+                        "absolute bottom-0 left-0 right-0 rounded-b-lg px-2 py-0.5 text-center text-[10px] font-semibold text-white",
                         outOfStock
                           ? "bg-[var(--error)]"
                           : "bg-[var(--warning)]",

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { formatMXN, formatUSD, mxnToUsd } from "@/lib/currency";
 import { CartItem } from "./CartItem";
 import { CustomerSelector } from "./CustomerSelector";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useCartStore } from "@/store/cart";
 import type { AuthUser } from "@/store/auth";
 
@@ -26,6 +28,8 @@ export function Cart({ token, user, fxRate }: CartProps) {
   const clearCart = useCartStore((s) => s.clearCart);
   const subtotal_mxn = useCartStore((s) => s.subtotal_mxn)();
   const total_mxn = useCartStore((s) => s.total_mxn)();
+
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const canEditPrice = user.role === "admin" || user.role === "supervisor";
 
@@ -53,7 +57,7 @@ export function Cart({ token, user, fxRate }: CartProps) {
         {items.length > 0 && (
           <button
             type="button"
-            onClick={clearCart}
+            onClick={() => setConfirmClear(true)}
             className={cn(
               "flex items-center gap-1 rounded px-2 py-1 text-xs",
               "text-[var(--text-muted)] transition-colors hover:bg-[var(--error-subtle)] hover:text-[var(--error)]",
@@ -64,6 +68,20 @@ export function Cart({ token, user, fxRate }: CartProps) {
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        onConfirm={() => {
+          clearCart();
+          setConfirmClear(false);
+        }}
+        title={t.sales.clear_cart_title}
+        message={t.sales.clear_cart_message}
+        confirmLabel={t.action.clear}
+        cancelLabel={t.action.cancel}
+        variant="danger"
+      />
 
       {/* Items list */}
       <div className="min-h-0 flex-1 overflow-y-auto">

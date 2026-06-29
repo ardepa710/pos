@@ -91,8 +91,9 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
           <>
             {/* Receipt header */}
             <div className="bg-[var(--accent)] px-5 py-4 text-center text-white">
-              <p className="text-xs font-medium uppercase tracking-widest opacity-80">
-                {t.sales.receipt}
+              <p className="flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-widest opacity-90">
+                <CheckCircle size={14} aria-hidden />
+                {t.sales.sale_registered}
               </p>
               <h2
                 id="receipt-title"
@@ -107,6 +108,18 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
 
             {/* Body */}
             <div className="max-h-[60vh] overflow-y-auto px-5 py-4">
+              {/* Prominent change (screen only — the most important number when
+                  handing back cash). The printed receipt keeps the line below. */}
+              {hasChange && (
+                <div className="mb-4 flex flex-col items-center rounded-lg bg-[var(--success-subtle)] py-3 print:hidden">
+                  <span className="text-xs font-medium uppercase tracking-wider text-[var(--success)]">
+                    {t.sales.change}
+                  </span>
+                  <span className="text-4xl font-bold tabular-nums text-[var(--success)]">
+                    {formatMXN(change.toFixed(2))}
+                  </span>
+                </div>
+              )}
               {/* Customer */}
               {sale.customer_name && (
                 <p className="mb-3 text-sm text-[var(--text-secondary)]">
@@ -209,9 +222,9 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
                 </div>
               </div>
 
-              {/* Change */}
+              {/* Change — printed receipt only (screen shows the big block above) */}
               {hasChange && (
-                <div className="flex justify-between rounded-lg bg-[var(--success-subtle)] px-3 py-2 text-sm font-semibold text-[var(--success)]">
+                <div className="hidden justify-between rounded-lg bg-[var(--success-subtle)] px-3 py-2 text-sm font-semibold text-[var(--success)] print:flex">
                   <span>{t.sales.change}</span>
                   <span className="tabular-nums">
                     {formatMXN(change.toFixed(2))}

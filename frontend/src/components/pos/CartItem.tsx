@@ -8,6 +8,10 @@ import { formatMXN } from "@/lib/currency";
 import { t } from "@/lib/i18n";
 import type { CartItem as CartItemType } from "@/store/cart";
 
+// Visible keyboard focus (WCAG AA 2.4.7) — reused across this component's controls.
+const FOCUS_RING =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--accent)]";
+
 interface CartItemProps {
   item: CartItemType;
   canEditPrice: boolean;
@@ -49,11 +53,12 @@ export function CartItem({
           onClick={() => onRemove(item.product_id)}
           aria-label={`Eliminar ${item.product_name}`}
           className={cn(
-            "flex-shrink-0 rounded p-1 text-[var(--text-muted)]",
+            "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded text-[var(--text-muted)]",
             "transition-colors hover:bg-[var(--error-subtle)] hover:text-[var(--error)]",
+            FOCUS_RING,
           )}
         >
-          <Trash2 size={14} />
+          <Trash2 size={16} />
         </button>
       </div>
 
@@ -66,11 +71,12 @@ export function CartItem({
             onClick={() => onQuantityChange(item.product_id, item.quantity - 1)}
             aria-label="Reducir cantidad"
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-l-lg",
+              "flex h-10 w-10 items-center justify-center rounded-l-lg",
               "text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-elevated)]",
+              FOCUS_RING,
             )}
           >
-            <Minus size={12} />
+            <Minus size={14} />
           </button>
           <input
             type="number"
@@ -81,7 +87,7 @@ export function CartItem({
               onQuantityChange(item.product_id, val);
             }}
             className={cn(
-              "h-7 w-10 bg-transparent text-center text-sm font-medium",
+              "h-10 w-12 bg-transparent text-center text-sm font-medium",
               "text-[var(--text-primary)] outline-none",
               "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
             )}
@@ -91,11 +97,12 @@ export function CartItem({
             onClick={() => onQuantityChange(item.product_id, item.quantity + 1)}
             aria-label="Aumentar cantidad"
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-r-lg",
+              "flex h-10 w-10 items-center justify-center rounded-r-lg",
               "text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-elevated)]",
+              FOCUS_RING,
             )}
           >
-            <Plus size={12} />
+            <Plus size={14} />
           </button>
         </div>
 
