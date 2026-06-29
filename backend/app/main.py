@@ -28,6 +28,11 @@ _DEFAULT_ADMIN_PASSWORD = "Admin123!"  # noqa: S105 — this is the known insecu
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("pos.backend.startup", env=settings.env, demo_mode=settings.demo_mode)
     if settings.admin_initial_password == _DEFAULT_ADMIN_PASSWORD:
+        if settings.is_production:
+            raise RuntimeError(
+                "ADMIN_INITIAL_PASSWORD is the known default 'Admin123!' in a "
+                "production environment. Set a strong value in .env and restart."
+            )
         log.warning(
             "pos.security.default_password",
             message="ADMIN_INITIAL_PASSWORD is set to the known default 'Admin123!'. "
@@ -44,6 +49,7 @@ app = FastAPI(
     version="2026.05.06.1",
     docs_url=None if settings.is_production else "/docs",
     redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
     lifespan=lifespan,
     redirect_slashes=False,
 )

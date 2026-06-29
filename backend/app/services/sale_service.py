@@ -16,6 +16,7 @@ from app.models.sale import Payment, Sale, SaleItem
 from app.models.stock_movement import StockMovement
 from app.models.user import User
 from app.schemas.operations import SaleCreate
+from app.services import gift_card_service
 
 log = structlog.get_logger()
 
@@ -125,11 +126,15 @@ async def create_sale(
     discount_total_mxn = Decimal("0")
 
     for item_data in data.items:
+        # Lock the product row (FOR UPDATE) so the stock check-then-decrement
+        # below is race-free against concurrent sales of the same product.
         product_result = await session.execute(
-            select(Product).where(
+            select(Product)
+            .where(
                 Product.id == item_data.product_id,
                 Product.deleted_at.is_(None),
             )
+            .with_for_update()
         )
         product = product_result.scalar_one_or_none()
         if product is None:
@@ -254,6 +259,19 @@ async def create_sale(
         elif payment_data.method in ("credit_card", "debit_card"):
             card_total += amount_in_mxn
         elif payment_data.method == "gift_card":
+            if payment_data.gift_card_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Se requiere gift_card_id para pago con tarjeta de regalo",
+                )
+            # Actually debit the card balance (locked); fails the whole sale
+            # if the card is invalid/expired/has insufficient balance.
+            await gift_card_service.redeem_gift_card_by_id(
+                session,
+                payment_data.gift_card_id,
+                amount_in_mxn,
+                sale_id=sale.id,
+            )
             gift_card_total += amount_in_mxn
 
     # ── 6: loyalty points ────────────────────────────────────────────────

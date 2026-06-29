@@ -103,10 +103,14 @@ async def get_current_session(
 @router.get("/sessions/{session_id}", response_model=CashierSessionRead)
 async def get_session_by_id(
     session_id: uuid.UUID,
-    _: CurrentUser,
+    current_user: CurrentUser,
     session: AsyncSession = Depends(get_session),
 ) -> CashierSessionRead:
-    """Return a cashier session by its ID."""
+    """Return a cashier session by its ID.
+
+    A cashier may only read their own session; supervisors and admins may read
+    any. Prevents enumerating other cashiers' cash balances (IDOR).
+    """
     cashier_session = await cashier_session_service.get_session_by_id(
         session, session_id
     )
@@ -114,6 +118,14 @@ async def get_session_by_id(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Sesión no encontrada: {session_id}",
+        )
+    if (
+        cashier_session.cashier_id != current_user.id
+        and current_user.role not in {"admin", "supervisor"}
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No autorizado para ver esta sesión de caja",
         )
     return CashierSessionRead.model_validate(cashier_session)
 

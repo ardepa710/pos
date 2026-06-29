@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     db_host: str = Field(default="pos-db", alias="DB_HOST")
     db_port: int = Field(default=5432, alias="DB_PORT")
     db_name: str = Field(default="pos_db", alias="DB_NAME")
+    # TLS mode for the DB connection. Left empty for the internal Docker network
+    # (pos-db has no cert). Set to "require"/"verify-full" for an external DB.
+    db_sslmode: str = Field(default="", alias="DB_SSLMODE")
 
     # Full URLs — optional override. If not set, built from components above.
     # Setting these in .env takes priority (useful for external DBs with custom DSN).
@@ -26,14 +29,17 @@ class Settings(BaseSettings):
         """
         pw = quote(self.db_password, safe="")
         base = f"{self.db_user}:{pw}@{self.db_host}:{self.db_port}/{self.db_name}"
+        # asyncpg uses ?ssl=, psycopg2 uses ?sslmode=
+        async_q = f"?ssl={self.db_sslmode}" if self.db_sslmode else ""
+        sync_q = f"?sslmode={self.db_sslmode}" if self.db_sslmode else ""
         if not self.database_url:
-            self.database_url = f"postgresql+asyncpg://{base}"
+            self.database_url = f"postgresql+asyncpg://{base}{async_q}"
         if not self.database_sync_url:
-            self.database_sync_url = f"postgresql://{base}"
+            self.database_sync_url = f"postgresql://{base}{sync_q}"
         return self
 
-    # Security
-    secret_key: str = Field(..., alias="SECRET_KEY")
+    # Security — JWT signing key must be long enough to resist brute force.
+    secret_key: str = Field(..., min_length=32, alias="SECRET_KEY")
     algorithm: str = Field(default="HS256", alias="ALGORITHM")
     access_token_expire_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
 

@@ -12,13 +12,19 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.security.dependencies import CurrentUser
+from app.security.dependencies import CurrentUser, require_supervisor_or_admin
 from app.services import pdf_service, report_service, xlsx_service
 from app.services.settings_service import get_business_settings
 
 log = structlog.get_logger()
 
-router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
+# Financial/sales reports are supervisor+admin only — enforced at the router
+# level so every endpoint inherits the role gate (matches the frontend matrix).
+router = APIRouter(
+    prefix="/api/v1/reports",
+    tags=["reports"],
+    dependencies=[Depends(require_supervisor_or_admin)],
+)
 
 _PDF_MEDIA = "application/pdf"
 _XLSX_MEDIA = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

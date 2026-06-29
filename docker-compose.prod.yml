@@ -89,8 +89,14 @@ services:
   proxy:
     image: caddy:2-alpine
     container_name: pos-proxy
+    # LAN default: host PORT → container :80 (plain HTTP).
+    # Public TLS: set SITE_ADDRESS=your-domain in .env AND set PORT=80 so
+    # Caddy can complete the ACME HTTP-01 challenge; 443 is published below.
     ports:
       - "${PORT:-3005}:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS::80}
     configs:
       - source: caddyfile
         target: /etc/caddy/Caddyfile
@@ -108,7 +114,7 @@ services:
 configs:
   caddyfile:
     content: |
-      :80 {
+      {$SITE_ADDRESS::80} {
           handle /api/* {
               reverse_proxy backend:8000
           }
@@ -124,6 +130,8 @@ configs:
               Referrer-Policy strict-origin-when-cross-origin
               X-XSS-Protection "1; mode=block"
               Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+              Strict-Transport-Security "max-age=31536000; includeSubDomains"
+              Permissions-Policy "camera=(), microphone=(), geolocation=(), usb=()"
               -Server
           }
           encode gzip

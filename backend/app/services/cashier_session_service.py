@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.audit_log import AuditLog
 from app.models.cashier_session import CashierSession
 from app.models.user import User
 
@@ -51,6 +52,16 @@ async def open_session(
     await session.flush()
     await session.refresh(cashier_session)
 
+    session.add(
+        AuditLog(
+            actor_id=user.id,
+            action="cashier_session.opened",
+            entity_type="cashier_session",
+            entity_id=cashier_session.id,
+            payload={"starting_cash_mxn": str(starting_cash_mxn)},
+        )
+    )
+
     log.info(
         "cashier_session.opened",
         session_id=str(cashier_session.id),
@@ -90,6 +101,20 @@ async def close_session(
 
     await session.flush()
     await session.refresh(cashier_session)
+
+    session.add(
+        AuditLog(
+            actor_id=cashier_session.cashier_id,
+            action="cashier_session.closed",
+            entity_type="cashier_session",
+            entity_id=cashier_session.id,
+            payload={
+                "expected_cash_mxn": str(expected_cash),
+                "physical_cash_mxn": str(physical_cash_mxn),
+                "difference_mxn": str(cashier_session.difference_mxn),
+            },
+        )
+    )
 
     log.info(
         "cashier_session.closed",

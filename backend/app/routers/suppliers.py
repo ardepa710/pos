@@ -8,9 +8,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.models.audit_log import AuditLog
 from app.models.supplier import Supplier
 from app.schemas.people import SupplierCreate, SupplierRead, SupplierUpdate
-from app.security.dependencies import CurrentUser
+from app.security.dependencies import CurrentUser, SupervisorUser
 
 router = APIRouter(prefix="/api/v1/suppliers", tags=["suppliers"])
 
@@ -31,7 +32,7 @@ async def list_suppliers(
 @router.post("", response_model=SupplierRead, status_code=status.HTTP_201_CREATED, summary="Crear proveedor")
 async def create_supplier(
     data: SupplierCreate,
-    _user: CurrentUser,
+    user: SupervisorUser,
     session: DbSession,
 ) -> SupplierRead:
     existing = await session.execute(
@@ -43,6 +44,15 @@ async def create_supplier(
     session.add(supplier)
     await session.flush()
     await session.refresh(supplier)
+    session.add(
+        AuditLog(
+            actor_id=user.id,
+            action="supplier.created",
+            entity_type="supplier",
+            entity_id=supplier.id,
+            payload={"code": supplier.code},
+        )
+    )
     return SupplierRead.model_validate(supplier)
 
 
@@ -65,7 +75,7 @@ async def get_supplier(
 async def update_supplier(
     supplier_id: uuid.UUID,
     data: SupplierUpdate,
-    _user: CurrentUser,
+    user: SupervisorUser,
     session: DbSession,
 ) -> SupplierRead:
     result = await session.execute(
@@ -74,8 +84,18 @@ async def update_supplier(
     supplier = result.scalar_one_or_none()
     if not supplier:
         raise HTTPException(status_code=404, detail="Proveedor no encontrado")
-    for field, value in data.model_dump(exclude_unset=True).items():
+    changed = data.model_dump(exclude_unset=True)
+    for field, value in changed.items():
         setattr(supplier, field, value)
     await session.flush()
     await session.refresh(supplier)
+    session.add(
+        AuditLog(
+            actor_id=user.id,
+            action="supplier.updated",
+            entity_type="supplier",
+            entity_id=supplier.id,
+            payload={"fields": sorted(changed.keys())},
+        )
+    )
     return SupplierRead.model_validate(supplier)

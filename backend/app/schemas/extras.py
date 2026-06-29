@@ -51,7 +51,8 @@ class GiftCardRedeemRequest(BaseModel):
 class ReturnItemCreate(BaseModel):
     original_sale_item_id: uuid.UUID
     quantity_returned: Decimal
-    unit_price_mxn: Decimal
+    # unit_price_mxn is intentionally NOT accepted from the client — the refund
+    # price is taken server-side from the original sale item (anti-fraud).
 
 
 class ReturnCreate(BaseModel):
