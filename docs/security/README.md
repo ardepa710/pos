@@ -4,3 +4,4 @@
 | ---------- | ------------- | ------------------ | ---------- | -------------------------------------------------------------------- |
 | 2026-05-07 | Kolekto — POS | 1 CRITICAL, 4 HIGH | 52/100 🔴  | [2026-05-07-v1-security-audit.pdf](2026-05-07-v1-security-audit.pdf) |
 | 2026-05-08 | Kolekto — POS | 1 CRITICAL, 2 HIGH | 62/100 🟡  | [2026-05-08-v1-security-audit.pdf](2026-05-08-v1-security-audit.pdf) |
+| 2026-06-29 | Kolekto — POS | 2 CRITICAL, 6 HIGH | 45/100 🔴  | [2026-06-29-v1-security-audit.pdf](2026-06-29-v1-security-audit.pdf) |
