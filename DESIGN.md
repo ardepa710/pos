@@ -113,12 +113,21 @@ Kolekto se ve como un puesto de mercado bien llevado: cálido, local y ordenado,
 
 El sistema rechaza explícitamente cuatro cosas (de PRODUCT.md): el **SaaS genérico** (cards azules, gradientes morados, eyebrows en mayúsculas), el **POS corporativo frío** estilo Square/Clover/Toast (gris, sin alma, sin raíz local), lo **recargado/colorido** (badges por todas partes, ruido), y lo **anticuado** (tablas densas estilo Windows XP sin jerarquía). La calidez vive en el color, la tipografía y el ritmo del espaciado — nunca en decoración.
 
+> **Dirección 2026-06 — más vibrante.** El sistema evolucionó de "sobrio" a
+> cálido-vibrante: el olivo sigue siendo la **voz de CTA**, pero el color ahora
+> tiene más presencia vía una **paleta categórica/semántica** (gráficas, halos
+> de empty-state, puntos de vendedor, KPIs, imágenes de producto). El color se
+> gana su lugar por **significado** (identidad, estado, data viz), no por ruido —
+> esa es la línea que separa "vibrante" de "recargado".
+
 **Key Characteristics:**
 
 - Superficie hueso cálida, no blanco clínico; tinta para texto, no gris suave.
-- Un solo acento (olivo), usado con disciplina (≤10% de cualquier pantalla).
+- Olivo = voz de CTA/activo/foco; el resto del color viene de la paleta categórica/semántica, siempre con significado.
 - Densidad de herramienta de trabajo: escala de 4px, controles compactos, áreas de toque generosas.
-- Identidad de vendedor por color: cada colaborador del colectivo tiene su "punto".
+- Identidad de vendedor por color: cada colaborador (y producto) tiene su "punto"/color estable.
+- Data viz e imágenes de producto cargan la calidez tanto como el acento.
+- Micro-motion que comunica estado (rise/pop/stagger/hover-lift), siempre con `prefers-reduced-motion`.
 - es-MX nativo en toda la UI; los números son tabulares y nunca mienten.
 
 ## 2. Colors
@@ -149,7 +158,9 @@ Una paleta terrosa y contenida: hueso y arena como tierra, tinta como texto, oli
 
 ### Named Rules
 
-**La Regla del Olivo Disciplinado.** El olivo es el acento, no la decoración. Vive en ≤10% de cualquier pantalla: CTA primario, estado activo, foco, punto de vendedor. **Prohibido** usar olivo para texto largo, fondos de párrafo o fondos de card. Su rareza es lo que lo hace significar.
+**La Regla del Olivo como Voz.** El olivo es la **voz de acción**: CTA primario, estado activo, foco, serie principal de gráficas. No es el único color de la pantalla — la paleta categórica (vendedor) y la semántica (mostaza/tinto/azul-piedra) cargan gráficas, halos, puntos y estados. Pero **el olivo no compite**: si todo es olivo, nada es la acción. **Prohibido** usar olivo para texto largo o fondos de párrafo. (Antes: ≤10% estricto; ahora el color vibra más, pero el olivo conserva su rol de "esto es lo accionable".)
+
+**La Regla de la Paleta Categórica.** Para charts multi-serie, puntos de vendedor y halos: usar la paleta `series` (olivo, azul-piedra, mostaza, tinto, café, marrón) de `chart-kit`/`vendor-color`, asignada de forma **estable** (hash por id) — el mismo vendedor/categoría es siempre el mismo color.
 
 **La Regla del Punto de Vendedor.** En un colectivo, cada vendedor tiene un color de identidad de una paleta fija de 10 (tinta, café, tinto, azul piedra, marrón, mostaza, tabaco, olivo profundo, arena tostada). El vendedor **activo** siempre se renderea en olivo. El color identifica, no decora.
 
@@ -222,24 +233,46 @@ Componentes **táctiles y honestos**: el control responde a la presión, muestra
 
 ### Vendor Identity Dot (signature)
 
-Punto de color que identifica al vendedor en listados y ventas. Activo = olivo; el resto rota en la paleta fija de 10. Es la firma de Kolekto: vuelve visible quién es quién en un colectivo.
+Punto de color que identifica al vendedor/producto en listados, ventas y cards del POS. Activo = olivo; el resto rota en la paleta fija (hash estable por id). Es la firma de Kolekto: vuelve visible quién es quién en un colectivo. Componente: `lib/vendor-color.ts`.
+
+### Empty States
+
+`<EmptyState>` (`components/ui/EmptyState.tsx`): halo de gradiente con ícono Lucide + título + hint, en 5 tonos (olivo/mostaza/tinto/azul/café). Es el patrón estándar para carrito vacío, sin-resultados, errores, y **todas las tablas** (vía `DataTable`). Nunca un ícono gris solitario.
+
+### Product Thumbnails
+
+`<ProductThumb>`: muestra `thumbnail_url` (object-cover) o, si no hay, las **iniciales sobre un bloque de color de vendedor** — nunca un ícono de imagen rota. Header de 80px en cards del POS; 32px junto al nombre en el catálogo.
+
+### Charts (data viz)
+
+recharts themeado vía `components/ui/chart-kit.tsx` (colores por CSS-var → siguen light/dark; tooltip on-theme; formateador de pesos). Patrones: **área** para series temporales (relleno en gradiente olivo), **barras horizontales** para rankings (paleta categórica por barra), **dona** para desgloses. Animan ~500ms; reduced-motion las vuelve instantáneas. Viven en Reportes y el Dashboard.
+
+### Dashboard KPI cards
+
+Tarjeta con halo de color (ícono) + label + valor tabular. Entra con `motion-stagger`, `hover-lift`. Solo admin/supervisor; el cajero va directo al POS.
+
+### Motion
+
+Micro-motion que comunica estado, nunca coreografía. Utilidades en `globals.css`: `motion-rise` (entrada de ítem), `motion-pop` (momento del dinero), `motion-stagger` (entrada de grid/lista, vía `--i`), `hover-lift` (sube 2px vía `translate`, compone con `active:scale`). Ease-out exponencial `cubic-bezier(0.22,1,0.36,1)`, 150–220ms, sin bounce. **Todo** respeta `@media (prefers-reduced-motion: reduce)`.
 
 ## 6. Do's and Don'ts
 
 ### Do:
 
-- **Do** usar olivo (#6B7A3F) solo para CTA primario, estado activo, foco y punto de vendedor — ≤10% de la pantalla.
+- **Do** reservar el olivo (#6B7A3F) como la **voz de acción** (CTA, activo, foco, serie principal); para charts/puntos/halos usa la paleta categórica/semántica.
+- **Do** colorear con **significado**: identidad (vendedor), estado (semántico), o data viz. Color sí, ruido no.
+- **Do** usar `<EmptyState>` (no texto gris solitario), `<ProductThumb>` (imagen o iniciales, nunca rota) y `chart-kit` para toda gráfica.
 - **Do** poner todo monto/cantidad en `tabular-nums` (JetBrains Mono donde alinee columnas).
 - **Do** separar superficies con borde arena (#E8E2D5) antes que con sombra.
 - **Do** dar `active:scale-[0.96]` y `focus-visible` outline a todo control interactivo (especialmente los de alta frecuencia del POS).
-- **Do** acompañar todo color semántico con ícono o texto (WCAG AA, daltonismo).
+- **Do** acompañar todo color semántico con ícono o texto (WCAG AA, daltonismo) y respetar `prefers-reduced-motion`.
 - **Do** mantener `letter-spacing ≥ -0.04em` en display.
 
 ### Don't:
 
 - **Don't** parecer **SaaS genérico**: nada de cards azules, gradientes morados, `background-clip: text`, ni eyebrows en mayúsculas tracked sobre cada sección.
 - **Don't** parecer **POS corporativo frío** (Square/Clover/Toast): nada de gris neutro sin raíz local; el hueso y el olivo son la identidad.
-- **Don't** caer en lo **recargado/colorido**: badges por todas partes, múltiples acentos compitiendo, ruido visual.
+- **Don't** confundir vibrante con **recargado**: el color vibra cuando significa (identidad/estado/data viz). Badges por todas partes sin razón, múltiples olivos compitiendo por "la acción", o tinte decorativo sin propósito → ruido.
 - **Don't** parecer **anticuado**: tablas densas sin jerarquía, formularios interminables, sombras oscuras estilo 2014.
 - **Don't** usar olivo para texto largo, fondos de párrafo o fondos de card.
 - **Don't** redondear cards por encima de 16px ni emparejar `border 1px` con `box-shadow` ancho (≥16px blur) como decoración.
