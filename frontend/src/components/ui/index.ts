@@ -15,3 +15,4 @@ export { Tabs } from "./Tabs";
 export type { TabsProps, TabItem } from "./Tabs";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
+export { ProductThumb } from "./ProductThumb";

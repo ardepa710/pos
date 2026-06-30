@@ -9,7 +9,12 @@ import { productsApi, categoriesApi } from "@/lib/api";
 import type { ProductRead } from "@/lib/api";
 import { formatMXN } from "@/lib/currency";
 import { vendorColor } from "@/lib/vendor-color";
-import { SearchInput, LoadingSpinner, EmptyState } from "@/components/ui";
+import {
+  SearchInput,
+  LoadingSpinner,
+  EmptyState,
+  ProductThumb,
+} from "@/components/ui";
 
 interface ProductGridProps {
   token: string;
@@ -153,7 +158,7 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                   onClick={() => handleAdd(product)}
                   style={{ "--i": Math.min(idx, 12) } as CSSProperties}
                   className={cn(
-                    "motion-stagger hover-lift relative flex flex-col rounded-lg border p-3 text-left",
+                    "motion-stagger hover-lift relative flex flex-col overflow-hidden rounded-lg border p-0 text-left",
                     "bg-[var(--product-card-bg)] shadow-[var(--shadow-card)]",
                     "transition duration-150",
                     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
@@ -194,27 +199,41 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                     </div>
                   )}
 
-                  {/* Consignment badge */}
-                  {product.is_consigned && (
-                    <span className="mb-1 self-start rounded-sm bg-[var(--info-subtle)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--info)]">
-                      {t.sales.consignment_badge}
-                    </span>
-                  )}
+                  {/* Image (or initials fallback) header */}
+                  <ProductThumb
+                    url={product.thumbnail_url}
+                    name={product.name}
+                    seed={
+                      product.category_id ??
+                      product.consigned_supplier_id ??
+                      product.sku
+                    }
+                    className="h-20 w-full text-xl"
+                  />
 
-                  {/* Name */}
-                  <p className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)]">
-                    {product.name}
-                  </p>
+                  <div className="flex flex-col p-3">
+                    {/* Consignment badge */}
+                    {product.is_consigned && (
+                      <span className="mb-1 self-start rounded-sm bg-[var(--info-subtle)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--info)]">
+                        {t.sales.consignment_badge}
+                      </span>
+                    )}
 
-                  {/* SKU */}
-                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                    {product.sku}
-                  </p>
+                    {/* Name */}
+                    <p className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)]">
+                      {product.name}
+                    </p>
 
-                  {/* Price */}
-                  <p className="mt-2 text-base font-bold tabular-nums text-[var(--accent)]">
-                    {formatMXN(product.price_general)}
-                  </p>
+                    {/* SKU */}
+                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                      {product.sku}
+                    </p>
+
+                    {/* Price */}
+                    <p className="mt-2 text-base font-bold tabular-nums text-[var(--accent)]">
+                      {formatMXN(product.price_general)}
+                    </p>
+                  </div>
                 </button>
               );
             })}
