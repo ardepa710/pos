@@ -232,7 +232,7 @@ function ClosedResult({
 
       <div
         className={cn(
-          "mb-5 flex items-baseline justify-between rounded-lg px-4 py-3",
+          "motion-pop mb-5 flex items-baseline justify-between rounded-lg px-4 py-3",
           ok ? "bg-[var(--success-subtle)]" : "bg-[var(--error-subtle)]",
         )}
       >

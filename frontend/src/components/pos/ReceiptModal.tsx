@@ -111,7 +111,7 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
               {/* Prominent change (screen only — the most important number when
                   handing back cash). The printed receipt keeps the line below. */}
               {hasChange && (
-                <div className="mb-4 flex flex-col items-center rounded-lg bg-[var(--success-subtle)] py-3 print:hidden">
+                <div className="motion-pop mb-4 flex flex-col items-center rounded-lg bg-[var(--success-subtle)] py-3 print:hidden">
                   <span className="text-xs font-medium uppercase tracking-wider text-[var(--success)]">
                     {t.sales.change}
                   </span>

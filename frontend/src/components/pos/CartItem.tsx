@@ -36,7 +36,7 @@ export function CartItem({
   return (
     <div
       className={cn(
-        "flex flex-col gap-1.5 border-b border-[var(--border)] px-3 py-2.5",
+        "motion-rise flex flex-col gap-1.5 border-b border-[var(--border)] px-3 py-2.5",
         "last:border-b-0",
       )}
     >
