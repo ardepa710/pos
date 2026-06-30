@@ -11,12 +11,14 @@ import {
   Gift,
   FileDown,
 } from "lucide-react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import {
   DataTable,
   type Column,
   LoadingSpinner,
   CurrencyDisplay,
 } from "@/components/ui";
+import { CHART_COLORS, ChartTooltip, pesos } from "@/components/ui/chart-kit";
 import { reportsApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
@@ -243,7 +245,35 @@ export function DailyReport() {
               <h3 className="mb-4 text-sm font-semibold text-[var(--text-primary)]">
                 {t.payment.method}
               </h3>
-              <div className="flex flex-col gap-2">
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie
+                    data={paymentRows.map((r) => ({
+                      name: r.label,
+                      value: parseFloat(r.amount || "0"),
+                    }))}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={45}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    stroke="var(--bg-card)"
+                    strokeWidth={2}
+                    animationDuration={500}
+                  >
+                    {paymentRows.map((_, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          CHART_COLORS.series[i % CHART_COLORS.series.length]
+                        }
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ChartTooltip format={pesos} />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-3 flex flex-col gap-2">
                 {paymentRows.map((row) => (
                   <div
                     key={row.method}

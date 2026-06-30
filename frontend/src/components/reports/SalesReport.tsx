@@ -4,11 +4,21 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FileDown } from "lucide-react";
 import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   DataTable,
   type Column,
   LoadingSpinner,
   CurrencyDisplay,
 } from "@/components/ui";
+import { ChartTooltip, axisTick, pesos } from "@/components/ui/chart-kit";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -73,11 +83,6 @@ export function SalesReport() {
     },
     enabled: !!token,
   });
-
-  const maxTotal = Math.max(
-    ...data.map((r) => parseFloat(r.total_mxn || "0")),
-    1,
-  );
 
   const columns: Column<SalesPeriodRow>[] = [
     {
@@ -223,44 +228,66 @@ export function SalesReport() {
 
       {!isLoading && data.length > 0 && (
         <>
-          {/* CSS bar chart */}
+          {/* Revenue over time — themed area chart */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
             <h3 className="mb-4 text-sm font-semibold text-[var(--text-primary)]">
               {t.reports.total_revenue} — {t.currency.mxn}
             </h3>
-            <div
-              className="flex items-end gap-1 overflow-x-auto pb-1"
-              style={{ minHeight: 120 }}
-            >
-              {data.map((row) => {
-                const heightPct =
-                  (parseFloat(row.total_mxn || "0") / maxTotal) * 100;
-                return (
-                  <div
-                    key={row.period}
-                    className="group relative flex min-w-[28px] flex-1 flex-col items-center gap-1"
-                  >
-                    {/* Value tooltip on hover */}
-                    <span className="absolute -top-5 hidden text-xs font-semibold text-[var(--accent)] group-hover:block whitespace-nowrap">
-                      $
-                      {parseFloat(row.total_mxn).toLocaleString("es-MX", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                    <div
-                      className="w-full rounded-t bg-[var(--accent)] transition-all hover:bg-[var(--accent-hover)]"
-                      style={{
-                        height: `${Math.max(heightPct, 4)}px`,
-                        maxHeight: 100,
-                      }}
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart
+                data={data}
+                margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor="var(--accent)"
+                      stopOpacity={0.35}
                     />
-                    <span className="truncate text-[10px] text-[var(--text-muted)] w-full text-center">
-                      {row.period.length > 6 ? row.period.slice(5) : row.period}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                    <stop
+                      offset="100%"
+                      stopColor="var(--accent)"
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="period"
+                  tickFormatter={(v: string) => (v.length > 6 ? v.slice(5) : v)}
+                  tick={axisTick}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={(v: number) => pesos(v)}
+                  tick={axisTick}
+                  axisLine={false}
+                  tickLine={false}
+                  width={52}
+                />
+                <Tooltip
+                  content={<ChartTooltip format={pesos} />}
+                  cursor={{ stroke: "var(--accent)", strokeOpacity: 0.3 }}
+                />
+                <Area
+                  type="monotone"
+                  name="Ventas"
+                  dataKey={(row: SalesPeriodRow) =>
+                    parseFloat(row.total_mxn || "0")
+                  }
+                  stroke="var(--accent)"
+                  strokeWidth={2}
+                  fill="url(#salesFill)"
+                  animationDuration={500}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
 
           {/* Table */}

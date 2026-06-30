@@ -240,6 +240,8 @@ export const t = {
     date_to: "Fecha hasta",
     total_sales: "Total ventas",
     total_revenue: "Ingresos totales",
+    top_products: "Top productos por ingresos",
+    payment_breakdown: "Desglose por método de pago",
     period: {
       day: "Por día",
       week: "Por semana",
