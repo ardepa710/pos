@@ -14,6 +14,17 @@ export const t = {
     users: "Usuarios",
   },
 
+  // Dashboard (home)
+  dashboard: {
+    greeting: "Hola",
+    today_sales: "Ventas hoy",
+    today_revenue: "Ingresos hoy",
+    cash: "Efectivo",
+    card: "Tarjeta",
+    last_7_days: "Ingresos · últimos 7 días",
+    no_data: "Aún no hay ventas registradas.",
+  },
+
   // Common actions
   action: {
     save: "Guardar",

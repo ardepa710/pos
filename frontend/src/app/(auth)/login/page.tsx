@@ -44,7 +44,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/pos");
+      router.replace("/");
     }
   }, [isAuthenticated, router]);
 
@@ -78,7 +78,7 @@ export default function LoginPage() {
       if (result.user.must_change_password) {
         router.replace("/change-password");
       } else {
-        router.replace("/pos");
+        router.replace("/");
       }
     } catch {
       setLoginError("Usuario o contraseña incorrectos");
