@@ -97,6 +97,7 @@ export const t = {
     new_sale: "Nueva venta",
     search_product: "Buscar producto o escanear código",
     cart_empty: "El carrito está vacío",
+    cart_empty_hint: "Toca un producto para empezar la venta",
     clear_cart_title: "Vaciar carrito",
     clear_cart_message:
       "Se quitarán todos los artículos del carrito. Esta acción no se puede deshacer.",
@@ -158,6 +159,7 @@ export const t = {
     consignment: "Consignación",
     is_consignment: "En consignación",
     no_products: "No hay productos",
+    no_products_hint: "Ajusta la búsqueda o agrega productos en el catálogo",
     supplier: "Proveedor",
     attributes: "Atributos",
     add_product: "Agregar producto",

@@ -8,6 +8,7 @@ import { formatMXN, formatUSD, mxnToUsd } from "@/lib/currency";
 import { CartItem } from "./CartItem";
 import { CustomerSelector } from "./CustomerSelector";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui";
 import { useCartStore } from "@/store/cart";
 import type { AuthUser } from "@/store/auth";
 
@@ -86,11 +87,13 @@ export function Cart({ token, user, fxRate }: CartProps) {
       {/* Items list */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {items.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <ShoppingCart size={40} className="text-[var(--text-muted)]" />
-            <p className="text-sm text-[var(--text-muted)]">
-              {t.sales.cart_empty}
-            </p>
+          <div className="flex h-full items-center justify-center">
+            <EmptyState
+              icon={<ShoppingCart size={30} />}
+              title={t.sales.cart_empty}
+              hint={t.sales.cart_empty_hint}
+              tone="olivo"
+            />
           </div>
         ) : (
           <div className="flex flex-col">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Package, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { t } from "@/lib/i18n";
 import { productsApi, categoriesApi } from "@/lib/api";
 import type { ProductRead } from "@/lib/api";
 import { formatMXN } from "@/lib/currency";
-import { SearchInput, LoadingSpinner } from "@/components/ui";
+import { SearchInput, LoadingSpinner, EmptyState } from "@/components/ui";
 
 interface ProductGridProps {
   token: string;
@@ -114,29 +114,30 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
             <LoadingSpinner size="md" />
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <AlertCircle size={32} className="text-[var(--error)]" />
-            <p className="text-sm text-[var(--text-muted)]">
-              {t.error.network}
-            </p>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="text-sm text-[var(--accent)] underline underline-offset-2"
-            >
-              {t.action.retry}
-            </button>
-          </div>
+          <EmptyState
+            icon={<AlertCircle size={30} />}
+            title={t.error.network}
+            tone="tinto"
+            action={
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium text-[var(--accent)] transition-colors hover:bg-[var(--accent-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              >
+                {t.action.retry}
+              </button>
+            }
+          />
         ) : products.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <Package size={32} className="text-[var(--text-muted)]" />
-            <p className="text-sm text-[var(--text-muted)]">
-              {t.products.no_products}
-            </p>
-          </div>
+          <EmptyState
+            icon={<Package size={30} />}
+            title={t.products.no_products}
+            hint={t.products.no_products_hint}
+            tone="mostaza"
+          />
         ) : (
           <div className="grid grid-cols-2 gap-2 pb-2 lg:grid-cols-3">
-            {products.map((product) => {
+            {products.map((product, idx) => {
               const stockNum = parseFloat(String(product.stock_quantity));
               const outOfStock = product.track_inventory && stockNum <= 0;
               const lowStock =
@@ -149,8 +150,9 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                   type="button"
                   disabled={outOfStock}
                   onClick={() => handleAdd(product)}
+                  style={{ "--i": Math.min(idx, 12) } as CSSProperties}
                   className={cn(
-                    "relative flex flex-col rounded-lg border p-3 text-left",
+                    "motion-stagger hover-lift relative flex flex-col rounded-lg border p-3 text-left",
                     "bg-[var(--product-card-bg)] shadow-[var(--shadow-card)]",
                     "transition duration-150",
                     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
