@@ -49,7 +49,7 @@ export function OpenSessionModal({
       size="sm"
       classNames={{
         backdrop: "bg-black/60 backdrop-blur-sm",
-        base: "rounded-xl border border-[var(--border)] bg-[var(--bg-card)]",
+        base: "rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]",
       }}
       aria-labelledby="open-session-title"
     >
@@ -120,6 +120,7 @@ export function OpenSessionModal({
                   "flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold",
                   "bg-[var(--accent)] text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.96]",
                   "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
                 )}
               >
                 {loading ? (

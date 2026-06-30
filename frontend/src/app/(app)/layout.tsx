@@ -12,6 +12,7 @@ import { AppShell } from "@/components/layout/AppShell";
 const ROLE_ALLOWED: Record<string, string[]> = {
   admin: ["/"], // admin can access everything — wildcard handled below
   supervisor: [
+    "/dashboard",
     "/pos",
     "/catalog",
     "/customers",

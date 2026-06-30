@@ -117,17 +117,29 @@ async def create_return(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="La cantidad a devolver debe ser mayor a cero",
             )
-        if qty_returned > qty_sold:
+
+        # Cap against quantity already returned in prior returns for this
+        # sale item — otherwise the same line could be refunded repeatedly.
+        prior_result = await session.execute(
+            select(func.coalesce(func.sum(ReturnItem.quantity_returned), 0)).where(
+                ReturnItem.original_sale_item_id == item_data.original_sale_item_id
+            )
+        )
+        already_returned = Decimal(str(prior_result.scalar_one()))
+        if already_returned + qty_returned > qty_sold:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
-                    f"Cantidad a devolver ({qty_returned}) supera "
-                    f"la cantidad vendida ({qty_sold}) para la partida "
-                    f"{item_data.original_sale_item_id}"
+                    f"Cantidad a devolver ({qty_returned}) más lo ya devuelto "
+                    f"({already_returned}) supera la cantidad vendida ({qty_sold}) "
+                    f"para la partida {item_data.original_sale_item_id}"
                 ),
             )
 
-        subtotal = qty_returned * item_data.unit_price_mxn
+        # Authoritative price comes from the original sale item on file, never
+        # from the client request — prevents refund-amount inflation.
+        unit_price = Decimal(str(sale_item.unit_price_mxn))
+        subtotal = qty_returned * unit_price
         total_returned_mxn += subtotal
 
         return_item_rows.append(
@@ -135,7 +147,7 @@ async def create_return(
                 ReturnItem(
                     original_sale_item_id=item_data.original_sale_item_id,
                     quantity_returned=qty_returned,
-                    unit_price_mxn=item_data.unit_price_mxn,
+                    unit_price_mxn=unit_price,
                     subtotal_mxn=subtotal,
                 ),
                 sale_item.product_id,

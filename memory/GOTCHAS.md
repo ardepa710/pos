@@ -1,5 +1,18 @@
 # Gotchas — POS
 
+## Sesión 2026-06-29 (auditoría + rediseño)
+
+- **Gift card en venta NO debitaba saldo (CRÍTICO):** `create_sale` solo sumaba `gift_card_total`, nunca llamaba a redeem → una tarjeta pagaba ventas ilimitadas. Fix: `gift_card_service.redeem_gift_card_by_id` con `SELECT … FOR UPDATE` (también cierra la doble-redención por carrera).
+- **Devoluciones confiaban en `unit_price_mxn` del request:** inflaba reembolsos. El precio SIEMPRE sale del `SaleItem` original (server-side). Y sumar `ReturnItem` previos para topar cantidad acumulada (no solo la del request).
+- **Locks de fila para dinero/stock:** check-then-write sin `with_for_update()` = carrera. Aplica a gift card balance y a `product.stock_quantity` en ventas concurrentes.
+- **RBAC: el del frontend es solo UX.** Sidebar/layout filtran por rol pero NO protegen; cualquiera con token llega por `curl`. Los writes (suppliers/customers), reports, e IDOR de `GET /sales/sessions/{id}` se gatean en el BACKEND (`SupervisorUser`, guard a nivel router, check de ownership).
+- **Ruta `/` eclipsada:** existe `src/app/page.tsx` (raíz) con `redirect("/login")` Y `(app)/page.tsx` — ambas resuelven a `/`; la raíz gana. Poner un page en `(app)/page.tsx` NO sirve para `/`. Bug real: cambiar el redirect de login a `/` → login → `/` → 307 `/login` → "no pasa nada". Dashboard vive en `/dashboard`, no en `/`.
+- **WCAG AA, dos precisiones:** (1) componentes deshabilitados están EXENTOS del contraste mínimo (SC 1.4.3) — no "arreglar" el botón disabled. (2) "44px touch" es HIG/Apple; AA real es 24px (SC 2.5.8) — usamos 40px como término medio cómodo.
+- **recharts en SVG con CSS-vars:** `fill`/`stroke="var(--accent)"` funcionan y siguen light/dark; para colores categóricos usar `vendor-color.ts` (hash estable). Componentes de reporte deben ser `"use client"`.
+- **Motion + reduced-motion:** no había soporte; añadido bloque `@media (prefers-reduced-motion: reduce)` global en `globals.css`. `hover-lift` usa la propiedad `translate` (no `transform`) para componer con `active:scale` de Tailwind sin pisarse.
+- **Verificación sin navegador:** en esta sesión no hubo automatización de browser. `tsc` + build de prod Next.js (compila/bundlea todas las rutas) es la verificación más fuerte disponible; el click-through visual queda para QE manual.
+- **Push/auth desde la sesión:** no hay `gh` ni token en el shell por defecto; `GITHUB_PAT` exportado por el usuario solo es visible en un **login shell** (`bash -lic '… ${GITHUB_PAT} …'`). Además, `--force-with-lease` contra una URL anónima con token (no el remoto `origin`) falla con "stale info" porque no hay tracking ref → usar lease **explícito** `--force-with-lease=<branch>:<OID-remoto-actual>`. PRs sin `gh`: vía API REST (`curl POST /repos/:o/:r/pulls`). Ojo: el ruido `bash: cannot set terminal process group` va a stderr y corrompe el parseo si haces `2>&1 | python` — separar stderr.
+
 ## Docker
 
 - Use `node:20-slim` — never alpine (OpenSSL incompatibility breaks bcrypt/native modules)

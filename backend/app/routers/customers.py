@@ -8,9 +8,10 @@ from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.models.audit_log import AuditLog
 from app.models.customer import Customer
 from app.schemas.people import CustomerCreate, CustomerRead, CustomerUpdate
-from app.security.dependencies import CurrentUser
+from app.security.dependencies import CurrentUser, SupervisorUser
 
 router = APIRouter(prefix="/api/v1/customers", tags=["customers"])
 
@@ -43,7 +44,7 @@ async def list_customers(
 @router.post("", response_model=CustomerRead, status_code=status.HTTP_201_CREATED, summary="Crear cliente")
 async def create_customer(
     data: CustomerCreate,
-    _user: CurrentUser,
+    user: SupervisorUser,
     session: DbSession,
 ) -> CustomerRead:
     existing = await session.execute(
@@ -55,6 +56,15 @@ async def create_customer(
     session.add(customer)
     await session.flush()
     await session.refresh(customer)
+    session.add(
+        AuditLog(
+            actor_id=user.id,
+            action="customer.created",
+            entity_type="customer",
+            entity_id=customer.id,
+            payload={"code": customer.code},
+        )
+    )
     return CustomerRead.model_validate(customer)
 
 
@@ -77,7 +87,7 @@ async def get_customer(
 async def update_customer(
     customer_id: uuid.UUID,
     data: CustomerUpdate,
-    _user: CurrentUser,
+    user: SupervisorUser,
     session: DbSession,
 ) -> CustomerRead:
     result = await session.execute(
@@ -86,8 +96,18 @@ async def update_customer(
     customer = result.scalar_one_or_none()
     if not customer:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
-    for field, value in data.model_dump(exclude_unset=True).items():
+    changed = data.model_dump(exclude_unset=True)
+    for field, value in changed.items():
         setattr(customer, field, value)
     await session.flush()
     await session.refresh(customer)
+    session.add(
+        AuditLog(
+            actor_id=user.id,
+            action="customer.updated",
+            entity_type="customer",
+            entity_id=customer.id,
+            payload={"fields": sorted(changed.keys())},
+        )
+    )
     return CustomerRead.model_validate(customer)

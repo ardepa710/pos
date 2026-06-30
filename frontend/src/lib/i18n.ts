@@ -2,6 +2,7 @@
 export const t = {
   // Navigation
   nav: {
+    dashboard: "Inicio",
     pos: "Punto de Venta",
     catalog: "Catálogo",
     customers: "Clientes",
@@ -12,6 +13,17 @@ export const t = {
     reports: "Reportes",
     settings: "Configuración",
     users: "Usuarios",
+  },
+
+  // Dashboard (home)
+  dashboard: {
+    greeting: "Hola",
+    today_sales: "Ventas hoy",
+    today_revenue: "Ingresos hoy",
+    cash: "Efectivo",
+    card: "Tarjeta",
+    last_7_days: "Ingresos · últimos 7 días",
+    no_data: "Aún no hay ventas registradas.",
   },
 
   // Common actions
@@ -78,6 +90,11 @@ export const t = {
     change: "Cambio",
     paid: "Pagado",
     remaining: "Restante",
+    add_method_hint: "Agrega un método de pago para continuar",
+    partial_hint:
+      'Monto menor al total — toca "Agregar pago" para registrarlo (pago parcial)',
+    gift_inactive: "Tarjeta no activa o ya canjeada",
+    gift_not_found: "Tarjeta no encontrada",
   },
 
   // Currency
@@ -94,6 +111,14 @@ export const t = {
     new_sale: "Nueva venta",
     search_product: "Buscar producto o escanear código",
     cart_empty: "El carrito está vacío",
+    cart_empty_hint: "Toca un producto para empezar la venta",
+    clear_cart_title: "Vaciar carrito",
+    clear_cart_message:
+      "Se quitarán todos los artículos del carrito. Esta acción no se puede deshacer.",
+    surplus: "Sobrante",
+    shortage: "Faltante",
+    balanced: "Caja cuadrada",
+    session_closed: "Sesión cerrada",
     add_customer: "Agregar cliente",
     total: "Total",
     subtotal: "Subtotal",
@@ -101,6 +126,7 @@ export const t = {
     discount: "Descuento",
     change: "Cambio",
     complete_sale: "Completar venta",
+    sale_registered: "Venta registrada",
     cancel_sale: "Cancelar venta",
     receipt: "Recibo",
     print_receipt: "Imprimir recibo",
@@ -147,6 +173,7 @@ export const t = {
     consignment: "Consignación",
     is_consignment: "En consignación",
     no_products: "No hay productos",
+    no_products_hint: "Ajusta la búsqueda o agrega productos en el catálogo",
     supplier: "Proveedor",
     attributes: "Atributos",
     add_product: "Agregar producto",
@@ -227,6 +254,8 @@ export const t = {
     date_to: "Fecha hasta",
     total_sales: "Total ventas",
     total_revenue: "Ingresos totales",
+    top_products: "Top productos por ingresos",
+    payment_breakdown: "Desglose por método de pago",
     period: {
       day: "Por día",
       week: "Por semana",

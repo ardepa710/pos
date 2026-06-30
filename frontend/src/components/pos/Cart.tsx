@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { formatMXN, formatUSD, mxnToUsd } from "@/lib/currency";
 import { CartItem } from "./CartItem";
 import { CustomerSelector } from "./CustomerSelector";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/components/ui";
 import { useCartStore } from "@/store/cart";
 import type { AuthUser } from "@/store/auth";
 
@@ -26,6 +29,8 @@ export function Cart({ token, user, fxRate }: CartProps) {
   const clearCart = useCartStore((s) => s.clearCart);
   const subtotal_mxn = useCartStore((s) => s.subtotal_mxn)();
   const total_mxn = useCartStore((s) => s.total_mxn)();
+
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const canEditPrice = user.role === "admin" || user.role === "supervisor";
 
@@ -53,7 +58,7 @@ export function Cart({ token, user, fxRate }: CartProps) {
         {items.length > 0 && (
           <button
             type="button"
-            onClick={clearCart}
+            onClick={() => setConfirmClear(true)}
             className={cn(
               "flex items-center gap-1 rounded px-2 py-1 text-xs",
               "text-[var(--text-muted)] transition-colors hover:bg-[var(--error-subtle)] hover:text-[var(--error)]",
@@ -65,14 +70,30 @@ export function Cart({ token, user, fxRate }: CartProps) {
         )}
       </div>
 
+      <ConfirmDialog
+        isOpen={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        onConfirm={() => {
+          clearCart();
+          setConfirmClear(false);
+        }}
+        title={t.sales.clear_cart_title}
+        message={t.sales.clear_cart_message}
+        confirmLabel={t.action.clear}
+        cancelLabel={t.action.cancel}
+        variant="danger"
+      />
+
       {/* Items list */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {items.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <ShoppingCart size={40} className="text-[var(--text-muted)]" />
-            <p className="text-sm text-[var(--text-muted)]">
-              {t.sales.cart_empty}
-            </p>
+          <div className="flex h-full items-center justify-center">
+            <EmptyState
+              icon={<ShoppingCart size={30} />}
+              title={t.sales.cart_empty}
+              hint={t.sales.cart_empty_hint}
+              tone="olivo"
+            />
           </div>
         ) : (
           <div className="flex flex-col">

@@ -1,0 +1,257 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-29T00:00:00Z",
+  "title": "Design System: Kolekto",
+  "extensions": {
+    "colorMeta": {
+      "olivo": {
+        "role": "primary",
+        "displayName": "Olivo",
+        "canonical": "#6B7A3F",
+        "tonalRamp": [
+          "oklch(0.22 0.05 120)",
+          "oklch(0.31 0.06 120)",
+          "oklch(0.40 0.07 120)",
+          "oklch(0.50 0.075 120)",
+          "oklch(0.58 0.08 120)",
+          "oklch(0.68 0.075 120)",
+          "oklch(0.80 0.06 120)",
+          "oklch(0.92 0.04 120)"
+        ]
+      },
+      "tinta": {
+        "role": "secondary",
+        "displayName": "Tinta",
+        "canonical": "#1A1A1A",
+        "tonalRamp": [
+          "oklch(0.18 0 0)",
+          "oklch(0.27 0 0)",
+          "oklch(0.37 0 0)",
+          "oklch(0.47 0 0)",
+          "oklch(0.58 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.83 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "hueso": {
+        "role": "neutral",
+        "displayName": "Hueso",
+        "canonical": "#F5F1EA",
+        "tonalRamp": [
+          "oklch(0.30 0.01 80)",
+          "oklch(0.42 0.012 80)",
+          "oklch(0.54 0.014 80)",
+          "oklch(0.66 0.015 80)",
+          "oklch(0.77 0.015 80)",
+          "oklch(0.86 0.013 80)",
+          "oklch(0.93 0.01 80)",
+          "oklch(0.97 0.008 80)"
+        ]
+      },
+      "tinto": {
+        "role": "tertiary",
+        "displayName": "Tinto (error)",
+        "canonical": "#A04540",
+        "tonalRamp": [
+          "oklch(0.25 0.07 28)",
+          "oklch(0.34 0.09 28)",
+          "oklch(0.43 0.11 28)",
+          "oklch(0.52 0.12 28)",
+          "oklch(0.61 0.115 28)",
+          "oklch(0.71 0.09 28)",
+          "oklch(0.83 0.06 28)",
+          "oklch(0.93 0.03 28)"
+        ]
+      },
+      "mostaza": {
+        "role": "tertiary",
+        "displayName": "Mostaza (advertencia)",
+        "canonical": "#C49A3F",
+        "tonalRamp": [
+          "oklch(0.30 0.06 80)",
+          "oklch(0.40 0.08 80)",
+          "oklch(0.50 0.10 80)",
+          "oklch(0.60 0.11 80)",
+          "oklch(0.70 0.105 80)",
+          "oklch(0.79 0.09 80)",
+          "oklch(0.88 0.06 80)",
+          "oklch(0.95 0.03 80)"
+        ]
+      },
+      "azul-piedra": {
+        "role": "tertiary",
+        "displayName": "Azul piedra (info)",
+        "canonical": "#4A6B7A",
+        "tonalRamp": [
+          "oklch(0.28 0.03 230)",
+          "oklch(0.37 0.04 230)",
+          "oklch(0.46 0.045 230)",
+          "oklch(0.55 0.05 230)",
+          "oklch(0.64 0.045 230)",
+          "oklch(0.74 0.038 230)",
+          "oklch(0.84 0.028 230)",
+          "oklch(0.93 0.015 230)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Títulos de pantalla grandes, raros. ls nunca < -0.04em."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto de trabajo a 14px. Máx 65–75ch en prosa."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Montos, folios y cantidades con tabular-nums."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 1px 2px 0 rgb(26 26 26 / 0.04)",
+        "purpose": "Elevación de reposo apenas perceptible en cards sobre hueso."
+      },
+      {
+        "name": "elevated",
+        "value": "0 2px 8px -2px rgb(26 26 26 / 0.06), 0 1px 4px -1px rgb(26 26 26 / 0.04)",
+        "purpose": "Popovers, menús, cards en hover."
+      },
+      {
+        "name": "modal",
+        "value": "0 8px 24px -8px rgb(26 26 26 / 0.10), 0 4px 8px -4px rgb(26 26 26 / 0.06)",
+        "purpose": "Diálogos y modales sobre el backdrop atenuado."
+      }
+    ],
+    "motion": [
+      {
+        "name": "fast",
+        "value": "120ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Feedback inmediato: hover, press."
+      },
+      {
+        "name": "base",
+        "value": "180ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Transiciones de estado estándar."
+      },
+      {
+        "name": "slow",
+        "value": "240ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Entradas de modal/menú."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "CTA primario. La única superficie olivo de la pantalla.",
+      "html": "<button class=\"ds-btn-primary\">Cobrar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; font: 500 14px Inter, system-ui, sans-serif; color: #FFFFFF; background: #6B7A3F; border: none; border-radius: 6px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1), transform 120ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: #5A6835; } .ds-btn-primary:active { transform: scale(0.96); } .ds-btn-primary:focus-visible { outline: 2px solid #6B7A3F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Acción secundaria. Sin fondo en reposo.",
+      "html": "<button class=\"ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; font: 500 14px Inter, system-ui, sans-serif; color: #3D4326; background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: background 120ms cubic-bezier(0.4,0,0.2,1), color 120ms; } .ds-btn-ghost:hover { background: #F0F0E5; color: #1A1A1A; } .ds-btn-ghost:focus-visible { outline: 2px solid #6B7A3F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de texto base. Focus = shift de borde a olivo, sin glow.",
+      "html": "<input class=\"ds-input\" placeholder=\"Buscar producto…\" />",
+      "css": ".ds-input { width: 100%; padding: 8px 12px; font: 400 14px Inter, system-ui, sans-serif; color: #1A1A1A; background: #FFFFFF; border: 1px solid #E8E2D5; border-radius: 6px; outline: none; transition: border-color 120ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: #8C8478; } .ds-input:focus { border-color: #6B7A3F; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor de superficie blanca sobre hueso. Borde primero, sombra casi invisible.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Venta VTA-202606-000123</div><div class=\"ds-card-amount\">$1,240.00</div></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid #E8E2D5; border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px 0 rgb(26 26 26 / 0.04); } .ds-card-title { font: 500 13px Inter, system-ui, sans-serif; color: #3D4326; } .ds-card-amount { margin-top: 4px; font: 400 22px 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; color: #1A1A1A; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Badge de estado semántico. El color va acompañado de texto (WCAG AA).",
+      "html": "<span class=\"ds-badge\">Completada</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 2px 8px; font: 500 11px Inter, system-ui, sans-serif; letter-spacing: 0.02em; color: #6B7A3F; background: rgba(107,122,63,0.10); border-radius: 9999px; }"
+    },
+    {
+      "name": "Vendor Identity Dot",
+      "kind": "custom",
+      "refersTo": "vendor-dot",
+      "description": "Firma de Kolekto: punto de color que identifica al vendedor. Activo = olivo.",
+      "html": "<span class=\"ds-vendor\"><span class=\"ds-vendor-dot\"></span>Carmen · Textiles</span>",
+      "css": ".ds-vendor { display: inline-flex; align-items: center; gap: 8px; font: 400 14px Inter, system-ui, sans-serif; color: #1A1A1A; } .ds-vendor-dot { width: 10px; height: 10px; border-radius: 9999px; background: #6B7A3F; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Mercado de Confianza",
+    "overview": "Kolekto se ve como un puesto de mercado bien llevado: cálido, local y ordenado, donde cada vendedor tiene su lugar y los números siempre cuadran. Superficie papel hueso (no blanco de oficina), texto tinta, un único acento olivo que se gana su lugar. Densidad de herramienta de trabajo pero temperatura humana. Rechaza el SaaS genérico, el POS corporativo frío, lo recargado/colorido y lo anticuado.",
+    "keyCharacteristics": [
+      "Superficie hueso cálida, no blanco clínico; tinta para texto, no gris suave.",
+      "Un solo acento (olivo), usado con disciplina (≤10% de cualquier pantalla).",
+      "Densidad de herramienta de trabajo: escala de 4px, controles compactos, áreas de toque generosas.",
+      "Identidad de vendedor por color: cada colaborador del colectivo tiene su punto.",
+      "es-MX nativo; los números son tabulares y nunca mienten."
+    ],
+    "rules": [
+      {
+        "name": "La Regla del Olivo Disciplinado",
+        "body": "El olivo es el acento, no la decoración. Vive en ≤10% de cualquier pantalla: CTA primario, estado activo, foco, punto de vendedor. Prohibido para texto largo, fondos de párrafo o fondos de card.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Punto de Vendedor",
+        "body": "Cada vendedor tiene un color de identidad de una paleta fija de 10. El vendedor activo siempre se renderea en olivo. El color identifica, no decora.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Color Semántico Acompañado",
+        "body": "El color de estado nunca es el único portador de significado — siempre con ícono o texto (WCAG AA, daltonismo).",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla de los Dígitos Tabulares",
+        "body": "Todo monto, saldo o cantidad usa tabular-nums (y a menudo JetBrains Mono) para que las columnas de dinero se alineen.",
+        "section": "typography"
+      },
+      {
+        "name": "La Regla del Borde Primero",
+        "body": "Ante la duda entre sombra y borde, gana el borde. La sombra se reserva para lo que de verdad flota (menús, modales).",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar olivo (#6B7A3F) solo para CTA primario, estado activo, foco y punto de vendedor — ≤10% de la pantalla.",
+      "Do poner todo monto/cantidad en tabular-nums (JetBrains Mono donde alinee columnas).",
+      "Do separar superficies con borde arena (#E8E2D5) antes que con sombra.",
+      "Do dar active:scale-[0.96] y focus-visible outline a todo control interactivo.",
+      "Do acompañar todo color semántico con ícono o texto (WCAG AA).",
+      "Do mantener letter-spacing ≥ -0.04em en display."
+    ],
+    "donts": [
+      "Don't parecer SaaS genérico: nada de cards azules, gradientes morados, background-clip: text, ni eyebrows en mayúsculas tracked.",
+      "Don't parecer POS corporativo frío (Square/Clover/Toast): nada de gris neutro sin raíz local.",
+      "Don't caer en lo recargado/colorido: badges por todas partes, múltiples acentos compitiendo.",
+      "Don't parecer anticuado: tablas densas sin jerarquía, sombras oscuras estilo 2014.",
+      "Don't usar olivo para texto largo, fondos de párrafo o fondos de card.",
+      "Don't redondear cards por encima de 16px ni emparejar border 1px con box-shadow ancho (≥16px blur).",
+      "Don't usar gris claro para body 'por elegancia' — el texto es tinta."
+    ]
+  }
+}

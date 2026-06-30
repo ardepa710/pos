@@ -116,17 +116,23 @@ async def issue_gift_card(
     log.info(
         "gift_card.issued",
         gift_card_id=str(gift_card.id),
-        code=code,
         initial_balance=str(data.initial_balance),
     )
     return gift_card
 
 
-async def get_gift_card_by_code(session: AsyncSession, code: str) -> GiftCard:
-    """Return the GiftCard matching *code*, or raise HTTP 404."""
-    result = await session.execute(
-        select(GiftCard).where(GiftCard.code == code)
-    )
+async def get_gift_card_by_code(
+    session: AsyncSession, code: str, *, for_update: bool = False
+) -> GiftCard:
+    """Return the GiftCard matching *code*, or raise HTTP 404.
+
+    Set ``for_update`` to acquire a ``SELECT … FOR UPDATE`` row lock — required
+    when the caller will mutate the balance, to prevent double-redeem races.
+    """
+    stmt = select(GiftCard).where(GiftCard.code == code)
+    if for_update:
+        stmt = stmt.with_for_update()
+    result = await session.execute(stmt)
     gift_card = result.scalar_one_or_none()
     if gift_card is None:
         raise HTTPException(
@@ -136,25 +142,37 @@ async def get_gift_card_by_code(session: AsyncSession, code: str) -> GiftCard:
     return gift_card
 
 
-async def redeem_gift_card(
-    session: AsyncSession,
-    code: str,
-    amount: Decimal,
-    sale_id: uuid.UUID | None = None,
+async def get_gift_card_by_id(
+    session: AsyncSession, gift_card_id: uuid.UUID, *, for_update: bool = False
 ) -> GiftCard:
-    """Validate and redeem *amount* from the gift card identified by *code*.
+    """Return the GiftCard with *gift_card_id*, or raise HTTP 404.
 
-    Validations:
-    - Card must exist (404 otherwise).
-    - Card status must be 'active' (400 otherwise).
-    - Card must not be expired (400 otherwise).
-    - Card must have sufficient balance (400 otherwise).
-
-    On success: deducts balance, records a 'redeem' transaction, and if the
-    resulting balance reaches zero sets status to 'redeemed'.
+    Set ``for_update`` to acquire a row lock before mutating the balance.
     """
-    gift_card = await get_gift_card_by_code(session, code)
+    stmt = select(GiftCard).where(GiftCard.id == gift_card_id)
+    if for_update:
+        stmt = stmt.with_for_update()
+    result = await session.execute(stmt)
+    gift_card = result.scalar_one_or_none()
+    if gift_card is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tarjeta de regalo no encontrada",
+        )
+    return gift_card
 
+
+async def _apply_redemption(
+    session: AsyncSession,
+    gift_card: GiftCard,
+    amount: Decimal,
+    sale_id: uuid.UUID | None,
+) -> GiftCard:
+    """Validate state/balance on an already-locked card and debit *amount*.
+
+    The caller MUST have loaded *gift_card* with ``for_update=True`` so the
+    check-then-write below is race-free.
+    """
     if gift_card.status != "active":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -202,6 +220,37 @@ async def redeem_gift_card(
         sale_id=str(sale_id) if sale_id else None,
     )
     return gift_card
+
+
+async def redeem_gift_card(
+    session: AsyncSession,
+    code: str,
+    amount: Decimal,
+    sale_id: uuid.UUID | None = None,
+) -> GiftCard:
+    """Validate and redeem *amount* from the gift card identified by *code*.
+
+    Acquires a row lock before the balance check so concurrent redemptions
+    cannot both pass (no double-redeem). On success deducts balance, records a
+    'redeem' transaction, and marks the card 'redeemed' when it reaches zero.
+    """
+    gift_card = await get_gift_card_by_code(session, code, for_update=True)
+    return await _apply_redemption(session, gift_card, amount, sale_id)
+
+
+async def redeem_gift_card_by_id(
+    session: AsyncSession,
+    gift_card_id: uuid.UUID,
+    amount: Decimal,
+    sale_id: uuid.UUID | None = None,
+) -> GiftCard:
+    """Redeem *amount* from the gift card identified by *gift_card_id*.
+
+    Used by the sale path, where payments reference the card by id. Locks the
+    row before debiting (see :func:`redeem_gift_card`).
+    """
+    gift_card = await get_gift_card_by_id(session, gift_card_id, for_update=True)
+    return await _apply_redemption(session, gift_card, amount, sale_id)
 
 
 async def void_gift_card(

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import Decimal from "decimal.js";
 import { XCircle, ArrowRightLeft } from "lucide-react";
 import { salesApi } from "@/lib/api";
@@ -189,63 +190,82 @@ export function POSTerminal() {
         />
       )}
 
-      {/* 2-column POS layout */}
-      <div className="flex h-full w-full overflow-hidden">
-        {/* Left — Product grid (55%) */}
-        <section className="flex flex-col border-r border-[var(--border)] p-3 basis-[55%] min-w-0">
-          {/* Session toolbar */}
-          {session && (
-            <div className="mb-2 flex items-center gap-3">
-              {fxRate > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <ArrowRightLeft
-                    size={12}
-                    className="text-[var(--text-muted)]"
-                  />
-                  <span className="text-xs text-[var(--text-muted)]">
-                    1 USD = {formatMXN(fxRate)} MXN
-                  </span>
-                  <span className="text-[10px] text-[var(--text-muted)]">
-                    {fxRateDate}
-                  </span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowCloseSession(true)}
-                className="ml-auto flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--error)] hover:text-[var(--error)]"
-              >
-                <XCircle size={14} />
-                Cerrar caja
-              </button>
-            </div>
-          )}
-          <ProductGrid token={token} onAddItem={handleAddItem} />
-        </section>
+      {/* Resizable POS layout — drag the dividers; sizes persist per browser */}
+      <PanelGroup
+        direction="horizontal"
+        autoSaveId="pos-terminal-h"
+        className="h-full w-full"
+      >
+        {/* Left — Product grid */}
+        <Panel defaultSize={55} minSize={35} className="flex flex-col">
+          <section className="flex h-full flex-col p-3 min-w-0">
+            {/* Session toolbar */}
+            {session && (
+              <div className="mb-2 flex items-center gap-3">
+                {fxRate > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <ArrowRightLeft
+                      size={12}
+                      className="text-[var(--text-muted)]"
+                    />
+                    <span className="text-xs text-[var(--text-muted)]">
+                      1 USD = {formatMXN(fxRate)} MXN
+                    </span>
+                    <span className="text-[10px] text-[var(--text-muted)]">
+                      {fxRateDate}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowCloseSession(true)}
+                  className="ml-auto flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--error)] hover:text-[var(--error)]"
+                >
+                  <XCircle size={14} />
+                  Cerrar caja
+                </button>
+              </div>
+            )}
+            <ProductGrid token={token} onAddItem={handleAddItem} />
+          </section>
+        </Panel>
 
-        {/* Right — Cart (top) + Payment (bottom), stacked vertically (45%) */}
-        <section className="flex flex-col basis-[45%] min-w-0">
-          {/* Cart — upper portion */}
-          <div
-            className="overflow-hidden border-b border-[var(--border)]"
-            style={{ flex: "0 0 38%" }}
+        {/* Draggable vertical divider (catalog ↔ cart/payment) */}
+        <PanelResizeHandle className="pos-resize-handle-v" />
+
+        {/* Right — Cart (top) + Payment (bottom), themselves resizable */}
+        <Panel defaultSize={45} minSize={28} className="min-w-0">
+          <PanelGroup
+            direction="vertical"
+            autoSaveId="pos-terminal-v"
+            className="h-full"
           >
-            {user && <Cart token={token} user={user} fxRate={fxRate} />}
-          </div>
+            {/* Cart — upper portion */}
+            <Panel defaultSize={38} minSize={18} className="overflow-hidden">
+              <div className="h-full overflow-hidden">
+                {user && <Cart token={token} user={user} fxRate={fxRate} />}
+              </div>
+            </Panel>
 
-          {/* Payment panel — lower portion */}
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <PaymentPanel
-              token={token}
-              totalMxn={total_mxn}
-              fxRate={fxRate}
-              fxRateDate={fxRateDate}
-              onCharge={handleCharge}
-              charging={charging}
-            />
-          </div>
-        </section>
-      </div>
+            {/* Draggable horizontal divider (cart ↔ payment) */}
+            <PanelResizeHandle className="pos-resize-handle-h" />
+
+            {/* Payment panel — lower portion */}
+            <Panel defaultSize={62} minSize={25} className="overflow-hidden">
+              <div className="h-full overflow-hidden">
+                <PaymentPanel
+                  token={token}
+                  totalMxn={total_mxn}
+                  fxRate={fxRate}
+                  fxRateDate={fxRateDate}
+                  onCharge={handleCharge}
+                  charging={charging}
+                />
+              </div>
+            </Panel>
+          </PanelGroup>
+        </Panel>
+      </PanelGroup>
     </>
   );
 }

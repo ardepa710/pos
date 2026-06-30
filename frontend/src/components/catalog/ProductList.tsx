@@ -9,6 +9,7 @@ import {
   StatusBadge,
   ConfirmDialog,
   CurrencyDisplay,
+  ProductThumb,
 } from "@/components/ui";
 import type { Column } from "@/components/ui";
 import { ProductForm } from "./ProductForm";
@@ -111,8 +112,16 @@ export function ProductList() {
       header: t.products.name,
       sortable: true,
       accessor: (row) => (
-        <span className="font-medium text-[var(--text-primary)]">
-          {row.name}
+        <span className="flex items-center gap-2.5">
+          <ProductThumb
+            url={row.thumbnail_url}
+            name={row.name}
+            seed={row.category_id ?? row.consigned_supplier_id ?? row.sku}
+            className="h-8 w-8 shrink-0 rounded-md text-[11px]"
+          />
+          <span className="font-medium text-[var(--text-primary)]">
+            {row.name}
+          </span>
         </span>
       ),
     },

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "./EmptyState";
 
 export interface Column<T> {
   key: string;
@@ -18,6 +19,10 @@ interface DataTableProps<T> {
   keyExtractor: (row: T) => string;
   isLoading?: boolean;
   emptyMessage?: string;
+  /** Optional Lucide icon element for the empty state. Defaults to Inbox. */
+  emptyIcon?: React.ReactNode;
+  /** Optional secondary line under the empty message. */
+  emptyHint?: string;
   /** Client-side pagination page size. Default 20. */
   pageSize?: number;
   /** Pass together with onPageChange for server-side pagination */
@@ -65,6 +70,8 @@ export function DataTable<T>({
   keyExtractor,
   isLoading = false,
   emptyMessage = "No hay datos",
+  emptyIcon,
+  emptyHint,
   pageSize = 20,
   totalCount,
   currentPage: externalPage,
@@ -179,11 +186,13 @@ export function DataTable<T>({
               />
             ) : paginatedData.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className={`${padding.cell.split(" ")[0]} py-10 text-center text-[var(--text-muted)]`}
-                >
-                  {emptyMessage}
+                <td colSpan={columns.length}>
+                  <EmptyState
+                    icon={emptyIcon ?? <Inbox size={30} />}
+                    title={emptyMessage}
+                    hint={emptyHint}
+                    tone="olivo"
+                  />
                 </td>
               </tr>
             ) : (

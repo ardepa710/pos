@@ -4,11 +4,27 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FileDown } from "lucide-react";
 import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   DataTable,
   type Column,
   LoadingSpinner,
   CurrencyDisplay,
 } from "@/components/ui";
+import {
+  CHART_COLORS,
+  ChartTooltip,
+  axisTick,
+  pesos,
+} from "@/components/ui/chart-kit";
 import { categoriesApi } from "@/lib/api";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,6 +96,14 @@ export function ProductsReport() {
     },
     enabled: !!token,
   });
+
+  const topProducts = [...data]
+    .sort(
+      (a, b) =>
+        parseFloat(b.revenue_mxn || "0") - parseFloat(a.revenue_mxn || "0"),
+    )
+    .slice(0, 10)
+    .map((r) => ({ name: r.name, revenue: parseFloat(r.revenue_mxn || "0") }));
 
   const columns: Column<ProductSalesRow>[] = [
     {
@@ -209,6 +233,62 @@ export function ProductsReport() {
         <p className="rounded-lg bg-[var(--error-subtle)] px-4 py-3 text-sm text-[var(--error)]">
           {t.error.generic}
         </p>
+      )}
+
+      {!isLoading && data.length > 0 && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-4">
+          <h3 className="mb-4 text-sm font-semibold text-[var(--text-primary)]">
+            {t.reports.top_products}
+          </h3>
+          <ResponsiveContainer
+            width="100%"
+            height={Math.max(200, topProducts.length * 34)}
+          >
+            <BarChart
+              layout="vertical"
+              data={topProducts}
+              margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
+            >
+              <CartesianGrid
+                horizontal={false}
+                stroke="var(--border)"
+                strokeDasharray="3 3"
+              />
+              <XAxis
+                type="number"
+                tickFormatter={(v: number) => pesos(v)}
+                tick={axisTick}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={130}
+                tick={axisTick}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                content={<ChartTooltip format={pesos} />}
+                cursor={{ fill: "var(--accent-subtle)" }}
+              />
+              <Bar
+                dataKey="revenue"
+                name="Ingresos"
+                radius={[0, 4, 4, 0]}
+                animationDuration={500}
+              >
+                {topProducts.map((_, i) => (
+                  <Cell
+                    key={i}
+                    fill={CHART_COLORS.series[i % CHART_COLORS.series.length]}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       )}
 
       {!isLoading && (
