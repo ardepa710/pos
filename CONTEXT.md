@@ -1,4 +1,95 @@
-## Session 2026-05-09-002 — Obsidian sync, memory update, PR #8
+## Session 2026-06-29 — Security audit+fixes, tests, impeccable (PRODUCT/DESIGN, critique), UX fixes, resizable panels, vibrancy pass (charts/images/dashboard), login routing fix
+
+**Goal:** Auditoría de seguridad pre-producción y corrección; luego setup de impeccable (PRODUCT.md/DESIGN.md), critique del POS y sus fixes; rediseño "menos sobrio" en fases (color/empty/motion, gráficas, imágenes, dashboard); y arreglo del login roto.
+
+**Affected files (por área):**
+
+- **Seguridad (backend):** `app/services/gift_card_service.py` (lock + redeem-by-id), `app/services/sale_service.py` (debita gift card C1, lock de stock H3), `app/services/return_service.py` (precio server-side H1, tope acumulado H2), `app/services/cashier_session_service.py` (audit logs), `app/schemas/extras.py` (quita unit_price del cliente), `app/routers/{suppliers,customers,reports,sales}.py` (RBAC: SupervisorUser, router-level guard, IDOR de sesión, audit logs), `app/config.py` (SECRET_KEY min_length, DB_SSLMODE), `app/main.py` (bloquea admin default en prod, /openapi.json off), `docker-compose.prod.yml` + `caddy/Caddyfile` + `frontend/next.config.ts` (HSTS, Permissions-Policy, SITE_ADDRESS para TLS), `.env.example`
+- **Tests (backend):** `tests/{conftest,factories,test_gift_cards,test_sales_returns,test_access_control,test_health}.py` — 20/20 pasando
+- **Auditoría:** `docs/security/2026-06-29-v1-security-audit.{md,pdf}` + README
+- **Impeccable:** `PRODUCT.md`, `DESIGN.md`, `.impeccable/design.json`, `.impeccable/critique/*` (snapshots 30→36)
+- **UX/diseño (frontend):** `components/pos/{Cart,CartItem,PaymentPanel,CloseSessionModal,ReceiptModal,ProductGrid,POSTerminal}.tsx`, `components/ui/{EmptyState,ProductThumb,DataTable,chart-kit,index}.tsx`, `components/reports/{SalesReport,ProductsReport,DailyReport}.tsx`, `components/dashboard/DashboardHome.tsx`, `components/catalog/ProductList.tsx`, `components/layout/Sidebar.tsx`, `app/globals.css`, `app/(app)/{layout,dashboard/page}.tsx`, `app/(auth)/login/page.tsx`, `lib/{i18n,vendor-color}.ts`. Eliminado: `app/(app)/page.tsx`
+- **Deps frontend:** + `react-resizable-panels@^2.1.9`, `recharts@^3.9.0`
+
+**Key decisions:**
+
+- **Bugs CRÍTICOS de dinero (no slop):** gift card en venta NUNCA debitaba saldo (C1) → ahora `redeem_gift_card_by_id` con `SELECT … FOR UPDATE` (C2). Devoluciones usaban precio del cliente (H1) → server-side; sin tope acumulado (H2) → suma devoluciones previas. Stock sin lock (H3) → `with_for_update`.
+- **RBAC en backend, no solo frontend:** suppliers/customers writes → `SupervisorUser`; reports → guard a nivel router; IDOR de `GET /sales/sessions/{id}` cerrado. El RBAC del frontend es solo UX.
+- **WCAG:** botón deshabilitado está EXENTO de contraste (SC 1.4.3); "44px" es HIG, AA pide 24px → fui a 40px en controles táctiles.
+- **Cobro de un toque:** efectivo exacto sin "Agregar pago" previo (pago sintetizado).
+- **Color "vibrante con significado":** olivo pasa de ≤10% a "voz de acción"; paleta categórica (vendor-color) para charts/dots/halos. recharts themeado por CSS-vars (light/dark). `<EmptyState>`/`<ProductThumb>` reutilizables. Motion con `prefers-reduced-motion` (antes inexistente).
+- **Paneles resizeables:** `react-resizable-panels` (touch+a11y+persistencia) sobre hacerlo a mano.
+- **Dashboard ≠ "/":** `src/app/page.tsx` (raíz) hace `redirect("/login")` y eclipsaba `(app)/page.tsx`. El dashboard vive en `/dashboard`; login enruta por rol (admin/supervisor→/dashboard, cajero→/pos). Causa del bug "login no hace nada".
+
+**Skills activated:** audit-full, impeccable (init/document/critique/animate), 12-principles-of-animation, modern-web-guidance, morphing-icons, ponytail, context
+
+**Blockers:** ninguno técnico. **Pendiente operativo:** force-push del rebase NO hecho (rama local rebaseada limpia sobre `main`, remoto sin sobrescribir).
+
+**Version bump:** V2026.06.29-001
+
+**Next steps:**
+
+1. `git push --force-with-lease` de `feat/docker-registry-deploy` + abrir PR nuevo a `main` (PR #8 ya estaba mergeado; main avanzó).
+2. QE manual en navegador del flujo POS (cobro de un toque, descuadre en cierre) y del dashboard/charts (necesita navegador — no disponible en sesión).
+3. Regenerar `.impeccable/design.json` si se usará `$impeccable live` (narrativa quedó un poco detrás del DESIGN.md vibrante).
+4. Fixes P2/P3 restantes del critique (focus-visible en botones de modal, N2 cobro directo con monto < total, radios de modales).
+
+**Status:** complete (código verificado por tsc + build de prod; runtime visual pendiente de QE en navegador)
+
+[ARCHIVED] ## Session 2026-05-12-001 — Obsidian sync manual + dashboard verify
+
+**Goal:** Ejecutar obsidian-sync.mjs manualmente, confirmar memoria del proyecto y sincronización del dashboard.
+**Affected files:**
+
+- `Wiki/002-Personal APP Projects/POS/POS.md` — `date-updated` → `2026-05-12` (actualizado por el hook)
+
+**Key decisions:**
+
+- `obsidian-sync.mjs` corre correctamente vía `node ~/.claude/hooks/obsidian-sync.mjs` — log muestra `DASHBOARD-OK pos` @ `2026-05-12T06:30:11Z`.
+- La consola Windows cp1252 lanza `UnicodeEncodeError` al intentar imprimir emojis desde psycopg2, pero los commits a Supabase ya se ejecutaron antes del print — no es un error real.
+- `badge-text` en frontmatter de POS.md es `Active — QA Complete` — el hook lo sincroniza tal cual al dashboard. Para mostrar la versión en el badge, actualizar `badge-text` en el frontmatter.
+
+**Skills activated:** obsidian-sync
+**Blockers:** ninguno
+**Version bump:** none
+**Next steps:**
+
+1. Mergear PR #8 (`feat/docker-registry-deploy` → `main`).
+2. Deploy VPS: `docker compose -f docker-compose.prod.yml pull && up -d --force-recreate`.
+3. Si pgdata existe: `ALTER USER pos_user WITH PASSWORD '...'`.
+4. `/audit-full` antes de producción.
+
+**Status:** complete
+
+[ARCHIVED] ## Session 2026-05-11-001 — Obsidian sync + dashboard update
+
+**Goal:** Completar sincronización pendiente de sesiones anteriores: actualizar Obsidian vault, memoria del proyecto y Supabase dashboard.
+**Affected files:**
+
+- `memory/STACK.md` — DATABASE_URL/DATABASE_SYNC_URL removidas de env vars list; versión → V2026.05.09-002; current focus actualizado
+- `memory/GOTCHAS.md` — 4 nuevos gotchas: Docker Compose v2 .env injection, build cache stale, pgdata password persistence, customer_id nullable
+- `CONTEXT.md` — este archivo
+- `Wiki/002-Personal APP Projects/POS/POS.md` (Obsidian) — Daily Update 2026-05-09 completo (sesiones 001+002), 4 gotchas nuevos, version bump, kanban DONE actualizado, env vars corregidas
+
+**Key decisions:**
+
+- `tbmproject_projects` no tiene columna `version` — el versionado se refleja en `badgeText` (`Active — V2026.05.09-002`).
+- PR #8 ya abierto: `feat/docker-registry-deploy` → `main` con 8 commits.
+- UnicodeEncodeError en consola Windows al imprimir emojis desde psycopg2 es cosmético — los commits a Supabase se ejecutan antes del print que falla, por lo que los datos sí quedan guardados.
+
+**Skills activated:** context
+**Blockers:** ninguno
+**Version bump:** none (solo sync/docs)
+**Next steps:**
+
+1. Mergear PR #8 → `main` tras revisión.
+2. Deploy VPS: `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d --force-recreate`.
+3. Si pgdata existe en VPS: `ALTER USER pos_user WITH PASSWORD '...'` para sincronizar contraseña.
+4. `/audit-full` antes del deploy a producción.
+
+**Status:** complete
+
+[ARCHIVED] ## Session 2026-05-09-002 — Obsidian sync, memory update, PR #8
 
 **Goal:** Sincronizar Obsidian vault, actualizar archivos de memoria del proyecto y crear PR con todos los cambios de la sesión.
 **Affected files:**

@@ -50,11 +50,16 @@
 
 ## Current Focus
 
-- Sprint goal: imágenes ghcr.io correctas, deploy VPS pendiente
-- Blockers: ninguno
-- Recently done: fix customer_id nullable (Error 500 al cobrar); fix Docker .env injection (DATABASE_URL removido de .env); imágenes ghcr.io empujadas sha 8386865
-- Next up: GitLab repo inicial, primer push a staging (coralslrc.shop), security audit pre-MR
+- Sprint goal: post-auditoría de seguridad — corregidos bugs CRÍTICOS de dinero (gift card, devoluciones, stock) + RBAC backend; rediseño UI "vibrante" (charts/imágenes/dashboard); 20 tests de integración.
+- Blockers: ninguno técnico.
+- Recently done: `/audit-full` (2 CRITICAL/6 HIGH) + fixes verificados con tests; impeccable PRODUCT.md/DESIGN.md + critique POS 30→36; cobro de un toque; paneles resizeables; gráficas recharts; dashboard `/dashboard`; fix login (ruta `/` eclipsada por `app/page.tsx`).
+- Next up: `git push --force-with-lease` + PR nuevo a `main` (rama rebaseada local, remoto sin tocar); QE manual en navegador; deploy VPS.
+
+## Deps añadidas (frontend, 2026-06-29)
+
+- `recharts@^3.9.0` — gráficas (área/barras/dona) themeadas por CSS-vars.
+- `react-resizable-panels@^2.1.9` — paneles resizeables del POS. **NO usar v4:** v4 renombra la API a `Group/Panel/Separator` y quita `autoSaveId` (persistencia manual). v2 = `PanelGroup/Panel/PanelResizeHandle` + `autoSaveId`.
 
 ## Version
 
-V2026.05.09-002
+V2026.06.29-001
