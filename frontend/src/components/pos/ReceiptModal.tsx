@@ -64,15 +64,12 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
     }
   }
 
-  const hasChange =
-    parseFloat(sale.total_mxn) <
-    sale.payments.reduce((s, p) => s + parseFloat(p.amount_in_mxn), 0);
-
   const totalPaid = sale.payments.reduce(
     (s, p) => s + parseFloat(p.amount_in_mxn),
     0,
   );
   const change = Math.max(0, totalPaid - parseFloat(sale.total_mxn));
+  const hasChange = change > 0;
 
   return (
     <Modal
@@ -82,7 +79,7 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
       size="sm"
       classNames={{
         backdrop: "bg-black/60 backdrop-blur-sm",
-        base: "rounded-xl border border-[var(--border)] bg-[var(--receipt-bg)] shadow-[var(--shadow-modal)]",
+        base: "rounded-2xl border border-[var(--border)] bg-[var(--receipt-bg)] shadow-[var(--shadow-modal)]",
       }}
       aria-labelledby="receipt-title"
     >
@@ -250,6 +247,7 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium",
                   "transition active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
                   printState === "ok"
                     ? "border-[var(--success)] bg-[var(--success-subtle)] text-[var(--success)]"
                     : "border-[var(--border)] bg-[var(--bg-card-elevated)] text-[var(--text-secondary)] hover:bg-[var(--border)]",
@@ -273,6 +271,7 @@ export function ReceiptModal({ sale, onNewSale }: ReceiptModalProps) {
                   "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5",
                   "bg-[var(--accent)] text-sm font-semibold text-white",
                   "transition hover:bg-[var(--accent-hover)] active:scale-[0.96]",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
                 )}
               >
                 <ShoppingCart size={16} />

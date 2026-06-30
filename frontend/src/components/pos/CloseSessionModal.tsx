@@ -57,7 +57,7 @@ export function CloseSessionModal({
       size="sm"
       classNames={{
         backdrop: "bg-black/60 backdrop-blur-sm",
-        base: "rounded-xl border border-[var(--border)] bg-[var(--bg-card)]",
+        base: "rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]",
       }}
       aria-labelledby="close-session-title"
     >
@@ -149,6 +149,7 @@ export function CloseSessionModal({
                       "flex-1 rounded-lg border border-[var(--border)] py-2.5 text-sm font-medium",
                       "text-[var(--text-secondary)] transition hover:bg-[var(--bg-input)] active:scale-[0.96]",
                       "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+                      "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
                     )}
                   >
                     Cancelar
@@ -160,6 +161,7 @@ export function CloseSessionModal({
                       "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold",
                       "bg-[var(--error)] text-white transition hover:opacity-90 active:scale-[0.96]",
                       "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+                      "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--error)]",
                     )}
                   >
                     {loading ? (

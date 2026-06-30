@@ -53,7 +53,7 @@ export function CartItem({
           onClick={() => onRemove(item.product_id)}
           aria-label={`Eliminar ${item.product_name}`}
           className={cn(
-            "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded text-[var(--text-muted)]",
+            "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded text-[var(--text-muted)]",
             "transition-colors hover:bg-[var(--error-subtle)] hover:text-[var(--error)]",
             FOCUS_RING,
           )}

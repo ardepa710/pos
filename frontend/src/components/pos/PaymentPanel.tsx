@@ -99,6 +99,10 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+// Visible keyboard focus (WCAG AA 2.4.7).
+const FOCUS_RING =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]";
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function PaymentPanel({
@@ -404,6 +408,7 @@ export function PaymentPanel({
                   "text-xs font-medium text-[var(--text-secondary)]",
                   "transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]",
                   "disabled:cursor-not-allowed disabled:opacity-50",
+                  FOCUS_RING,
                 )}
               >
                 {giftLookupLoading ? <LoadingSpinner size="sm" /> : "Verificar"}
@@ -472,6 +477,7 @@ export function PaymentPanel({
                   "flex-shrink-0 rounded-lg border border-[var(--border)] bg-[var(--bg-card)]",
                   "px-2.5 py-2 text-xs font-medium text-[var(--text-secondary)]",
                   "transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]",
+                  FOCUS_RING,
                 )}
                 title="Llenar con el restante"
                 aria-label="Llenar con el monto restante"
@@ -506,6 +512,7 @@ export function PaymentPanel({
               "border border-dashed border-[var(--accent)] text-sm font-medium text-[var(--accent)]",
               "transition-colors hover:bg-[var(--accent-subtle)]",
               "disabled:cursor-not-allowed disabled:border-[var(--border)] disabled:text-[var(--text-muted)]",
+              FOCUS_RING,
             )}
           >
             <Plus size={15} />
@@ -556,7 +563,10 @@ export function PaymentPanel({
                         type="button"
                         title="Editar monto"
                         onClick={() => startEditPayment(p)}
-                        className="tabular-nums text-sm font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent)]"
+                        className={cn(
+                          "rounded tabular-nums text-sm font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent)]",
+                          FOCUS_RING,
+                        )}
                       >
                         {p.method === "cash_usd" && p.amount_usd
                           ? formatUSD(p.amount_usd)
@@ -567,7 +577,10 @@ export function PaymentPanel({
                       type="button"
                       onClick={() => handleRemovePayment(p.id)}
                       aria-label="Quitar pago"
-                      className="text-[var(--text-muted)] transition-colors hover:text-[var(--error)]"
+                      className={cn(
+                        "rounded text-[var(--text-muted)] transition-colors hover:text-[var(--error)]",
+                        FOCUS_RING,
+                      )}
                     >
                       <X size={14} />
                     </button>
@@ -619,7 +632,11 @@ export function PaymentPanel({
       <div className="border-t border-[var(--border)] p-4">
         {payments.length === 0 && directAmountMxn === null ? (
           <p className="py-3 text-center text-sm text-[var(--text-muted)]">
-            {t.payment.add_method_hint}
+            {directEligible &&
+            amountInput.trim() !== "" &&
+            parseFloat(resolveAmountMxn()) > 0
+              ? t.payment.partial_hint
+              : t.payment.add_method_hint}
           </p>
         ) : (
           <>

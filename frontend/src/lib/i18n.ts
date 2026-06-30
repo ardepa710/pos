@@ -91,6 +91,8 @@ export const t = {
     paid: "Pagado",
     remaining: "Restante",
     add_method_hint: "Agrega un método de pago para continuar",
+    partial_hint:
+      'Monto menor al total — toca "Agregar pago" para registrarlo (pago parcial)',
     gift_inactive: "Tarjeta no activa o ya canjeada",
     gift_not_found: "Tarjeta no encontrada",
   },
