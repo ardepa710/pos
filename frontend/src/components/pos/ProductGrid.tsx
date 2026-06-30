@@ -8,6 +8,7 @@ import { t } from "@/lib/i18n";
 import { productsApi, categoriesApi } from "@/lib/api";
 import type { ProductRead } from "@/lib/api";
 import { formatMXN } from "@/lib/currency";
+import { vendorColor } from "@/lib/vendor-color";
 import { SearchInput, LoadingSpinner, EmptyState } from "@/components/ui";
 
 interface ProductGridProps {
@@ -164,6 +165,19 @@ export function ProductGrid({ token, onAddItem }: ProductGridProps) {
                       : "border-[var(--border)]",
                   )}
                 >
+                  {/* Vendor identity dot — Kolekto signature, stable per category/supplier */}
+                  <span
+                    className="absolute right-2 top-2 h-2 w-2 rounded-full ring-2 ring-[var(--product-card-bg)]"
+                    style={{
+                      background: vendorColor(
+                        product.category_id ??
+                          product.consigned_supplier_id ??
+                          product.sku,
+                      ),
+                    }}
+                    aria-hidden
+                  />
+
                   {/* Stock badge — only shown when out-of-stock or low stock */}
                   {product.track_inventory && (outOfStock || lowStock) && (
                     <div
