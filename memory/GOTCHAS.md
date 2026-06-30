@@ -11,6 +11,7 @@
 - **recharts en SVG con CSS-vars:** `fill`/`stroke="var(--accent)"` funcionan y siguen light/dark; para colores categóricos usar `vendor-color.ts` (hash estable). Componentes de reporte deben ser `"use client"`.
 - **Motion + reduced-motion:** no había soporte; añadido bloque `@media (prefers-reduced-motion: reduce)` global en `globals.css`. `hover-lift` usa la propiedad `translate` (no `transform`) para componer con `active:scale` de Tailwind sin pisarse.
 - **Verificación sin navegador:** en esta sesión no hubo automatización de browser. `tsc` + build de prod Next.js (compila/bundlea todas las rutas) es la verificación más fuerte disponible; el click-through visual queda para QE manual.
+- **Push/auth desde la sesión:** no hay `gh` ni token en el shell por defecto; `GITHUB_PAT` exportado por el usuario solo es visible en un **login shell** (`bash -lic '… ${GITHUB_PAT} …'`). Además, `--force-with-lease` contra una URL anónima con token (no el remoto `origin`) falla con "stale info" porque no hay tracking ref → usar lease **explícito** `--force-with-lease=<branch>:<OID-remoto-actual>`. PRs sin `gh`: vía API REST (`curl POST /repos/:o/:r/pulls`). Ojo: el ruido `bash: cannot set terminal process group` va a stderr y corrompe el parseo si haces `2>&1 | python` — separar stderr.
 
 ## Docker
 
