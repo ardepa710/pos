@@ -195,6 +195,30 @@ p {
   }
 }
 
+/* ── Resizable panel handles (POS terminal) ──────────────────── */
+.pos-resize-handle-v,
+.pos-resize-handle-h {
+  flex-shrink: 0;
+  background: var(--border);
+  transition: background 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pos-resize-handle-v {
+  width: 6px;
+  cursor: col-resize;
+}
+.pos-resize-handle-h {
+  height: 6px;
+  cursor: row-resize;
+}
+.pos-resize-handle-v:hover,
+.pos-resize-handle-h:hover,
+.pos-resize-handle-v[data-resize-handle-state="hover"],
+.pos-resize-handle-h[data-resize-handle-state="hover"],
+.pos-resize-handle-v[data-resize-handle-state="drag"],
+.pos-resize-handle-h[data-resize-handle-state="drag"] {
+  background: var(--accent);
+}
+
 /* ── Demo mode banner ────────────────────────────────────────── */
 .demo-banner {
   background: var(--warning);
