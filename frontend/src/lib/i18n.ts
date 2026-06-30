@@ -2,6 +2,7 @@
 export const t = {
   // Navigation
   nav: {
+    dashboard: "Inicio",
     pos: "Punto de Venta",
     catalog: "Catálogo",
     customers: "Clientes",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
+  LayoutDashboard,
   ShoppingCart,
   Package,
   Users,
@@ -30,6 +31,12 @@ const navItems: {
   label: string;
   roles: Role[];
 }[] = [
+  {
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    label: t.nav.dashboard,
+    roles: ["admin", "supervisor"],
+  },
   {
     href: "/pos",
     icon: ShoppingCart,

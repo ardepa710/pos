@@ -18,6 +18,11 @@ const loginSchema = z.object({
   password: z.string().min(1, "La contraseña es obligatoria"),
 });
 
+/** Where a logged-in user lands: admins/supervisors get the dashboard. */
+function landingFor(role?: string): string {
+  return role === "admin" || role === "supervisor" ? "/dashboard" : "/pos";
+}
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -26,6 +31,7 @@ export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const currentUser = useAuthStore((s) => s.user);
 
   const [branding, setBranding] = useState<BrandingConfig | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -44,9 +50,9 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/");
+      router.replace(landingFor(currentUser?.role));
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, currentUser, router]);
 
   // Reset CSS accent vars to Kolekto defaults when entering the auth area.
   // (app)/layout.tsx injects the business primary_color into --accent on <html> at runtime.
@@ -78,7 +84,7 @@ export default function LoginPage() {
       if (result.user.must_change_password) {
         router.replace("/change-password");
       } else {
-        router.replace("/");
+        router.replace(landingFor(result.user.role));
       }
     } catch {
       setLoginError("Usuario o contraseña incorrectos");

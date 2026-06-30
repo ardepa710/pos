@@ -12,6 +12,7 @@ import { AppShell } from "@/components/layout/AppShell";
 const ROLE_ALLOWED: Record<string, string[]> = {
   admin: ["/"], // admin can access everything — wildcard handled below
   supervisor: [
+    "/dashboard",
     "/pos",
     "/catalog",
     "/customers",
@@ -52,10 +53,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const role = user.role as string;
     if (role === "admin") return; // admin: unrestricted
     const allowed = ROLE_ALLOWED[role] ?? [];
-    // The home dashboard ("/") is allowed for everyone here; the home page
-    // itself sends cashiers on to /pos.
-    const canVisit =
-      pathname === "/" || allowed.some((prefix) => pathname.startsWith(prefix));
+    const canVisit = allowed.some((prefix) => pathname.startsWith(prefix));
     if (!canVisit) router.replace("/pos");
   }, [user, pathname, router]);
 
